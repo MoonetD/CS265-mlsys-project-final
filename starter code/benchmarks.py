@@ -108,7 +108,7 @@ class Experiment:
 
             for _ in range(profile_iters):
                 graph_profiler.run(*args)
-            graph_profiler.aggregate_stats()
+            graph_profiler.aggregate_stats(num_runs=profile_iters)
             graph_profiler.print_stats()
 
         return gm
