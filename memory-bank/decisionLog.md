@@ -29,7 +29,7 @@ The implementation involved three main passes over the graph nodes:
 2.  **Second Pass:** Determine the `NodeType` (PARAM, GRAD, ACT, OTHER) for each node based on information from the first pass and its usage context (e.g., created in forward, used in backward for ACT).
 3.  **Third Pass:** For nodes identified as ACT (activations), calculate their liveness information: creation rank, last forward use rank, first backward use rank, and last backward use rank.
 
-Reference: [`starter code/graph_prof.py`](starter code/graph_prof.py:35) (specifically the `__init__` method)
+Reference: [`starter_code/graph_prof.py`](starter_code/graph_prof.py:35) (specifically the `__init__` method)
 ---
 ### Decision (Code)
 [2025-05-12 18:20:45] - Implemented run-time profiling in `GraphProfiler.run_node`.
@@ -49,7 +49,7 @@ The implementation follows the specifications in `PLAN_stage_1.md`, Section 2, t
 *   **Storage:** New dictionaries (`run_times`, `peak_mem_node`, `memory_sizes`, `swap_times`) and a set (`swapped_out_activations`) are added to the `GraphProfiler` instance to store the collected data. These are cleared by `reset_stats`.
 
 **Details:**
-The changes were applied to the `__init__`, `run_node`, and `reset_stats` methods of the `GraphProfiler` class in [`starter code/graph_prof.py`](starter code/graph_prof.py:1). The `run_node` method now incorporates logic for event-based timing, peak memory capture, activation output size recording, and simulation of swap-in/out operations based on liveness information from static analysis.
+The changes were applied to the `__init__`, `run_node`, and `reset_stats` methods of the `GraphProfiler` class in [`starter_code/graph_prof.py`](starter_code/graph_prof.py:1). The `run_node` method now incorporates logic for event-based timing, peak memory capture, activation output size recording, and simulation of swap-in/out operations based on liveness information from static analysis.
 ---
 ### Decision (Code)
 [2025-05-12 18:27:33] - Implemented statistics aggregation and reporting in `GraphProfiler`.
@@ -66,7 +66,7 @@ To support profiling over multiple iterations and provide clearer insights, the 
 *   **Reset (`reset_stats`):** The method was updated to clear all raw statistic lists, averaged statistic dictionaries, and MuTWO metric dictionaries to prepare for new profiling runs.
 
 **Details:**
-Changes were applied to `__init__`, `run_node`, `aggregate_stats`, `reset_stats`, and `print_stats` methods of the `GraphProfiler` class in [`starter code/graph_prof.py`](starter code/graph_prof.py). Imports for `statistics`, `defaultdict`, and `math` were added. The `aggregate_stats` method now accepts an optional `num_runs` argument for correct swap time averaging.
+Changes were applied to `__init__`, `run_node`, `aggregate_stats`, `reset_stats`, and `print_stats` methods of the `GraphProfiler` class in [`starter_code/graph_prof.py`](starter_code/graph_prof.py). Imports for `statistics`, `defaultdict`, and `math` were added. The `aggregate_stats` method now accepts an optional `num_runs` argument for correct swap time averaging.
 ## [2025-05-12 18:53:14] DevOps Task: Profiler Enhancement for Stage 1 - Decisions
 - **Decision:** Modified `GraphProfiler` in `starter_code/graph_prof.py` to output profiling statistics to CSV files.
     - **Reason:** Project requirements ([`Material Markdown/Project Requirement.md:100`](Material%20Markdown/Project%20Requirement.md:100)) mandate computation and memory profiling statistics. CSV is a structured and accessible format.
@@ -102,7 +102,7 @@ Changes were applied to `__init__`, `run_node`, `aggregate_stats`, `reset_stats`
     - **Reason:** `ModuleNotFoundError` indicated it was missing.
 ---
 ### Decision (Code)
-[2025-05-13 10:04:46] - Designed and implemented the initial structure for `ActivationCheckpointingAlgorithm` in `starter code/activation_checkpointing.py`.
+[2025-05-13 10:04:46] - Designed and implemented the initial structure for `ActivationCheckpointingAlgorithm` in `starter_code/activation_checkpointing.py`.
 
 **Rationale:**
 The goal is to implement the activation checkpointing (AC) algorithm (Phase 2) as described in the μ-TWO paper, specifically Algorithm B (Scheduling Policy), using profiling data from Phase 1.
@@ -117,7 +117,7 @@ Key design choices:
 7.  **Activation "Benefit" Metric:** The benefit of not checkpointing an activation (i.e., recomputing it) is calculated as `live_duration_ranks * memory_saved`. `live_duration_ranks` is the difference between its effective last use rank (considering both FW and BW passes) and its creation rank. This is a proxy for the "space-time" product.
 
 **Details:**
-The implementation is in [`starter code/activation_checkpointing.py`](starter code/activation_checkpointing.py:1). The main class is `ActivationCheckpointingAlgorithm`. An example usage block is provided in `if __name__ == "__main__":` to demonstrate how to run the algorithm with sample CSV paths and a memory budget. The `_simulate_memory_usage` method is currently the most complex and least accurate part and is a candidate for future refinement.
+The implementation is in [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1). The main class is `ActivationCheckpointingAlgorithm`. An example usage block is provided in `if __name__ == "__main__":` to demonstrate how to run the algorithm with sample CSV paths and a memory budget. The `_simulate_memory_usage` method is currently the most complex and least accurate part and is a candidate for future refinement.
 ---
 ### Decision (Code)
 [2025-05-13 10:10:18] - Refined `_simulate_memory_usage` in `ActivationCheckpointingAlgorithm` for better alignment with μ-TWO Algorithm G.
@@ -136,13 +136,13 @@ The previous `_simulate_memory_usage` was a significant simplification. The goal
     *   `producing_node_name`: Added logic to pre-calculate which activations are produced by each forward node using the `producing_node_name` column from `activation_stats_df` for more efficient lookup during simulation.
 
 **Details:**
-The changes were applied to the `_simulate_memory_usage` method in [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py). The method now more closely follows the principles of Algorithm G by distinguishing between memory peaks during operations (using `avg_peak_mem_node`) and memory held by live checkpointed activations between operations.
+The changes were applied to the `_simulate_memory_usage` method in [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py). The method now more closely follows the principles of Algorithm G by distinguishing between memory peaks during operations (using `avg_peak_mem_node`) and memory held by live checkpointed activations between operations.
 ---
 ### Decision (Code)
 [2025-05-13 10:13:10] - Corrected CSV column name references and updated activation creation logic in `ActivationCheckpointingAlgorithm`.
 
 **Rationale:**
-Discrepancies were found between column names used in the Python code ([`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)) and those present in the profiler output CSV ([`profiler_stats_activation_stats.csv`](profiler_stats_activation_stats.csv)). Additionally, the `_simulate_memory_usage` method relied on a `producing_node_name` column that was not available.
+Discrepancies were found between column names used in the Python code ([`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)) and those present in the profiler output CSV ([`profiler_stats_activation_stats.csv`](profiler_stats_activation_stats.csv)). Additionally, the `_simulate_memory_usage` method relied on a `producing_node_name` column that was not available.
 1.  **Column Name Correction:** To ensure accurate data retrieval, all references in the Python script to columns like `recomp_time`, `avg_memory_size`, and `avg_swap_time` were updated to their correct counterparts in the CSV (e.g., `recomp_time_s`, `avg_mem_size_bytes`, `avg_swap_time_s`). This affects methods like `_calculate_recompute_overhead`, `_calculate_swap_overhead`, `_simulate_memory_usage`, and `decide_checkpoints`.
 2.  **Activation Creation Logic in Simulation:** The `_simulate_memory_usage` method was trying to use a `producing_node_name` column to link activations to the forward pass node that creates them. Since this column is not in `profiler_stats_activation_stats.csv`, the logic was changed. Now, during the simulation's iteration through forward pass nodes, it iterates through all activations in `self.activation_stats_df`. An activation is considered created by the current forward node if the activation's `creation_rank` (from the CSV) matches the current node's `rank`. This provides a robust way to determine when an activation becomes live without needing an explicit `producing_node_name` mapping.
 
@@ -151,16 +151,16 @@ The changes involved:
 *   Modifying string literals for column names in various `self.activation_stats_df.loc[]` calls and `act_details[]` accesses.
 *   Removing the `activations_produced_by_node` dictionary and its population logic from `_simulate_memory_usage`.
 *   Adding a nested loop within the `if node_gtype == 'fw':` block in `_simulate_memory_usage` to check `act_details_series['creation_rank'] == node_rank`.
-These changes are in [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py).
+These changes are in [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py).
 ---
 ### Decision (Debug)
 [2025-05-13 10:29:07] - Bug Fix: Corrected column name for activation identifiers in `ActivationCheckpointingAlgorithm`.
 
 **Rationale:**
-The script `starter code/activation_checkpointing.py` was expecting a column named 'act_name' in the `profiler_stats_activation_stats.csv` file for identifying activations. However, the CSV file uses 'activation_name'. This mismatch caused a `ValueError`. The fix involves updating the script to use the correct column name ('activation_name') when reading and processing the activation statistics.
+The script `starter_code/activation_checkpointing.py` was expecting a column named 'act_name' in the `profiler_stats_activation_stats.csv` file for identifying activations. However, the CSV file uses 'activation_name'. This mismatch caused a `ValueError`. The fix involves updating the script to use the correct column name ('activation_name') when reading and processing the activation statistics.
 
 **Details:**
-Affected file: [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
+Affected file: [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
 Changes:
 1.  Modified `__init__` to check for and set index using 'activation_name'.
 2.  Updated `_simulate_memory_usage` to retrieve activation names using `act_details_series['activation_name']`.
@@ -170,10 +170,10 @@ Changes:
 [2025-05-13 10:34:21] - Bug Fix Strategy: Corrected column name for node average run time.
 
 **Rationale:**
-The script [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py) was attempting to access `self.node_stats_df['avg_run_time']` in the `_simulate_memory_usage` method. However, the corresponding CSV file, [`profiler_stats_node_stats.csv`](profiler_stats_node_stats.csv), uses `avg_run_time_s` as the column header for average node run time. This mismatch caused a `KeyError: 'avg_run_time'`. The fix involves updating the script to use the correct column name `avg_run_time_s`.
+The script [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py) was attempting to access `self.node_stats_df['avg_run_time']` in the `_simulate_memory_usage` method. However, the corresponding CSV file, [`profiler_stats_node_stats.csv`](profiler_stats_node_stats.csv), uses `avg_run_time_s` as the column header for average node run time. This mismatch caused a `KeyError: 'avg_run_time'`. The fix involves updating the script to use the correct column name `avg_run_time_s`.
 
 **Details:**
-Affected file: [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
+Affected file: [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
 Change:
 In the `_simulate_memory_usage` method, the line:
 `total_execution_time = self.node_stats_df['avg_run_time'].sum()`
@@ -188,7 +188,7 @@ The initial run with a 10GB budget resulted in no recomputations. To ensure the 
 Test parameters: `memory_budget_gb = 0.05`, `fixed_overhead_gb = 0.1`.
 
 **Details:**
-*   The script [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py) was modified to use these parameters.
+*   The script [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py) was modified to use these parameters.
 *   **Outcome:**
     *   Recomputation was triggered: 309 activations were set to 'RECOMPUTE', 311 to 'CHECKPOINT'.
     *   The estimated peak GPU memory reported by the simulation remained at 0.10 GB (equal to `fixed_overhead_gb`) throughout the eviction process, even when many activations were no longer checkpointed. This suggests the peak memory calculation might be dominated by the fixed overhead or specific node peak memories, and not fully reflecting the reduction in live checkpointed activation memory, or that the sum of concurrently live checkpointed activations plus fixed overhead never significantly exceeded the fixed overhead alone in the simulation steps.
@@ -203,7 +203,7 @@ Test parameters: `memory_budget_gb = 0.05`, `fixed_overhead_gb = 0.1`.
 Activations with a `recomp_time_s` of 0 in `profiler_stats_activation_stats.csv` were causing eviction ratios of 0.0. The existing logic in `decide_checkpoints` incorrectly skipped evicting activations if their `recomp_time` was 0 but they had a positive memory size. This prevented potentially good candidates from being chosen. Additionally, when multiple activations had a 0 ratio, the selection was arbitrary.
 
 **Details:**
-Affected file: [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
+Affected file: [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
 Changes:
 1.  Removed the conditional `continue` statement (previously lines 249-251) in `decide_checkpoints` that skipped activations with `recomp_time == 0` and `avg_mem_size_bytes > 0`.
 2.  Modified the eviction candidate selection logic to implement tie-breaking: if multiple candidates share the same minimum eviction ratio (especially 0.0), the one offering the largest `benefit` (approximated as `live_duration_ranks * memory_saved`) is chosen. This ensures a more optimal choice among candidates with zero recomputation cost.
@@ -216,7 +216,7 @@ Changes:
 The "Estimated Peak GPU Memory" reported by `_simulate_memory_usage` remained at `fixed_overhead_gb` even when many activations were marked for `RECOMPUTE`. A review was conducted to ensure the simulation accurately reflects memory savings.
 
 **Details:**
-Affected file: [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
+Affected file: [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)
 Findings:
 *   The simulation logic in `_simulate_memory_usage` correctly excludes activations marked `RECOMPUTE` from the `current_checkpointed_plus_fixed_mem_bytes` calculation. This means their `avg_mem_size_bytes` does not contribute to the memory occupied by *checkpointed* tensors during their inactive period.
 *   The observed behavior (peak memory not dropping below `fixed_overhead_gb`) is expected when `fixed_overhead_gb` itself is significant and/or exceeds the `memory_budget_gb`. The reported peak is the maximum of (fixed_overhead + live_checkpointed_activations_memory) and (peak_during_node_execution). If fixed_overhead is the dominant value, or if a specific node's execution peak (which includes fixed components) is high, the overall simulated peak will reflect that.

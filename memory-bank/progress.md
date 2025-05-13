@@ -16,7 +16,7 @@ This file tracks the project's progress using a task list format.
 ## Next Steps
 
 *
-* 2025-05-12 18:18:20 - Completed Task: Static Analysis (`GraphProfiler.__init__`) in `starter code/graph_prof.py` including:
+* 2025-05-12 18:18:20 - Completed Task: Static Analysis (`GraphProfiler.__init__`) in `starter_code/graph_prof.py` including:
     * Identified Forward/Backward Boundary.
     * Categorized Nodes/Tensors (PARAM, ACT, GRAD, OTHER).
     * Performed Activation Liveness Analysis (creation, last_fw_use, first_bw_use, last_bw_use).
@@ -24,9 +24,9 @@ This file tracks the project's progress using a task list format.
     * Implemented Timing: Using `torch.cuda.Event` for `run_time`.
     * Implemented Memory Measurement: Using `torch.cuda.max_memory_allocated` for `peak_mem` and tensor properties for `memory_size`.
     * Implemented Swap Simulation: Logic for `swap_time` based on estimated bandwidth and liveness.
-* [2025-05-12 18:22:51] - Completed Task: Task 3: Calculate MuTWO Metrics (`inactive_time`, `recomp_time`, `recomp_memory`, `recompute_ratio`) in `GraphProfiler.aggregate_stats` as per `PLAN_stage_1.md`, Section 3. Implemented in [`starter code/graph_prof.py`](starter code/graph_prof.py:249).
-* [2025-05-12 18:27:25] - Completed Task: Task 4: Statistics Aggregation & Reporting (`aggregate_stats`, `reset_stats`, `print_stats`) from `PLAN_stage_1.md`, Section 4. Implemented in [`starter code/graph_prof.py`](starter code/graph_prof.py).
-* [2025-05-12 18:29:45] - Completed Task: Task 5: Integrate `GraphProfiler` into example scripts (`starter code/starter_code.py`, `starter code/benchmarks.py`) as per `PLAN_stage_1.md`, Section 5. Updated `graph_transformation` to call `aggregate_stats` correctly.
+* [2025-05-12 18:22:51] - Completed Task: Task 3: Calculate MuTWO Metrics (`inactive_time`, `recomp_time`, `recomp_memory`, `recompute_ratio`) in `GraphProfiler.aggregate_stats` as per `PLAN_stage_1.md`, Section 3. Implemented in [`starter_code/graph_prof.py`](starter_code/graph_prof.py:249).
+* [2025-05-12 18:27:25] - Completed Task: Task 4: Statistics Aggregation & Reporting (`aggregate_stats`, `reset_stats`, `print_stats`) from `PLAN_stage_1.md`, Section 4. Implemented in [`starter_code/graph_prof.py`](starter_code/graph_prof.py).
+* [2025-05-12 18:29:45] - Completed Task: Task 5: Integrate `GraphProfiler` into example scripts (`starter_code/starter_code.py`, `starter_code/benchmarks.py`) as per `PLAN_stage_1.md`, Section 5. Updated `graph_transformation` to call `aggregate_stats` correctly.
 ## [2025-05-12 18:52:56] DevOps Task: Profiler Enhancement for Stage 1
 - **Status:** Success
 - **Summary:** Modified `starter_code/graph_prof.py` to save detailed node and activation statistics to CSV files (`profiler_stats_node_stats.csv`, `profiler_stats_activation_stats.csv`). Added various plots including node runtime, node peak memory, activation memory size, activation inactive time, and a new "Memory vs. Execution Rank" plot with FW/BW separators and GPU memory limit.
@@ -58,14 +58,14 @@ This file tracks the project's progress using a task list format.
     - BERT profiling blocked by `aten._local_scalar_dense.default` error.
 - **Next Steps:** Proceed with Stage 2 development focusing on ResNet-152 data. Defer further BERT debugging unless critical.
 * [2025-05-13 10:04:32] - Current Task: Phase 2: Activation Checkpointing Algorithm Implementation.
-* [2025-05-13 10:04:32] - Progress: Created `starter code/activation_checkpointing.py` with the `ActivationCheckpointingAlgorithm` class.
+* [2025-05-13 10:04:32] - Progress: Created `starter_code/activation_checkpointing.py` with the `ActivationCheckpointingAlgorithm` class.
     * Implemented initial data loading from profiler CSVs.
     * Added helper methods for recompute/swap overhead.
     * Implemented a simplified `_simulate_memory_usage` function.
     * Implemented a version of `decide_checkpoints` based on μ-TWO paper's Algorithm B.
     * Added an example `if __name__ == "__main__":` block for testing.
-* [2025-05-13 10:10:10] - Progress: Refined `_simulate_memory_usage` in `ActivationCheckpointingAlgorithm` ([`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)) to better align with μ-TWO's Algorithm G. This includes improved peak memory tracking and execution time calculation.
-* [2025-05-13 10:13:01] - Progress: Further refined `ActivationCheckpointingAlgorithm` in [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py):
+* [2025-05-13 10:10:10] - Progress: Refined `_simulate_memory_usage` in `ActivationCheckpointingAlgorithm` ([`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)) to better align with μ-TWO's Algorithm G. This includes improved peak memory tracking and execution time calculation.
+* [2025-05-13 10:13:01] - Progress: Further refined `ActivationCheckpointingAlgorithm` in [`starter_code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py):
     * Corrected all identified CSV column name mismatches (e.g., `recomp_time` to `recomp_time_s`).
     * Updated `_simulate_memory_usage` to use `creation_rank` for identifying when activations are created, removing the need for a `producing_node_name` column.
 * [2025-05-13 11:06:00] - Completed Task: Debug `activation_checkpointing.py` for zero eviction ratio and peak memory simulation.

@@ -1,6 +1,6 @@
 # Plan - Stage 1: Graph Profiler Enhancements
 
-This stage focuses on enhancing the `starter code/graph_prof.py` ([`starter code/graph_prof.py`](starter code/graph_prof.py:1)) to collect detailed static and run-time information required by the MuTWO activation checkpointing algorithm.
+This stage focuses on enhancing the `starter_code/graph_prof.py` ([`starter_code/graph_prof.py`](starter_code/graph_prof.py:1)) to collect detailed static and run-time information required by the MuTWO activation checkpointing algorithm.
 
 ## Tasks
 
@@ -11,7 +11,7 @@ This stage focuses on enhancing the `starter code/graph_prof.py` ([`starter code
     *   Locate the `torch.ops.separator.sep_backward.default` node marking the start of the backward pass.
     *   Store references to these boundary nodes or their positions (`rank`).
 *   [ ] **Categorize Nodes/Tensors:**
-    *   Implement logic to assign `NodeType` ([`starter code/graph_prof.py:17`](starter code/graph_prof.py:17)) (PARAM, ACT, GRAD, OTHER) to relevant nodes or the tensors they produce/represent.
+    *   Implement logic to assign `NodeType` ([`starter_code/graph_prof.py:17`](starter_code/graph_prof.py:17)) (PARAM, ACT, GRAD, OTHER) to relevant nodes or the tensors they produce/represent.
     *   Use optimizer node (`torch.ops.aten._fused_adam.default`) args to identify PARAMs and GRADs.
     *   Identify ACTivations (intermediate tensors created in forward, used in backward, not PARAMs).
     *   Tag other nodes appropriately (e.g., inputs, optimizer states).
@@ -26,7 +26,7 @@ This stage focuses on enhancing the `starter code/graph_prof.py` ([`starter code
 ### 2. Run-time Profiling (`GraphProfiler.run_node`)
 
 *   [ ] **Implement Timing:**
-    *   Use `torch.cuda.Event(enable_timing=True)` before and after the `super().run_node(n)` call ([`starter code/graph_prof.py:92`](starter code/graph_prof.py:92)) to record the execution time (`run_time`) for each node `n`.
+    *   Use `torch.cuda.Event(enable_timing=True)` before and after the `super().run_node(n)` call ([`starter_code/graph_prof.py:92`](starter_code/graph_prof.py:92)) to record the execution time (`run_time`) for each node `n`.
     *   Store the recorded time associated with the node `n`.
 *   [ ] **Implement Memory Measurement:**
     *   Use `torch.cuda.memory_stats()` or `torch.cuda.max_memory_allocated()` / `torch.cuda.memory_allocated()` appropriately around `super().run_node(n)` to measure:
@@ -35,7 +35,7 @@ This stage focuses on enhancing the `starter code/graph_prof.py` ([`starter code
         *   Potentially active memory (`active_mem` - may require careful definition/measurement).
     *   Store these memory values associated with the node `n` or its output tensors.
 *   [ ] **Simulate Swapping & Measure Swap Time:**
-    *   Implement the logic hinted at in `run_node` comments ([`starter code/graph_prof.py:87`](starter code/graph_prof.py:87), [`starter code/graph_prof.py:96`](starter code/graph_prof.py:96)):
+    *   Implement the logic hinted at in `run_node` comments ([`starter_code/graph_prof.py:87`](starter_code/graph_prof.py:87), [`starter_code/graph_prof.py:96`](starter_code/graph_prof.py:96)):
         *   *Before* `super().run_node(n)`: If in backward pass and `n` requires an activation `x` that *would have been* swapped out, simulate swapping `x` *in*. Measure the time this *would* take (`swap_time` - potentially profile actual `tensor.to('cuda')` / `tensor.to('cpu')` on tensors of relevant sizes beforehand).
         *   *After* `super().run_node(n)`: If in forward pass and `n` is the `last_fw_access` for an activation `x`, simulate swapping `x` *out*. Measure the time this *would* take (contributes to `swap_time`).
     *   Store the measured `swap_time` associated with each activation tensor.
@@ -51,12 +51,12 @@ This stage focuses on enhancing the `starter code/graph_prof.py` ([`starter code
 
 ### 4. Statistics Aggregation & Reporting
 
-*   [ ] **Implement `aggregate_stats` ([`starter code/graph_prof.py:102`](starter code/graph_prof.py:102)):**
+*   [ ] **Implement `aggregate_stats` ([`starter_code/graph_prof.py:102`](starter_code/graph_prof.py:102)):**
     *   Store run-time stats (time, memory) per node/tensor for each measurement iteration.
     *   Calculate the average (or median, as per MuTWO) `run_time`, `peak_mem`, etc., over the measurement iterations.
-*   [ ] **Implement `reset_stats` ([`starter code/graph_prof.py:111`](starter code/graph_prof.py:111)):**
+*   [ ] **Implement `reset_stats` ([`starter_code/graph_prof.py:111`](starter_code/graph_prof.py:111)):**
     *   Clear out statistics collected during warm-up iterations.
-*   [ ] **Implement `print_stats` ([`starter code/graph_prof.py:108`](starter code/graph_prof.py:108)):**
+*   [ ] **Implement `print_stats` ([`starter_code/graph_prof.py:108`](starter_code/graph_prof.py:108)):**
     *   Output the collected and calculated statistics in a readable format (e.g., per-node times, activation liveness, inactive times, recompute ratios).
     *   Generate the peak memory breakdown graph required by project deliverables (Phase 1, 4a).
 

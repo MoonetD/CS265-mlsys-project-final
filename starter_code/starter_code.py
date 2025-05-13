@@ -13,7 +13,7 @@ from transformers import BertModel, BertConfig # Added for BERT
 from graph_prof import GraphProfiler
 from graph_tracer import SEPFunction, compile
 
-# This is the dummy model that is for use in starter code. But we will
+# This is the dummy model that is for use in starter_code. But we will
 # experiment with Resnet and Transformer model.
 
 
