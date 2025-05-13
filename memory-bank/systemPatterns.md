@@ -15,5 +15,5 @@ It is optional, but recommended to be updated as the project evolves.
 *   
 
 ## Testing Patterns
-
+always use conda run -n ml_env python before running the code
 *
