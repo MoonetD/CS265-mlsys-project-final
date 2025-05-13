@@ -57,3 +57,20 @@ This file tracks the project's progress using a task list format.
 - **Issues:**
     - BERT profiling blocked by `aten._local_scalar_dense.default` error.
 - **Next Steps:** Proceed with Stage 2 development focusing on ResNet-152 data. Defer further BERT debugging unless critical.
+* [2025-05-13 10:04:32] - Current Task: Phase 2: Activation Checkpointing Algorithm Implementation.
+* [2025-05-13 10:04:32] - Progress: Created `starter code/activation_checkpointing.py` with the `ActivationCheckpointingAlgorithm` class.
+    * Implemented initial data loading from profiler CSVs.
+    * Added helper methods for recompute/swap overhead.
+    * Implemented a simplified `_simulate_memory_usage` function.
+    * Implemented a version of `decide_checkpoints` based on μ-TWO paper's Algorithm B.
+    * Added an example `if __name__ == "__main__":` block for testing.
+* [2025-05-13 10:10:10] - Progress: Refined `_simulate_memory_usage` in `ActivationCheckpointingAlgorithm` ([`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py)) to better align with μ-TWO's Algorithm G. This includes improved peak memory tracking and execution time calculation.
+* [2025-05-13 10:13:01] - Progress: Further refined `ActivationCheckpointingAlgorithm` in [`starter code/activation_checkpointing.py`](starter%20code/activation_checkpointing.py):
+    * Corrected all identified CSV column name mismatches (e.g., `recomp_time` to `recomp_time_s`).
+    * Updated `_simulate_memory_usage` to use `creation_rank` for identifying when activations are created, removing the need for a `producing_node_name` column.
+* [2025-05-13 11:06:00] - Completed Task: Debug `activation_checkpointing.py` for zero eviction ratio and peak memory simulation.
+    * Fixed zero eviction ratio by correcting logic in `decide_checkpoints` to consider 0-cost activations and use benefit for tie-breaking.
+    * Verified peak memory simulation in `_simulate_memory_usage` correctly handles `RECOMPUTE`d activations and reflects memory savings.
+    * Retested with constrained budget (`memory_budget_gb = 0.05`, `fixed_overhead_gb = 0.1`), confirming fixes and observing expected behavior (all activations recomputed, peak memory at fixed overhead level).
+    * Verified Phase 2 scope conformance.
+    * Noted NumPy environment incompatibility for future resolution.
