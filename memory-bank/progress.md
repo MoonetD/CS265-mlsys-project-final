@@ -95,3 +95,24 @@ This file tracks the project's progress using a task list format.
     * Added visualization of the memory curve and detailed verification logic
     * Implemented clear output messages indicating test success/failure
     * These improvements will lead to better eviction decisions in the activation checkpointing algorithm in Stage 2
+* [2025-05-13 23:27:48] - Completed Task: Implemented batch memory analysis script for ResNet-152:
+    * Created `starter_code/batch_memory_analysis.py` that profiles ResNet-152 with multiple batch sizes (4, 8, 16, 32)
+    * Implemented memory collection using GraphProfiler's peak memory tracking
+    * Added visualization with matplotlib to generate a bar graph of batch size vs. peak memory
+    * Included automatic creation of reports/ directory if it doesn't exist
+    * Added comprehensive error handling and detailed reporting
+    * Used "conda run -n ml_env python" execution pattern as specified in systemPatterns.md
+* [2025-05-13 23:36:20] - Completed Task: Successfully executed batch memory analysis script for ResNet-152:
+    * Fixed issue with return value handling in `graph_transformation` function
+    * Used global variable to store peak memory instead of returning it from the function
+    * Successfully profiled ResNet-152 with batch sizes 4, 8, 16, 32
+    * Generated bar graph showing batch size vs. peak memory consumption
+    * Saved graph to `reports/resnet152_batch_memory.png`
+    * Observed memory usage scaling from 1.4 GB (batch size 4) to 6.2 GB (batch size 32)
+    * Results show approximately linear scaling of memory usage with batch size
+* [2025-05-13 23:47:26] - Completed Task: Enhanced batch memory analysis script to generate CSV files for Stage 2:
+    * Modified `starter_code/batch_memory_analysis.py` to call `graph_profiler.save_stats_to_csv()` after aggregating stats
+    * Implemented batch-size-specific prefixes for CSV files (e.g., `profiler_stats_bs{batch_size}`) to avoid overwriting
+    * Ensured CSV files are saved in the main directory to be consistent with existing CSV files
+    * Updated the main function to print information about the generated CSV files
+    * These changes enable Stage 2 to use batch-specific profiling data for activation checkpointing analysis

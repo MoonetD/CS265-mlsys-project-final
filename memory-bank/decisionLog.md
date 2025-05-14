@@ -306,3 +306,84 @@ The implementation in [`starter_code/test_profiler_mlp.py`](starter_code/test_pr
 
 The test revealed that in the traced graph, linear layers appear as 'addmm' operations rather than 'linear' or 'fc' nodes, which was an important insight for correctly identifying computational nodes in the profiler.
 Reference: [`starter_code/graph_prof.py`](starter_code/graph_prof.py:358)
+---
+### Decision (Code)
+[2025-05-13 23:28:03] - Implemented batch memory analysis script for ResNet-152 model.
+
+**Rationale:**
+Created a dedicated script to analyze how batch size affects peak memory consumption in the ResNet-152 model. This analysis is valuable for understanding memory scaling behavior and helps determine optimal batch sizes for training. The implementation follows the project's existing patterns for profiling and visualization while focusing specifically on batch size impact.
+
+**Details:**
+The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/batch_memory_analysis.py) includes:
+
+1. **Profiling Infrastructure:**
+   - Reused the existing GraphProfiler and compile framework from the codebase
+   - Extended the graph_transformation function to return peak memory information
+   - Created a dedicated profile_batch_size function to isolate the profiling logic
+
+2. **Batch Size Selection:**
+   - Chose four representative batch sizes (4, 8, 16, 32) to demonstrate memory scaling
+   - These sizes provide a good range for analysis while remaining practical for most GPUs
+
+3. **Memory Measurement:**
+   - Used max(graph_profiler.avg_peak_mem_node.values()) to determine the peak memory usage
+   - This captures the highest memory point across all operations in the model
+
+4. **Visualization:**
+   - Created a bar graph showing batch size vs. peak memory consumption
+   - Added value labels on top of each bar for easy reading
+   - Included proper axis labels, title, and grid lines for clarity
+
+5. **Error Handling:**
+   - Implemented try-except blocks to handle potential failures during profiling
+   - Added logic to continue with plotting if at least one batch size was successfully profiled
+
+6. **Output Management:**
+   - Added ensure_reports_directory() function to create the reports/ directory if it doesn't exist
+   - Saved the visualization as a PNG file in the reports/ directory
+   - Printed a detailed summary table of results for quick reference
+---
+### Decision (Code)
+[2025-05-13 23:35:50] - Fixed and successfully executed batch memory analysis script.
+
+**Rationale:**
+The initial implementation of the batch memory analysis script had an issue with how it handled the return value from the `compile` function. The `graph_transformation` function was returning a tuple `(gm, peak_memory)`, but the `compile` function expected only the graph module to be returned. This caused a "'tuple' object is not callable" error. The solution was to use a global variable to store the peak memory value instead of trying to return it from the `graph_transformation` function.
+
+**Details:**
+1. **Root Cause Analysis:**
+   - Examined the `compile` function in `graph_tracer.py` to understand how it uses the return value from `graph_transformation`
+   - Identified that `graph_transformation` should return only the graph module, not additional data
+
+2. **Implementation Fix:**
+   - Added a global variable `_peak_memory` to store the peak memory value
+   - Modified `graph_transformation` to store the peak memory in the global variable and return only the graph module
+   - Updated `profile_batch_size` to access the peak memory from the global variable
+
+3. **Results:**
+   - Successfully profiled ResNet-152 with batch sizes 4, 8, 16, and 32
+   - Generated a bar graph showing the relationship between batch size and peak memory usage
+   - Saved the graph to `reports/resnet152_batch_memory.png`
+   - Observed clear linear scaling of memory usage with batch size:
+     * Batch size 4: 1449.59 MiB
+     * Batch size 8: 2128.61 MiB
+     * Batch size 16: 3465.96 MiB
+     * Batch size 32: 6191.08 MiB
+---
+### Decision (Code)
+[2025-05-13 23:47:09] - Enhanced batch memory analysis script to generate CSV files for Stage 2.
+
+**Rationale:**
+The batch memory analysis script needed to be modified to generate CSV files for each batch size that can be used in Stage 2 for activation checkpointing analysis. The existing script only generated a bar graph showing batch size vs. peak memory consumption, but did not save the detailed profiling data needed for Stage 2. Using batch-size-specific prefixes ensures that CSV files from different batch sizes don't overwrite each other, allowing for comparative analysis across batch sizes.
+
+**Details:**
+The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/batch_memory_analysis.py) was enhanced with:
+
+1. **CSV Generation:** Updated the `graph_transformation` function to call `graph_profiler.save_stats_to_csv()` after aggregating the stats, using a batch-size-specific prefix (`f"profiler_stats_bs{batch_size}"`) for each CSV file.
+
+2. **File Location:** Ensured CSV files are saved in the main directory (not in reports/) to be consistent with the existing CSV files, by using the default behavior of the `save_stats_to_csv` method.
+
+3. **User Feedback:** Updated the main function to print information about the generated CSV files, including a summary table showing batch sizes, peak memory usage, and the corresponding CSV files.
+
+4. **Documentation:** Added explanatory comments and print statements to clarify that these CSV files can be used in Stage 2 for activation checkpointing analysis.
+
+These changes enable Stage 2 to use batch-specific profiling data for more accurate activation checkpointing decisions based on different memory constraints.
