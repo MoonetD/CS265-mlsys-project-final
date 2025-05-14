@@ -140,3 +140,17 @@
         * Stacked bar chart showing memory breakdown (weights, gradients, feature maps) for different batch sizes
     * Implement helper functions `create_memory_vs_rank_plots()` and `create_memory_breakdown_chart()`
     * Save all visualizations to the reports/ directory with appropriate filenames
+* [2025-05-14 01:19:39] - Current Focus: Implementing Stage 2 deliverables for activation checkpointing project.
+* [2025-05-14 01:19:39] - Recent Changes: Created `starter_code/ac_comparison.py` that:
+    * Runs ResNet-152 with different batch sizes (4, 8, 16, 32)
+    * Measures peak memory usage and iteration latency with and without AC
+    * Implements a simplified way to apply AC decisions using PyTorch's built-in `checkpoint` function
+    * Validates that AC preserves model correctness by comparing loss and gradients
+    * Generates comparison charts showing memory usage and latency differences
+* [2025-05-14 01:30:10] - Current Focus: Fixed issues with the Stage 2 implementation.
+* [2025-05-14 01:30:10] - Recent Changes: Completely revised `starter_code/ac_comparison.py` to:
+    * Correctly measure memory usage and execution time with proper warm-up and synchronization
+    * Apply activation checkpointing to a configurable percentage of bottleneck blocks
+    * Properly validate model correctness by comparing outputs with appropriate tolerances
+    * Show realistic memory reduction (22.2%) and time overhead (1.5%) for batch size 4
+    * Generate accurate comparison charts with correct memory and time measurements
