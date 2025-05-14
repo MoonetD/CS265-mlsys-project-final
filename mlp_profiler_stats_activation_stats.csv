@@ -1,4 +1,4 @@
-activation_name,creation_rank,last_fw_use_rank,first_bw_use_rank,last_bw_use_rank,avg_mem_size_bytes,inactive_time_s,avg_swap_time_s,recomp_time_s,recomp_memory_bytes,recompute_ratio
+activation_name,creation_rank,last_fw_use_rank,first_bw_use_rank,last_bw_use_rank,median_mem_size_bytes,inactive_time_s,avg_swap_time_s,recomp_time_s,recomp_memory_bytes,recompute_ratio
 relu,11,13,35,40,16384,0.0008607359994202851,0.0,9.084800165146589e-05,16384,10.36235018837033
 t_1,12,13,32,32,65536,0.0007418559975922106,0.0,6.4e-05,65536,10.0
 relu_1,14,16,26,31,16384,0.000368384001776576,0.0,7.879999931901693e-05,16384,8.988124922325369

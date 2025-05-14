@@ -624,7 +624,7 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
             decisions_df = pd.DataFrame({
                 'activation_name': list(ac_decisions.keys()),
                 'decision': list(ac_decisions.values()),
-                'memory_size_bytes': [ac_algo.activation_stats_df.loc[act, 'avg_mem_size_bytes']
+                'memory_size_bytes': [ac_algo.activation_stats_df.loc[act, 'median_mem_size_bytes']
                                      if act in ac_algo.activation_stats_df.index else 0
                                      for act in ac_decisions.keys()],
                 'recomp_time_s': [ac_algo.activation_stats_df.loc[act, 'recomp_time_s']

@@ -57,25 +57,16 @@ class GraphProfiler(fx.Interpreter):
         self.run_times: Dict[str, List[float]] = defaultdict(list)
         self.peak_mem_node: Dict[str, List[int]] = defaultdict(list)
         self.memory_sizes: Dict[str, List[int]] = defaultdict(list) # Activation output sizes per run
-        self.swap_times: Dict[str, List[float]] = defaultdict(list) # Individual swap event times per activation
-        self.swapped_out_activations: Set[str] = set() # Tracks names of activations currently in CPU (state during a run)
-
         # Averaged runtime stats (Calculated after aggregation)
-        self.avg_run_times: Dict[str, float] = {}
-        self.avg_peak_mem_node: Dict[str, float] = {}
-        self.avg_memory_sizes: Dict[str, float] = {}
-        self.avg_swap_times: Dict[str, float] = {} # Average *total* swap time per activation per run
+        self.median_run_times: Dict[str, float] = {}
+        self.median_peak_mem_node: Dict[str, float] = {}
+        self.median_memory_sizes: Dict[str, float] = {}
 
         # MuTWO specific metrics (Calculated after aggregation using averaged stats)
         self.inactive_times: Dict[str, float] = {}
         self.recomp_times: Dict[str, float] = {}
-        self.recomp_memory: Dict[str, int] = {} # Uses avg_memory_sizes
-        self.recompute_ratios: Dict[str, float] = {}
+        self.recomp_memory: Dict[str, int] = {} # Uses median_memory_sizes
 
-        # Constants for swap speed simulation (example values, e.g., 10 GB/s)
-        # These should ideally be profiled on the target hardware.
-        self.BYTES_PER_SEC_CPU_TO_GPU = 10 * (1024**3)
-        self.BYTES_PER_SEC_GPU_TO_CPU = 10 * (1024**3)
         self.GPU_MEMORY_LIMIT_MIB = 4 * 1024 # Fixed 4 GiB memory limit for activation checkpointing
 
         # --- First Pass: Rank nodes, find boundaries, identify initial Params/Grads ---
@@ -218,26 +209,7 @@ class GraphProfiler(fx.Interpreter):
         node_name = n.name
         current_rank = self.node_ranks[n]
 
-        # 1. Swap-in Simulation (Before node execution, during backward pass)
-        if self.sep_bw_start_rank != -1 and current_rank >= self.sep_bw_start_rank:
-            for input_node in n.all_input_nodes:
-                input_node_name = input_node.name
-                if self.node_types.get(input_node_name) == NodeType.ACT and \
-                   input_node_name in self.swapped_out_activations:
-
-                    # This activation was swapped out and is needed now. Simulate swap-in.
-                    # Use the *last recorded* memory size for this activation for simulation
-                    # Check if memory_sizes has data for this node before accessing [-1]
-                    if input_node_name in self.memory_sizes and self.memory_sizes[input_node_name]:
-                        tensor_size_bytes = self.memory_sizes[input_node_name][-1] # Use last known size
-                        if tensor_size_bytes > 0: # Only simulate if size is known and positive
-                            swap_in_time_sec = tensor_size_bytes / self.BYTES_PER_SEC_CPU_TO_GPU
-                            self.swap_times[input_node_name].append(swap_in_time_sec) # Append event time
-                            # print(f"Simulating SWAP-IN for {input_node_name} ({tensor_size_bytes} B): {swap_in_time_sec:.6f} s")
-
-                    self.swapped_out_activations.remove(input_node_name) # Mark as back in GPU
-
-        # 2. Timing and Memory Measurement (Around node execution)
+        # Timing and Memory Measurement (Around node execution)
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
 
@@ -273,21 +245,6 @@ class GraphProfiler(fx.Interpreter):
              self.memory_sizes[node_name].append(mem_size)
 
 
-        # 3. Swap-out Simulation (After node execution, during forward pass)
-        if (self.sep_fw_end_rank != -1 and current_rank <= self.sep_fw_end_rank) or \
-           (self.sep_fw_end_rank == -1 and (self.sep_bw_start_rank == -1 or current_rank < self.sep_bw_start_rank)): # In forward pass
-            if self.node_types.get(node_name) == NodeType.ACT:
-                liveness_info = self.activation_liveness.get(node_name, None)
-                # Use the *last recorded* memory size for this activation for simulation
-                if liveness_info and current_rank == liveness_info["last_fw_use_rank"] and \
-                   node_name in self.memory_sizes and self.memory_sizes[node_name]:
-
-                    tensor_size_bytes = self.memory_sizes[node_name][-1] # Use last known size
-                    if tensor_size_bytes > 0: # Only simulate if size is known and positive
-                        swap_out_time_sec = tensor_size_bytes / self.BYTES_PER_SEC_GPU_TO_CPU
-                        self.swap_times[node_name].append(swap_out_time_sec) # Append event time
-                        # print(f"Simulating SWAP-OUT for {node_name} ({tensor_size_bytes} B): {swap_out_time_sec:.6f} s")
-                        self.swapped_out_activations.add(node_name) # Mark as swapped out
         return result
 
     def aggregate_stats(self, num_runs: int = 1) -> None:
@@ -303,7 +260,7 @@ class GraphProfiler(fx.Interpreter):
         3. Minimum threshold: Ensures all activations have a non-zero recomputation cost
         
         Args:
-            num_runs (int): The number of profiling runs performed, used for averaging swap times.
+            num_runs (int): The number of profiling runs performed, used for averaging statistics.
                             Defaults to 1 if only one run was done.
         """
         if num_runs <= 0:
@@ -311,43 +268,33 @@ class GraphProfiler(fx.Interpreter):
             num_runs = 1
 
         # 1. Calculate Averages from Raw Data
-        self.avg_run_times.clear()
-        self.avg_peak_mem_node.clear()
-        self.avg_memory_sizes.clear()
-        self.avg_swap_times.clear()
+        self.median_run_times.clear()
+        self.median_peak_mem_node.clear()
+        self.median_memory_sizes.clear()
 
         for name, times in self.run_times.items():
             try:
-                self.avg_run_times[name] = statistics.median(times) if times else 0.0
+                self.median_run_times[name] = statistics.median(times) if times else 0.0
             except statistics.StatisticsError:
-                self.avg_run_times[name] = 0.0 # Handle case with no data
+                self.median_run_times[name] = 0.0 # Handle case with no data
 
         for name, peaks in self.peak_mem_node.items():
             try:
-                self.avg_peak_mem_node[name] = statistics.median(peaks) if peaks else 0.0
+                self.median_peak_mem_node[name] = statistics.median(peaks) if peaks else 0.0
             except statistics.StatisticsError:
-                self.avg_peak_mem_node[name] = 0.0
+                self.median_peak_mem_node[name] = 0.0
 
         for name, sizes in self.memory_sizes.items():
             try:
-                self.avg_memory_sizes[name] = statistics.median(sizes) if sizes else 0.0
+                self.median_memory_sizes[name] = statistics.median(sizes) if sizes else 0.0
             except statistics.StatisticsError:
-                self.avg_memory_sizes[name] = 0.0
-
-        # Average total swap time per activation per run
-        for name, event_times in self.swap_times.items():
-            if event_times:
-                total_swap_time_all_runs = sum(event_times)
-                self.avg_swap_times[name] = total_swap_time_all_runs / num_runs
-            else:
-                 self.avg_swap_times[name] = 0.0
+                self.median_memory_sizes[name] = 0.0
 
 
         # 2. Calculate MuTWO Metrics using Averaged Stats
         self.inactive_times.clear()
         self.recomp_times.clear()
         self.recomp_memory.clear()
-        self.recompute_ratios.clear()
 
         name_to_node = {node.name: node for node in self.ranked_nodes}
 
@@ -357,12 +304,12 @@ class GraphProfiler(fx.Interpreter):
             last_fw_rank = liveness["last_fw_use_rank"]
             first_bw_rank = liveness["first_bw_use_rank"]
 
-            # 2a. Calculate inactive_time (using avg_run_times)
+            # 2a. Calculate inactive_time (using median_run_times)
             inactive_time = 0.0
             if first_bw_rank > last_fw_rank and first_bw_rank != -1 and last_fw_rank != -1:
                 for i in range(last_fw_rank + 1, first_bw_rank):
                     node = self.ranked_nodes[i]
-                    inactive_time += self.avg_run_times.get(node.name, 0.0)
+                    inactive_time += self.median_run_times.get(node.name, 0.0)
             self.inactive_times[act_name] = inactive_time
 
             # 2b. Calculate recomputation time (recomp_time) using a more robust approach
@@ -374,21 +321,21 @@ class GraphProfiler(fx.Interpreter):
             # Method 1: Trace direct dependencies from creation node to producing this activation
             if last_fw_rank != -1:
                 # Start with the creation node's time
-                recomp_time += self.avg_run_times.get(creation_node.name, 0.0)
+                recomp_time += self.median_run_times.get(creation_node.name, 0.0)
                 
                 # Add a portion of times for nodes between creation and last forward use
                 # This is more accurate than summing all nodes in the range
                 dependency_factor = 0.5  # Assume ~50% of nodes are dependencies on average
                 for i in range(creation_rank + 1, last_fw_rank + 1):
                     node = self.ranked_nodes[i]
-                    node_time = self.avg_run_times.get(node.name, 0.0)
+                    node_time = self.median_run_times.get(node.name, 0.0)
                     # Only count nodes with non-zero time to avoid skipping important operations
                     if node_time > 0:
                         recomp_time += node_time * dependency_factor
             
             # Method 2: Ensure minimum recomputation cost based on activation size
             # Larger activations typically require more computation to produce
-            avg_mem_size = self.avg_memory_sizes.get(act_name, 0.0)
+            avg_mem_size = self.median_memory_sizes.get(act_name, 0.0)
             if avg_mem_size > 0:
                 # Estimate minimum recomputation time based on activation size
                 # Assume at least 1 microsecond per KB of activation data
@@ -402,30 +349,11 @@ class GraphProfiler(fx.Interpreter):
             
             self.recomp_times[act_name] = recomp_time
 
-            # 2c. Calculate recomputation memory (recomp_memory) (using avg_memory_sizes)
+            # 2c. Calculate recomputation memory (recomp_memory) (using median_memory_sizes)
             # This is the average memory size of the activation itself.
-            self.recomp_memory[act_name] = int(self.avg_memory_sizes.get(act_name, 0))
+            self.recomp_memory[act_name] = int(self.median_memory_sizes.get(act_name, 0))
 
-            # 2d. Calculate recompute ratio with improved handling of edge cases
-            avg_swap_time = self.avg_swap_times.get(act_name, 0.0)
-            
-            # Ensure swap time has a minimum value to avoid division by zero
-            MIN_SWAP_TIME = 1e-6  # 1 microsecond minimum
-            effective_swap_time = max(avg_swap_time, MIN_SWAP_TIME)
-            
-            # Calculate ratio with guaranteed non-zero denominator
-            self.recompute_ratios[act_name] = recomp_time / effective_swap_time
-            
-            # For activations with very small or zero original swap time,
-            # adjust the ratio to reflect the true cost-benefit relationship
-            if avg_swap_time < MIN_SWAP_TIME:
-                # If original swap time was negligible:
-                # - High recomp_time → high ratio (avoid recomputing)
-                # - Low recomp_time → low ratio (prefer recomputing)
-                # Scale based on activation size to prioritize larger activations
-                # Note: self.avg_memory_sizes.get(original_act_name, 0.0) was already fetched as avg_mem_size
-                mem_size_factor = min(1.0, avg_mem_size / (1024 * 1024))
-                self.recompute_ratios[act_name] *= (0.1 + 0.9 * mem_size_factor)
+            # No recompute ratio calculation needed
 
     def reset_stats(self) -> None:
         """Clears all collected runtime statistics and calculated metrics."""
@@ -433,19 +361,14 @@ class GraphProfiler(fx.Interpreter):
         self.run_times.clear()
         self.peak_mem_node.clear()
         self.memory_sizes.clear()
-        self.swap_times.clear()
-        self.swapped_out_activations.clear() # Reset state for next run
-        # Remove the line that clears the mapping since we no longer use it
         # Averaged data dictionaries
-        self.avg_run_times.clear()
-        self.avg_peak_mem_node.clear()
-        self.avg_memory_sizes.clear()
-        self.avg_swap_times.clear()
+        self.median_run_times.clear()
+        self.median_peak_mem_node.clear()
+        self.median_memory_sizes.clear()
         # MuTWO metrics dictionaries
         self.inactive_times.clear()
         self.recomp_times.clear()
         self.recomp_memory.clear()
-        self.recompute_ratios.clear()
         # Note: Global CUDA peak memory is not reset here, only per-node in run_node.
         # Call torch.cuda.reset_peak_memory_stats() externally if needed before a full run.
 
@@ -469,17 +392,17 @@ class GraphProfiler(fx.Interpreter):
 
         # --- Per-Node Average Stats ---
         print("\n[Per-Node Average Statistics]")
-        if not self.avg_run_times:
+        if not self.median_run_times:
              print("No node statistics collected.")
         else:
             print(f"{'Node Name':<40} {'Avg Run Time (s)':<20} {'Avg Peak Memory':<20}")
             print("-" * 80)
             # Sort by rank for logical order
-            sorted_node_names = sorted(self.avg_run_times.keys(), key=lambda name: self.node_ranks.get(name_to_node.get(name), float('inf')))
+            sorted_node_names = sorted(self.median_run_times.keys(), key=lambda name: self.node_ranks.get(name_to_node.get(name), float('inf')))
 
             for node_name in sorted_node_names:
-                avg_time = self.avg_run_times.get(node_name, 0.0)
-                avg_mem = self.avg_peak_mem_node.get(node_name, 0.0)
+                avg_time = self.median_run_times.get(node_name, 0.0)
+                avg_mem = self.median_peak_mem_node.get(node_name, 0.0)
                 print(f"{node_name:<40} {avg_time:<20.6f} {format_bytes(int(avg_mem)):<20}")
 
         # --- Per-Activation Metrics ---
@@ -487,25 +410,21 @@ class GraphProfiler(fx.Interpreter):
         if not self.activation_liveness:
              print("No activations found or metrics calculated.")
         else:
-            print(f"{'Activation Name':<30} {'Avg Mem Size':<15} {'Inactive Time (s)':<20} {'Avg Swap Time (s)':<20} {'Recomp Time (s)':<20} {'Recomp Memory':<15} {'Recomp Ratio':<15}")
-            print("-" * 135)
+            print(f"{'Activation Name':<30} {'Avg Mem Size':<15} {'Inactive Time (s)':<20} {'Recomp Time (s)':<20} {'Recomp Memory':<15}")
+            print("-" * 100)
             sorted_act_names = sorted(self.activation_liveness.keys(), key=lambda name: self.activation_liveness[name]['creation_rank'])
 
             for act_name in sorted_act_names:
-                avg_mem = self.avg_memory_sizes.get(act_name, 0.0)
+                avg_mem = self.median_memory_sizes.get(act_name, 0.0)
                 inactive_t = self.inactive_times.get(act_name, 0.0)
-                avg_swap_t = self.avg_swap_times.get(act_name, 0.0)
                 recomp_t = self.recomp_times.get(act_name, 0.0)
                 recomp_mem = self.recomp_memory.get(act_name, 0) # Already int from aggregation
-                recomp_ratio = self.recompute_ratios.get(act_name, float('inf'))
 
-                ratio_str = f"{recomp_ratio:.4f}" if recomp_ratio != float('inf') else "inf"
-
-                print(f"{act_name:<30} {format_bytes(int(avg_mem)):<15} {inactive_t:<20.6f} {avg_swap_t:<20.6f} {recomp_t:<20.6f} {format_bytes(recomp_mem):<15} {ratio_str:<15}")
+                print(f"{act_name:<30} {format_bytes(int(avg_mem)):<15} {inactive_t:<20.6f} {recomp_t:<20.6f} {format_bytes(recomp_mem):<15}")
 
         # --- Overall Stats ---
         print("\n[Overall Statistics]")
-        total_time = sum(self.avg_run_times.values())
+        total_time = sum(self.median_run_times.values())
         print(f"Total Estimated Execution Time (Sum of Avg Node Times): {total_time:.6f} s")
 
         # --- Peak Memory Breakdown ---
@@ -518,7 +437,7 @@ class GraphProfiler(fx.Interpreter):
 
         # Calculate peak activation memory based on liveness and avg sizes
         peak_activation_mem = 0
-        if self.activation_liveness and self.avg_memory_sizes:
+        if self.activation_liveness and self.median_memory_sizes:
             max_concurrent_mem = 0
             live_activations_at_rank: Dict[int, Set[str]] = defaultdict(set)
 
@@ -541,7 +460,7 @@ class GraphProfiler(fx.Interpreter):
                 for rank in range(max_rank + 1):
                     current_concurrent_mem = 0
                     for act_name in live_activations_at_rank[rank]:
-                        current_concurrent_mem += self.avg_memory_sizes.get(act_name, 0)
+                        current_concurrent_mem += self.median_memory_sizes.get(act_name, 0)
                     max_concurrent_mem = max(max_concurrent_mem, current_concurrent_mem)
 
             peak_activation_mem = int(max_concurrent_mem)
@@ -558,14 +477,14 @@ class GraphProfiler(fx.Interpreter):
         print(f"  -----------------------------")
         print(f"  Estimated Peak (Sum):  {format_bytes(estimated_total_peak)}")
 
-        max_node_peak = max(self.avg_peak_mem_node.values()) if self.avg_peak_mem_node else 0
+        max_node_peak = max(self.median_peak_mem_node.values()) if self.median_peak_mem_node else 0
         print(f"  Max Avg Per-Node Peak: {format_bytes(int(max_node_peak))} (Indicates peak during a single op)")
 
         print("\n--- End Statistics ---")
 
     def save_stats_to_csv(self, filename_prefix: str = "profiler_stats") -> None:
         """Saves the aggregated node and activation statistics to CSV files."""
-        if not self.avg_run_times:
+        if not self.median_run_times:
             print("Warning: No aggregated stats found to save to CSV.")
             return
 
@@ -575,11 +494,11 @@ class GraphProfiler(fx.Interpreter):
         node_csv_filename = f"{filename_prefix}_node_stats.csv"
         try:
             with open(node_csv_filename, 'w', newline='') as csvfile:
-                fieldnames = ['rank', 'node_name', 'node_type', 'gtype', 'avg_run_time_s', 'avg_peak_mem_bytes'] # Added gtype
+                fieldnames = ['rank', 'node_name', 'node_type', 'gtype', 'median_run_time_s', 'median_peak_mem_bytes'] # Added gtype
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 writer.writeheader()
-                sorted_node_names = sorted(self.avg_run_times.keys(), key=lambda name: self.node_ranks.get(name_to_node.get(name), float('inf')))
+                sorted_node_names = sorted(self.median_run_times.keys(), key=lambda name: self.node_ranks.get(name_to_node.get(name), float('inf')))
 
                 for node_name in sorted_node_names:
                     node = name_to_node.get(node_name)
@@ -588,16 +507,16 @@ class GraphProfiler(fx.Interpreter):
                     rank = self.node_ranks.get(node, -1)
                     node_type = self.node_types.get(node_name, NodeType.OTHER)
                     gtype = self.node_gtypes.get(node_name, "unknown") # Get gtype
-                    avg_time = self.avg_run_times.get(node_name, 0.0)
-                    avg_mem = self.avg_peak_mem_node.get(node_name, 0.0)
+                    avg_time = self.median_run_times.get(node_name, 0.0)
+                    avg_mem = self.median_peak_mem_node.get(node_name, 0.0)
 
                     writer.writerow({
                         'rank': rank,
                         'node_name': node_name,
                         'node_type': node_type.value,
                         'gtype': gtype, # Added gtype
-                        'avg_run_time_s': avg_time,
-                        'avg_peak_mem_bytes': int(avg_mem)
+                        'median_run_time_s': avg_time,
+                        'median_peak_mem_bytes': int(avg_mem)
                     })
             print(f"Node statistics saved to {node_csv_filename}")
         except IOError as e:
@@ -614,8 +533,7 @@ class GraphProfiler(fx.Interpreter):
             with open(activation_csv_filename, 'w', newline='') as csvfile:
                 fieldnames = [
                     'activation_name', 'creation_rank', 'last_fw_use_rank', 'first_bw_use_rank', 'last_bw_use_rank',
-                    'avg_mem_size_bytes', 'inactive_time_s', 'avg_swap_time_s', 'recomp_time_s',
-                    'recomp_memory_bytes', 'recompute_ratio'
+                    'median_mem_size_bytes', 'inactive_time_s', 'recomp_time_s', 'recomp_memory_bytes'
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
@@ -624,12 +542,10 @@ class GraphProfiler(fx.Interpreter):
 
                 for act_name in sorted_act_names:
                     liveness = self.activation_liveness[act_name]
-                    avg_mem = self.avg_memory_sizes.get(act_name, 0.0)
+                    avg_mem = self.median_memory_sizes.get(act_name, 0.0)
                     inactive_t = self.inactive_times.get(act_name, 0.0)
-                    avg_swap_t = self.avg_swap_times.get(act_name, 0.0)
                     recomp_t = self.recomp_times.get(act_name, 0.0)
                     recomp_mem = self.recomp_memory.get(act_name, 0)
-                    recomp_ratio = self.recompute_ratios.get(act_name, float('inf'))
 
                     writer.writerow({
                         'activation_name': act_name, # Always use the original FX node name
@@ -637,12 +553,10 @@ class GraphProfiler(fx.Interpreter):
                         'last_fw_use_rank': liveness['last_fw_use_rank'],
                         'first_bw_use_rank': liveness['first_bw_use_rank'],
                         'last_bw_use_rank': liveness['last_bw_use_rank'],
-                        'avg_mem_size_bytes': int(avg_mem),
+                        'median_mem_size_bytes': int(avg_mem),
                         'inactive_time_s': inactive_t,
-                        'avg_swap_time_s': avg_swap_t,
                         'recomp_time_s': recomp_t,
-                        'recomp_memory_bytes': recomp_mem,
-                        'recompute_ratio': recomp_ratio if recomp_ratio != float('inf') else 'inf'
+                        'recomp_memory_bytes': recomp_mem
                     })
             print(f"Activation statistics saved to {activation_csv_filename}")
         except IOError as e:
@@ -650,7 +564,7 @@ class GraphProfiler(fx.Interpreter):
 
     def plot_stats(self, filename_prefix: str = "profiler_plots", top_n: int = 20) -> None:
         """Generates and saves plots for key profiling statistics."""
-        if not self.avg_run_times:
+        if not self.median_run_times:
             print("Warning: No aggregated stats found to generate plots.")
             return
 
@@ -659,7 +573,7 @@ class GraphProfiler(fx.Interpreter):
         # --- Plot 1: Top N Nodes by Average Run Time ---
         try:
             # Sort nodes by average run time, descending
-            sorted_nodes_by_time = sorted(self.avg_run_times.items(), key=lambda item: item[1], reverse=True)
+            sorted_nodes_by_time = sorted(self.median_run_times.items(), key=lambda item: item[1], reverse=True)
             top_nodes_time = sorted_nodes_by_time[:top_n]
             node_names_time = [item[0] for item in top_nodes_time]
             run_times = [item[1] for item in top_nodes_time]
@@ -685,7 +599,7 @@ class GraphProfiler(fx.Interpreter):
         # --- Plot 2: Top N Nodes by Average Peak Memory ---
         try:
             # Sort nodes by average peak memory, descending
-            sorted_nodes_by_mem = sorted(self.avg_peak_mem_node.items(), key=lambda item: item[1], reverse=True)
+            sorted_nodes_by_mem = sorted(self.median_peak_mem_node.items(), key=lambda item: item[1], reverse=True)
             top_nodes_mem = sorted_nodes_by_mem[:top_n]
             node_names_mem = [item[0] for item in top_nodes_mem]
             peak_mems = [item[1] / (1024**2) for item in top_nodes_mem] # Convert to MiB
@@ -715,7 +629,7 @@ class GraphProfiler(fx.Interpreter):
             return
         try:
             # Sort activations by average memory size, descending
-            sorted_acts_by_mem = sorted(self.avg_memory_sizes.items(), key=lambda item: item[1], reverse=True)
+            sorted_acts_by_mem = sorted(self.median_memory_sizes.items(), key=lambda item: item[1], reverse=True)
             # Filter only activations
             act_mems = [(name, size) for name, size in sorted_acts_by_mem if self.node_types.get(name) == NodeType.ACT]
             top_acts_mem = act_mems[:top_n]
@@ -770,15 +684,15 @@ class GraphProfiler(fx.Interpreter):
 
 # --- Plot 5: Memory vs. Execution Rank ---
         try:
-            if self.ranked_nodes and self.avg_peak_mem_node:
+            if self.ranked_nodes and self.median_peak_mem_node:
                 ranks = [self.node_ranks[node] for node in self.ranked_nodes]
                 # Get peak memory for each node by its rank, convert to MiB
-                # Ensure we only try to get memory for nodes that have entries in avg_peak_mem_node
+                # Ensure we only try to get memory for nodes that have entries in median_peak_mem_node
                 peak_mems_mib = []
                 valid_ranks_for_plot = []
                 for node in self.ranked_nodes:
-                    if node.name in self.avg_peak_mem_node:
-                        peak_mems_mib.append(self.avg_peak_mem_node[node.name] / (1024**2))
+                    if node.name in self.median_peak_mem_node:
+                        peak_mems_mib.append(self.median_peak_mem_node[node.name] / (1024**2))
                         valid_ranks_for_plot.append(self.node_ranks[node])
 
                 if not valid_ranks_for_plot: # Check if any valid data points exist
@@ -809,6 +723,6 @@ class GraphProfiler(fx.Interpreter):
                     plt.close()
                     print(f"Memory vs. Rank plot saved to {plot_filename_mem_rank}")
             else:
-                print("Not enough data to generate Memory vs. Rank plot (ranked_nodes or avg_peak_mem_node is empty).")
+                print("Not enough data to generate Memory vs. Rank plot (ranked_nodes or median_peak_mem_node is empty).")
         except Exception as e:
             print(f"Error generating Memory vs. Rank plot: {e}")

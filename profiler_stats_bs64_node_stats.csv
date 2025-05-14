@@ -1,4 +1,4 @@
-rank,node_name,node_type,gtype,avg_run_time_s,avg_peak_mem_bytes
+rank,node_name,node_type,gtype,median_run_time_s,median_peak_mem_bytes
 0,arg0_1,other,forward,1.3311999849975109e-05,781056000
 1,arg0_2,other,forward,2.2528000175952913e-05,781056000
 2,arg0_3,other,forward,2.0479999482631683e-05,781056000

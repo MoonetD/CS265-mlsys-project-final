@@ -49,21 +49,9 @@ class ActivationCheckpointingAlgorithm:
         
         recomp_time = self.activation_stats_df.loc[activation_name, 'recomp_time_s']
         # recomp_memory = self.activation_stats_df.loc[activation_name, 'recomp_memory_bytes'] # Memory during recomputation
-        act_memory = self.activation_stats_df.loc[activation_name, 'avg_mem_size_bytes'] # Memory of the activation itself
+        act_memory = self.activation_stats_df.loc[activation_name, 'median_mem_size_bytes'] # Memory of the activation itself
         return recomp_time if pd.notna(recomp_time) else 0, act_memory if pd.notna(act_memory) else 0
 
-    def _calculate_swap_overhead(self, activation_name):
-        """
-        Calculates the swap time overhead for a given activation.
-        Corresponds to Algorithm C from the paper.
-        """
-        if activation_name not in self.activation_stats_df.index:
-            # print(f"Warning: Activation {activation_name} not found in stats for swap overhead.")
-            return 0, 0 # Time, Memory (memory here refers to the activation's own size)
-        
-        swap_time = self.activation_stats_df.loc[activation_name, 'avg_swap_time_s']
-        act_memory = self.activation_stats_df.loc[activation_name, 'avg_mem_size_bytes']
-        return swap_time if pd.notna(swap_time) else 0, act_memory if pd.notna(act_memory) else 0
 
     def _get_node_execution_order(self):
         """
@@ -120,7 +108,7 @@ class ActivationCheckpointingAlgorithm:
         if debug:
             print("Calculating total execution time...")
             
-        total_execution_time = self.node_stats_df['avg_run_time_s'].sum()
+        total_execution_time = self.node_stats_df['median_run_time_s'].sum()
         
         # Add recomputation times for activations scheduled for RECOMPUTE
         recompute_count = 0
@@ -161,8 +149,8 @@ class ActivationCheckpointingAlgorithm:
         for act_name, decision in current_schedule.items():
             if decision == 'RETAINED':  # Only count activations we're keeping in memory
                 act_details = self._get_activation_details(act_name)
-                if act_details is not None and 'avg_mem_size_bytes' in act_details:
-                    bw_inter_mem += act_details['avg_mem_size_bytes']
+                if act_details is not None and 'median_mem_size_bytes' in act_details:
+                    bw_inter_mem += act_details['median_mem_size_bytes']
         
         if debug:
             print(f"Initial intermediate memory: {bw_inter_mem / (1024**3):.3f} GB")
@@ -240,8 +228,8 @@ class ActivationCheckpointingAlgorithm:
                     for act_details in activations_by_first_bw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RETAINED':
-                            if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                bw_inter_mem += act_details['avg_mem_size_bytes']
+                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                                bw_inter_mem += act_details['median_mem_size_bytes']
                 
                 # Add memory for recomputed tensors
                 # This is where we account for the memory cost of recomputation
@@ -251,9 +239,9 @@ class ActivationCheckpointingAlgorithm:
                     for act_details in activations_by_first_bw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RECOMPUTE':
-                            if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
+                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
                                 # Add the memory for this recomputed activation
-                                mem_size = act_details['avg_mem_size_bytes']
+                                mem_size = act_details['median_mem_size_bytes']
                                 bw_inter_mem += mem_size
                                 if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
                                     print(f"  Added {mem_size/(1024**2):.2f} MB for recomputed activation {act_name}")
@@ -270,16 +258,16 @@ class ActivationCheckpointingAlgorithm:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RETAINED':
                             # Only add memory for activations we're keeping (not recomputing)
-                            if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                mem_size = act_details['avg_mem_size_bytes']
+                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                                mem_size = act_details['median_mem_size_bytes']
                                 fw_inter_mem += mem_size
                                 if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
                                     print(f"  Added {mem_size/(1024**2):.2f} MB for retained activation {act_name}")
                         else:
                             # For RECOMPUTE activations, we don't keep them in memory
                             # This is the key memory savings of activation checkpointing
-                            if debug and 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                mem_size = act_details['avg_mem_size_bytes']
+                            if debug and 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                                mem_size = act_details['median_mem_size_bytes']
                                 if mem_size > 1024*1024:  # Only log significant activations (>1MB)
                                     print(f"  Discarded {mem_size/(1024**2):.2f} MB for activation {act_name} (will recompute)")
                 
@@ -288,8 +276,8 @@ class ActivationCheckpointingAlgorithm:
                     for act_details in activations_by_last_fw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RETAINED':
-                            if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                fw_inter_mem -= act_details['avg_mem_size_bytes']
+                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                                fw_inter_mem -= act_details['median_mem_size_bytes']
             
             # Calculate current memory consumption
             current_mem = fw_active_mem + bw_active_mem + fw_inter_mem + bw_inter_mem + fixed_overhead_bytes
@@ -304,8 +292,8 @@ class ActivationCheckpointingAlgorithm:
                     print(f"    Fixed overhead={fixed_overhead_bytes/(1024**3):.3f} GB")
             
             # Also consider the peak memory during this specific operation
-            if 'avg_peak_mem_node' in node_details and pd.notna(node_details['avg_peak_mem_node']):
-                node_peak = node_details['avg_peak_mem_node'] + fixed_overhead_bytes
+            if 'median_peak_mem_node' in node_details and pd.notna(node_details['median_peak_mem_node']):
+                node_peak = node_details['median_peak_mem_node'] + fixed_overhead_bytes
                 if node_peak > peak_mem:
                     peak_mem = node_peak
                     if debug:
@@ -315,7 +303,7 @@ class ActivationCheckpointingAlgorithm:
             print(f"Memory simulation complete.")
             print(f"Peak memory: {peak_mem / (1024**3):.3f} GB")
             print(f"Final execution time: {total_execution_time:.4f}s")
-            print(f"Memory savings from activation checkpointing: {sum(act_details['avg_mem_size_bytes'] for act_name, decision in current_schedule.items() if decision == 'RECOMPUTE' for act_details in [self._get_activation_details(act_name)] if act_details is not None and 'avg_mem_size_bytes' in act_details) / (1024**3):.3f} GB")
+            print(f"Memory savings from activation checkpointing: {sum(act_details['median_mem_size_bytes'] for act_name, decision in current_schedule.items() if decision == 'RECOMPUTE' for act_details in [self._get_activation_details(act_name)] if act_details is not None and 'median_mem_size_bytes' in act_details) / (1024**3):.3f} GB")
             print(f"Computation overhead from recomputation: {recompute_time_total:.4f}s")
         
         return peak_mem, total_execution_time
@@ -347,15 +335,15 @@ class ActivationCheckpointingAlgorithm:
         current_schedule = {
             act_name: 'RETAINED'
             for act_name in self.activation_stats_df['activation_name'] # Iterate using the correct column name
-            if pd.notna(self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes']) and self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes'] > 0
+            if pd.notna(self.activation_stats_df.loc[act_name, 'median_mem_size_bytes']) and self.activation_stats_df.loc[act_name, 'median_mem_size_bytes'] > 0
         }
         
         print(f"Initial schedule has {len(current_schedule)} activations marked for RETAINED")
         
         # Filter out activations with no valid size or recompute stats
         print("Filtering valid activations...")
-        valid_activations_df = self.activation_stats_df.dropna(subset=['avg_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'last_fw_use_rank'])
-        valid_activations_df = valid_activations_df[valid_activations_df['avg_mem_size_bytes'] > 0]
+        valid_activations_df = self.activation_stats_df.dropna(subset=['median_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'last_fw_use_rank'])
+        valid_activations_df = valid_activations_df[valid_activations_df['median_mem_size_bytes'] > 0]
         print(f"Found {len(valid_activations_df)} valid activations for consideration")
 
         # Pre-compute benefit values for all activations to avoid repeated calculations
@@ -364,17 +352,8 @@ class ActivationCheckpointingAlgorithm:
         # Create a set of candidate activations
         candidate_set = set(valid_activations_df.index)
         
-        # Initialize tracking sets
-        swaps = set()
+        # Initialize tracking set for recomputation
         recomps = set()
-        
-        # Initialize last_prompt to the last node in the backward graph
-        last_prompt = None
-        last_rank = -1
-        for _, node_details in self.node_stats_df.iterrows():
-            if node_details['gtype'] == 'bw' and node_details['rank'] > last_rank:
-                last_rank = node_details['rank']
-                last_prompt = node_details['node_name']
         
         # Main loop of Algorithm B
         iteration = 0
@@ -423,11 +402,11 @@ class ActivationCheckpointingAlgorithm:
                 r_details = self._get_activation_details(r_cand)
                 
                 # Calculate memory savings and recompute overhead
-                mem_size = r_details.get('avg_mem_size_bytes', 0) / (1024 * 1024)  # Convert to MB
+                mem_size = r_details.get('median_mem_size_bytes', 0) / (1024 * 1024)  # Convert to MB
                 recomp_time = r_details.get('recomp_time_s', 0)
-                recomp_ratio = r_details.get('avg_mem_size_bytes', 0) / (recomp_time + 1e-10)
+                recompute_benefit_ratio = r_details.get('median_mem_size_bytes', 0) / (recomp_time + 1e-10)
                 
-                print(f"DEBUG: Considering activation: {r_cand}, recomp_ratio: {recomp_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s")
+                print(f"DEBUG: Considering activation: {r_cand}, recompute_benefit_ratio: {recompute_benefit_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s")
                 
                 # Always choose to recompute to save memory
                 # This is the core of activation checkpointing - we discard activations during forward pass
@@ -445,9 +424,6 @@ class ActivationCheckpointingAlgorithm:
                 
                 # Update remaining candidates based on this decision
                 self._update_candidates(cand, recomp_cnt, candidate_set)
-                
-                # We don't need to update swap prompts since we're only doing recomputation
-                # self._update_swap_prompts(swaps, candidate_set)
                 
                 # Check if memory budget is met after this decision
                 current_peak_memory, _ = self._simulate_memory_usage(current_schedule, fixed_overhead_bytes)
@@ -491,13 +467,13 @@ class ActivationCheckpointingAlgorithm:
         
     def _get_max_recompute_ratio_candidate(self, candidate_set):
         """
-        Select the candidate with maximum recompute ratio (memory_size / recompute_time).
+        Select the candidate with maximum recompute benefit ratio (memory_size / recompute_time).
         Only consider candidates with significant memory size to make recomputation worthwhile.
         
         This is a key function for activation checkpointing. It identifies which activation
         will give us the best memory savings relative to its recomputation cost.
         
-        The ratio memory_size / recompute_time represents:
+        The recompute_benefit_ratio (memory_size / recompute_time) represents:
         - Higher values = more memory saved per unit of recomputation time
         - Lower values = less memory saved per unit of recomputation time
         
@@ -521,10 +497,10 @@ class ActivationCheckpointingAlgorithm:
             if act_details is None:
                 continue
                 
-            if 'avg_mem_size_bytes' not in act_details or 'recomp_time_s' not in act_details:
+            if 'median_mem_size_bytes' not in act_details or 'recomp_time_s' not in act_details:
                 continue
                 
-            mem_size = act_details['avg_mem_size_bytes']
+            mem_size = act_details['median_mem_size_bytes']
             recomp_time = act_details['recomp_time_s']
             
             if pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
@@ -546,113 +522,14 @@ class ActivationCheckpointingAlgorithm:
         print(f"DEBUG: _get_max_recompute_ratio_candidate - Found {valid_candidates} valid candidates, {significant_candidates} with significant memory size")
         if max_candidate:
             act_details = self._get_activation_details(max_candidate)
-            mem_size = act_details['avg_mem_size_bytes'] / (1024 * 1024)  # Convert to MB
+            mem_size = act_details['median_mem_size_bytes'] / (1024 * 1024)  # Convert to MB
             print(f"DEBUG: _get_max_recompute_ratio_candidate - Best candidate: {max_candidate} with ratio: {max_ratio:.2f}, mem_size: {mem_size:.2f} MB")
         else:
             print(f"DEBUG: _get_max_recompute_ratio_candidate - No valid candidate found with significant memory size")
                 
         return max_candidate
         
-    def _calculate_swap_overhead_v2(self, act_name, last_prompt):
-        """
-        Calculate the swap overhead for a given activation.
-        Implements Algorithm C from the μ-TWO paper.
         
-        Args:
-            act_name: Name of the activation to calculate swap overhead for
-            last_prompt: Last node used as a prefetch prompt
-            
-        Returns:
-            swap_overhead: The overhead of swapping this activation
-            prompt_node: The node that should be used as the prefetch prompt
-        """
-        act_details = self._get_activation_details(act_name)
-        if act_details is None:
-            print(f"DEBUG: _calculate_swap_overhead_v2 - No details found for {act_name}")
-            return float('inf'), last_prompt
-            
-        # Get first backward access node and swap time
-        first_bw_use = act_details.get('first_bw_use_rank', None)
-        if pd.isna(first_bw_use) or first_bw_use is None:
-            print(f"DEBUG: _calculate_swap_overhead_v2 - No first_bw_use_rank for {act_name}")
-            return float('inf'), last_prompt
-            
-        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} first_bw_use_rank: {first_bw_use}")
-            
-        bw_access = None
-        for _, node_details in self.node_stats_df.iterrows():
-            if node_details['rank'] == first_bw_use:
-                bw_access = node_details['node_name']
-                break
-                
-        if bw_access is None:
-            print(f"DEBUG: _calculate_swap_overhead_v2 - No node found with rank {first_bw_use}")
-            return float('inf'), last_prompt
-            
-        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} bw_access: {bw_access}")
-            
-        swap_time = act_details.get('avg_swap_time_s', None)
-        if pd.isna(swap_time) or swap_time is None:
-            print(f"DEBUG: _calculate_swap_overhead_v2 - No avg_swap_time_s for {act_name}")
-            return float('inf'), last_prompt
-            
-        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} swap_time: {swap_time:.6f}s")
-            
-        # Check if we're in peak memory interval
-        # This is a simplification - in a full implementation, we would need to
-        # determine the peak memory interval more accurately
-        reached_peak = False
-        
-        # Case 1: No overlap possible (peak interval already reached)
-        if reached_peak:
-            # Case 1(a): No conflict with existing swap
-            if first_bw_use < self._get_node_details(last_prompt)['rank']:
-                return swap_time, bw_access
-            else:
-                # Case 1(b): Conflicts with existing swap
-                # This is a simplification - in a full implementation, we would need to
-                # calculate the remaining time of the existing swap
-                return swap_time * 1.5, bw_access
-        
-        # Case 2: Complete overlap possible
-        # This is a simplification - in a full implementation, we would need to
-        # calculate the overlap more accurately
-        
-        # For now, assume we can overlap 50% of the swap time
-        remaining_swap_time = swap_time * 0.5
-        
-        # Case 3: Partial overlap
-        # Return the remaining swap time as the overhead
-        # Ensure swap overhead is never zero to make fair comparison with recompute overhead
-        MIN_SWAP_OVERHEAD = 0.000001  # 1 microsecond
-        
-        # Calculate the final swap overhead
-        swap_overhead = max(MIN_SWAP_OVERHEAD, remaining_swap_time)
-        
-        return swap_overhead, bw_access
-        
-    def _calculate_recompute_overhead_v2(self, act_name):
-        """
-        Calculate the recomputation overhead for a given activation.
-        
-        Args:
-            act_name: Name of the activation to calculate recompute overhead for
-            
-        Returns:
-            recompute_overhead: The overhead of recomputing this activation
-        """
-        act_details = self._get_activation_details(act_name)
-        if act_details is None:
-            print(f"DEBUG: _calculate_recompute_overhead_v2 - No details found for {act_name}")
-            return float('inf')
-            
-        recomp_time = act_details.get('recomp_time_s', None)
-        if pd.isna(recomp_time) or recomp_time is None:
-            print(f"DEBUG: _calculate_recompute_overhead_v2 - No recomp_time_s for {act_name}")
-            return float('inf')
-            
-        print(f"DEBUG: _calculate_recompute_overhead_v2 - {act_name} recomp_time: {recomp_time:.6f}s")
-        return recomp_time
         
     def _update_recomps(self, cand, recomps):
         """
@@ -682,17 +559,6 @@ class ActivationCheckpointingAlgorithm:
         # update the recomputation sources and times of remaining candidates
         pass
         
-    def _update_swap_prompts(self, swaps, candidate_set):
-        """
-        Update swap prompts for remaining candidates.
-        
-        Args:
-            swaps: Set of activations marked for swapping
-            candidate_set: Set of remaining candidates
-        """
-        # This is a simplification - in a full implementation, we would need to
-        # update the prefetch prompts for remaining candidates
-        pass
 
 if __name__ == "__main__":
     # Example Usage:

@@ -105,7 +105,7 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
             for missing_file in missing_files:
                 with open(missing_file, 'w') as f:
                     if 'node_stats' in missing_file:
-                        f.write("rank,name,gtype,avg_peak_mem_bytes\n")
+                        f.write("rank,name,gtype,median_peak_mem_bytes\n")
                     else:
                         f.write("name,avg_size_bytes\n")
                 print(f"Created empty placeholder file: {missing_file}")
@@ -113,7 +113,7 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
             print(f"Error creating placeholder CSV files: {e}")
     
     # Get the peak memory usage
-    _peak_memory = max(graph_profiler.avg_peak_mem_node.values()) if graph_profiler.avg_peak_mem_node else 0
+    _peak_memory = max(graph_profiler.median_peak_mem_node.values()) if graph_profiler.median_peak_mem_node else 0
     
     # Print peak memory usage
     print(f"Peak memory usage: {_peak_memory / (1024**2):.2f} MiB")
@@ -309,7 +309,7 @@ def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
             df = df.sort_values('rank')
             
             # Convert peak memory to MiB
-            df['peak_mem_mib'] = df['avg_peak_mem_bytes'] / (1024**2)
+            df['peak_mem_mib'] = df['median_peak_mem_bytes'] / (1024**2)
             
             # Find FW/BW boundary
             fw_end_rank = -1

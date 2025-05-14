@@ -214,7 +214,7 @@ The changes were applied to the `__init__`, `run_node`, and `reset_stats` method
 **Rationale:**
 To support profiling over multiple iterations and provide clearer insights, the following approach was taken:
 *   **Aggregation:** Raw runtime statistics (`run_times`, `peak_mem_node`, `memory_sizes`, `swap_times`) are collected as lists within `run_node` across multiple calls. The `aggregate_stats` method now calculates the mean of these lists (using `statistics.mean`) before computing derived metrics. This provides more stable results than single-run measurements. Swap times are aggregated by summing individual swap event times recorded in the list and dividing by the number of runs.
-*   **MuTWO Metrics:** Calculations for `inactive_time`, `recomp_time`, `recomp_memory`, and `recompute_ratio` in `aggregate_stats` were updated to use the newly calculated *average* statistics (`avg_run_times`, `avg_memory_sizes`, `avg_swap_times`). The recomputation cost approximation (summing times from creation to last forward use) remains but now uses averaged times.
+*   **MuTWO Metrics:** Calculations for `inactive_time`, `recomp_time`, `recomp_memory`, and `recompute_ratio` in `aggregate_stats` were updated to use the newly calculated *average* statistics (`median_run_times`, `median_memory_sizes`, `median_swap_times`). The recomputation cost approximation (summing times from creation to last forward use) remains but now uses averaged times.
 *   **Reporting (`print_stats`):** A dedicated method was implemented to display the results clearly. It includes:
     *   A table of average per-node run times and peak memory usage.
     *   A table of per-activation MuTWO metrics, including average memory size, inactive time, average swap time, recomputation time, recomputation memory, and the recompute ratio.
@@ -288,21 +288,21 @@ The previous `_simulate_memory_usage` was a significant simplification. The goal
     *   `peak_memory_observed_bytes`: This variable tracks the maximum memory encountered. It's initialized with `fixed_overhead_bytes`.
     *   `current_checkpointed_plus_fixed_mem_bytes`: Tracks the sum of `fixed_overhead_bytes` and the memory of all *currently live* checkpointed activations. This represents the memory footprint *between* operations due to persistent checkpointed data.
     *   Iteration Logic: The simulation iterates through nodes in execution order.
-        *   The `peak_memory_observed_bytes` is updated by taking the maximum of its current value, the `avg_peak_mem_node` for the current node (from profiler, representing the total peak *during* that specific operation), and `current_checkpointed_plus_fixed_mem_bytes`. This captures peaks both *during* and *between* operations.
+        *   The `peak_memory_observed_bytes` is updated by taking the maximum of its current value, the `median_peak_mem_node` for the current node (from profiler, representing the total peak *during* that specific operation), and `current_checkpointed_plus_fixed_mem_bytes`. This captures peaks both *during* and *between* operations.
         *   Liveness Tracking: `live_checkpointed_activations` (a dictionary) and `current_checkpointed_plus_fixed_mem_bytes` are updated by:
             *   Adding activations created by the current node if they are scheduled for 'CHECKPOINT'.
             *   Removing activations from the live set if the current node's rank meets or exceeds their `effective_last_use_rank`. The `effective_last_use_rank` considers both `last_fw_use_rank` and `last_bw_use_rank`.
     *   `producing_node_name`: Added logic to pre-calculate which activations are produced by each forward node using the `producing_node_name` column from `activation_stats_df` for more efficient lookup during simulation.
 
 **Details:**
-The changes were applied to the `_simulate_memory_usage` method in [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1). The method now more closely follows the principles of Algorithm G by distinguishing between memory peaks during operations (using `avg_peak_mem_node`) and memory held by live checkpointed activations between operations.
+The changes were applied to the `_simulate_memory_usage` method in [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1). The method now more closely follows the principles of Algorithm G by distinguishing between memory peaks during operations (using `median_peak_mem_node`) and memory held by live checkpointed activations between operations.
 ---
 ### Decision (Code)
 [2025-05-13 10:13:10] - Corrected CSV column name references and updated activation creation logic in `ActivationCheckpointingAlgorithm`.
 
 **Rationale:**
 Discrepancies were found between column names used in the Python code ([`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1)) and those present in the profiler output CSV ([`profiler_stats_activation_stats.csv`](profiler_stats_activation_stats.csv)). Additionally, the `_simulate_memory_usage` method relied on a `producing_node_name` column that was not available.
-1.  **Column Name Correction:** To ensure accurate data retrieval, all references in the Python script to columns like `recomp_time`, `avg_memory_size`, and `avg_swap_time` were updated to their correct counterparts in the CSV (e.g., `recomp_time_s`, `avg_mem_size_bytes`, `avg_swap_time_s`). This affects methods like `_calculate_recompute_overhead`, `_calculate_swap_overhead`, `_simulate_memory_usage`, and `decide_checkpoints`.
+1.  **Column Name Correction:** To ensure accurate data retrieval, all references in the Python script to columns like `recomp_time`, `avg_memory_size`, and `avg_swap_time` were updated to their correct counterparts in the CSV (e.g., `recomp_time_s`, `median_mem_size_bytes`, `avg_swap_time_s`). This affects methods like `_calculate_recompute_overhead`, `_calculate_swap_overhead`, `_simulate_memory_usage`, and `decide_checkpoints`.
 2.  **Activation Creation Logic in Simulation:** The `_simulate_memory_usage` method was trying to use a `producing_node_name` column to link activations to the forward pass node that creates them. Since this column is not in `profiler_stats_activation_stats.csv`, the logic was changed. Now, during the simulation's iteration through forward pass nodes, it iterates through all activations in `self.activation_stats_df`. An activation is considered created by the current forward node if the activation's `creation_rank` (from the CSV) matches the current node's `rank`. This provides a robust way to determine when an activation becomes live without needing an explicit `producing_node_name` mapping.
 
 **Details:**
@@ -329,7 +329,7 @@ Changes:
 [2025-05-13 10:34:21] - Bug Fix Strategy: Corrected column name for node average run time.
 
 **Rationale:**
-The script [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1) was attempting to access `self.node_stats_df['avg_run_time']` in the `_simulate_memory_usage` method. However, the corresponding CSV file, [`profiler_stats_node_stats.csv`](profiler_stats_node_stats.csv), uses `avg_run_time_s` as the column header for average node run time. This mismatch caused a `KeyError: 'avg_run_time'`. The fix involves updating the script to use the correct column name `avg_run_time_s`.
+The script [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1) was attempting to access `self.node_stats_df['avg_run_time']` in the `_simulate_memory_usage` method. However, the corresponding CSV file, [`profiler_stats_node_stats.csv`](profiler_stats_node_stats.csv), uses `median_run_time_s` as the column header for average node run time. This mismatch caused a `KeyError: 'avg_run_time'`. The fix involves updating the script to use the correct column name `median_run_time_s`.
 
 **Details:**
 Affected file: [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1)
@@ -337,7 +337,7 @@ Change:
 In the `_simulate_memory_usage` method, the line:
 `total_execution_time = self.node_stats_df['avg_run_time'].sum()`
 was changed to:
-`total_execution_time = self.node_stats_df['avg_run_time_s'].sum()`
+`total_execution_time = self.node_stats_df['median_run_time_s'].sum()`
 ---
 ### Decision (Code - Test Execution)
 [2025-05-13 10:45:24] - Tested `ActivationCheckpointingAlgorithm` with constrained memory budget to validate recomputation logic.
@@ -353,7 +353,7 @@ Test parameters: `memory_budget_gb = 0.05`, `fixed_overhead_gb = 0.1`.
     *   The estimated peak GPU memory reported by the simulation remained at 0.10 GB (equal to `fixed_overhead_gb`) throughout the eviction process, even when many activations were no longer checkpointed. This suggests the peak memory calculation might be dominated by the fixed overhead or specific node peak memories, and not fully reflecting the reduction in live checkpointed activation memory, or that the sum of concurrently live checkpointed activations plus fixed overhead never significantly exceeded the fixed overhead alone in the simulation steps.
     *   All evicted activations had an eviction `ratio: 0.000000`. This indicates their `recomp_time_s` in `profiler_stats_activation_stats.csv` is likely zero, leading to non-optimal eviction choices.
     *   Total execution time increased from 0.92s to 1.22s due to recomputations.
-*   **Implication:** The recomputation decision logic *is* being triggered. However, the quality of the decision-making (which activations to recompute) is suspect due to the zero ratios. The peak memory simulation's behavior when activations are recomputed also needs further scrutiny or validation against the input data's characteristics (e.g. sum of `avg_mem_size_bytes` for concurrently live activations).
+*   **Implication:** The recomputation decision logic *is* being triggered. However, the quality of the decision-making (which activations to recompute) is suspect due to the zero ratios. The peak memory simulation's behavior when activations are recomputed also needs further scrutiny or validation against the input data's characteristics (e.g. sum of `median_mem_size_bytes` for concurrently live activations).
 ---
 ### Decision (Debug)
 [2025-05-13 11:06:00] - Bug Fix Strategy: Address Zero Eviction Ratio in `activation_checkpointing.py`.
@@ -364,7 +364,7 @@ Activations with a `recomp_time_s` of 0 in `profiler_stats_activation_stats.csv`
 **Details:**
 Affected file: [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1)
 Changes:
-1.  Removed the conditional `continue` statement (previously lines 249-251) in `decide_checkpoints` that skipped activations with `recomp_time == 0` and `avg_mem_size_bytes > 0`.
+1.  Removed the conditional `continue` statement (previously lines 249-251) in `decide_checkpoints` that skipped activations with `recomp_time == 0` and `median_mem_size_bytes > 0`.
 2.  Modified the eviction candidate selection logic to implement tie-breaking: if multiple candidates share the same minimum eviction ratio (especially 0.0), the one offering the largest `benefit` (approximated as `live_duration_ranks * memory_saved`) is chosen. This ensures a more optimal choice among candidates with zero recomputation cost.
 
 ---
@@ -377,7 +377,7 @@ The "Estimated Peak GPU Memory" reported by `_simulate_memory_usage` remained at
 **Details:**
 Affected file: [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py:1)
 Findings:
-*   The simulation logic in `_simulate_memory_usage` correctly excludes activations marked `RECOMPUTE` from the `current_checkpointed_plus_fixed_mem_bytes` calculation. This means their `avg_mem_size_bytes` does not contribute to the memory occupied by *checkpointed* tensors during their inactive period.
+*   The simulation logic in `_simulate_memory_usage` correctly excludes activations marked `RECOMPUTE` from the `current_checkpointed_plus_fixed_mem_bytes` calculation. This means their `median_mem_size_bytes` does not contribute to the memory occupied by *checkpointed* tensors during their inactive period.
 *   The observed behavior (peak memory not dropping below `fixed_overhead_gb`) is expected when `fixed_overhead_gb` itself is significant and/or exceeds the `memory_budget_gb`. The reported peak is the maximum of (fixed_overhead + live_checkpointed_activations_memory) and (peak_during_node_execution). If fixed_overhead is the dominant value, or if a specific node's execution peak (which includes fixed components) is high, the overall simulated peak will reflect that.
 *   No code changes were deemed necessary for this part of the simulation logic, as it correctly models the non-contribution of `RECOMPUTE`d activations to the pool of *checkpointed* memory. The re-test results confirmed this behavior under the constrained budget.
 ---
@@ -485,7 +485,7 @@ The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/bat
    - These sizes provide a good range for analysis while remaining practical for most GPUs
 
 3. **Memory Measurement:**
-   - Used max(graph_profiler.avg_peak_mem_node.values()) to determine the peak memory usage
+   - Used max(graph_profiler.median_peak_mem_node.values()) to determine the peak memory usage
    - This captures the highest memory point across all operations in the model
 
 4. **Visualization:**
@@ -801,7 +801,7 @@ The `GraphRewriter` was failing because `GraphProfiler` generated abstract activ
     *   `self.activation_liveness` is keyed by this `reported_activation_name`.
     *   The map is populated if the reported name differs from the original `node.name`.
 2.  In `GraphProfiler.aggregate_stats`:
-    *   When calculating MuTWO metrics, lookups for `avg_memory_sizes`, `avg_swap_times`, etc. (which are keyed by original `node.name`) use the map to resolve the `reported_activation_name` to the `original_act_name`.
+    *   When calculating MuTWO metrics, lookups for `median_memory_sizes`, `median_swap_times`, etc. (which are keyed by original `node.name`) use the map to resolve the `reported_activation_name` to the `original_act_name`.
     *   Resulting MuTWO metrics are keyed by `reported_activation_name`.
 3.  In `GraphProfiler.save_stats_to_csv`:
     *   The `activation_name` column in `profiler_stats_activation_stats.csv` now uses the `reported_activation_name`.

@@ -1,4 +1,4 @@
-activation_name,creation_rank,last_fw_use_rank,first_bw_use_rank,last_bw_use_rank,avg_mem_size_bytes,inactive_time_s,avg_swap_time_s,recomp_time_s,recomp_memory_bytes,recompute_ratio
+activation_name,creation_rank,last_fw_use_rank,first_bw_use_rank,last_bw_use_rank,median_mem_size_bytes,inactive_time_s,avg_swap_time_s,recomp_time_s,recomp_memory_bytes,recompute_ratio
 convolution,2336,2338,4926,4926,51380224,0.12194291225622755,0.0,0.050176,51380224,50176.0
 getitem_1,2340,-1,4926,4926,256,0.0,0.0,1e-06,256,0.1002197265625
 getitem_2,2341,-1,4926,4926,256,0.0,0.0,1e-06,256,0.1002197265625

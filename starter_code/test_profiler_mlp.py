@@ -190,9 +190,9 @@ def plot_memory_curve(profiler):
     for node in profiler.ranked_nodes:
         rank = profiler.node_ranks[node]
         node_name = node.name
-        if node_name in profiler.avg_peak_mem_node:
+        if node_name in profiler.median_peak_mem_node:
             ranks.append(rank)
-            peak_mems.append(profiler.avg_peak_mem_node[node_name] / (1024 * 1024))  # Convert to MiB
+            peak_mems.append(profiler.median_peak_mem_node[node_name] / (1024 * 1024))  # Convert to MiB
     
     # Plot the memory curve
     plt.plot(ranks, peak_mems, marker='o', linestyle='-', markersize=3)
