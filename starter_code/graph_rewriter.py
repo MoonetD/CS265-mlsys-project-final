@@ -305,6 +305,14 @@ def extract_recomputation_subgraphs(graph: fx.Graph,
     """
     Extract subgraphs for activations marked for recomputation.
     
+    This is a key part of activation checkpointing. For each activation marked for RECOMPUTE:
+    1. We identify the subgraph that computes this activation
+    2. We extract this subgraph and its inputs
+    3. Later, we'll insert this subgraph before the first backward use of the activation
+    
+    The core idea is that we don't save these activations during the forward pass,
+    which saves memory. Instead, we recompute them during the backward pass when needed.
+    
     Args:
         graph: The original FX graph
         ac_decisions: Dict mapping activation names to 'RETAINED' or 'RECOMPUTE'
@@ -777,6 +785,10 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
                         if user_rank >= first_bw_use_rank:
                             users_to_replace.append(user)
                     
+                    # Replace ALL uses of the activation with the recomputed version
+                    # This is the key to activation checkpointing - we discard the original activation
+                    # and use the recomputed version for all backward pass operations
+                    
                     # Replace only the backward pass uses
                     for user in users_to_replace:
                         # Find all arguments to this user that reference the original activation
@@ -791,6 +803,13 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
                         for key, arg in user.kwargs.items():
                             if arg is original_act_node:
                                 user.kwargs[key] = recomputed_node
+                    
+                    # Add a special marker to the original activation node to indicate it's being recomputed
+                    # This helps with debugging and ensures the node is properly handled
+                    if not hasattr(original_act_node, 'meta'):
+                        original_act_node.meta = {}
+                    original_act_node.meta['recomputed'] = True
+                    original_act_node.meta['recompute_node'] = recomputed_node.name
                     
                     print(f"Successfully replaced {len(users_to_replace)} backward uses of {act_name} with recomputed node {recomputed_node.name}")
                     successful_insertions += 1
@@ -957,18 +976,23 @@ def apply_rewritten_graph(model: torch.nn.Module,
     return new_gm
 
 def trace_model_for_ac(model: torch.nn.Module,
-                         example_input: torch.Tensor,
-                         activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> fx.GraphModule:
+                      example_input: torch.Tensor,
+                      activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> fx.GraphModule:
     """
     Trace a model to get an FX graph suitable for activation checkpointing.
+    
+    This function creates a graph representation of the model that can be modified
+    to implement activation checkpointing. The key idea is to identify which activations
+    should be discarded during the forward pass and recomputed during the backward pass.
     
     Args:
         model: The model to trace
         example_input: An example input tensor
         activation_liveness: Optional dictionary with activation liveness information
+                            that maps activation names to their creation and usage ranks
         
     Returns:
-        An FX GraphModule
+        An FX GraphModule with metadata suitable for activation checkpointing
     """
     # Use torch.fx.symbolic_trace to trace the model
     try:

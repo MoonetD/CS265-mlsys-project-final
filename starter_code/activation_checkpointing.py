@@ -91,6 +91,16 @@ class ActivationCheckpointingAlgorithm:
         """
         Simulates peak memory usage and total execution time based on a given schedule.
         Implements Algorithm G from the μ-TWO paper.
+        
+        This is the core of activation checkpointing memory simulation. It tracks:
+        1. Which activations are kept in memory vs. recomputed
+        2. When activations are created and when they're last used
+        3. The memory impact of discarding activations during forward pass
+        4. The computational cost of recomputing activations during backward pass
+        
+        The key insight is that by discarding some activations during forward pass
+        and recomputing them during backward pass, we can reduce peak memory usage
+        at the cost of increased computation time.
 
         Args:
             current_schedule (dict): Activation name to decision ('RETAINED', 'RECOMPUTE').
@@ -143,15 +153,21 @@ class ActivationCheckpointingAlgorithm:
         bw_active_mem = 0  # Active memory during backward pass
         peak_mem = fixed_overhead_bytes  # Track peak memory, start with fixed overhead
         
+        # For activation checkpointing, we only keep RETAINED activations in memory
+        # RECOMPUTE activations are discarded during forward pass and recomputed during backward pass
+        
         # Calculate initial bw_inter_mem (all checkpointed activations)
+        # This is a key difference from regular execution - we only keep RETAINED activations
         for act_name, decision in current_schedule.items():
-            if decision == 'RETAINED':
+            if decision == 'RETAINED':  # Only count activations we're keeping in memory
                 act_details = self._get_activation_details(act_name)
                 if act_details is not None and 'avg_mem_size_bytes' in act_details:
                     bw_inter_mem += act_details['avg_mem_size_bytes']
         
         if debug:
             print(f"Initial intermediate memory: {bw_inter_mem / (1024**3):.3f} GB")
+            print(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.3f} GB")
+            print(f"Starting peak memory: {peak_mem / (1024**3):.3f} GB")
         
         # Get execution order
         execution_order = self._get_node_execution_order()
@@ -228,24 +244,44 @@ class ActivationCheckpointingAlgorithm:
                                 bw_inter_mem += act_details['avg_mem_size_bytes']
                 
                 # Add memory for recomputed tensors
+                # This is where we account for the memory cost of recomputation
+                # When we reach a node that needs a recomputed activation,
+                # we add its memory size to the intermediate memory
                 if node_rank in activations_by_first_bw_use_rank:
                     for act_details in activations_by_first_bw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RECOMPUTE':
                             if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                bw_inter_mem += act_details['avg_mem_size_bytes']
+                                # Add the memory for this recomputed activation
+                                mem_size = act_details['avg_mem_size_bytes']
+                                bw_inter_mem += mem_size
+                                if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
+                                    print(f"  Added {mem_size/(1024**2):.2f} MB for recomputed activation {act_name}")
             
             elif node_gtype == 'fw':
                 if 'avg_active_mem' in node_details and pd.notna(node_details['avg_active_mem']):
                     fw_active_mem = node_details['avg_active_mem']
                 
                 # Add memory for newly created tensors
+                # In the forward pass, we only keep RETAINED activations in memory
+                # RECOMPUTE activations are discarded immediately
                 if node_rank in activations_by_creation_rank:
                     for act_details in activations_by_creation_rank[node_rank]:
                         act_name = act_details['activation_name']
                         if current_schedule.get(act_name) == 'RETAINED':
+                            # Only add memory for activations we're keeping (not recomputing)
                             if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
-                                fw_inter_mem += act_details['avg_mem_size_bytes']
+                                mem_size = act_details['avg_mem_size_bytes']
+                                fw_inter_mem += mem_size
+                                if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
+                                    print(f"  Added {mem_size/(1024**2):.2f} MB for retained activation {act_name}")
+                        else:
+                            # For RECOMPUTE activations, we don't keep them in memory
+                            # This is the key memory savings of activation checkpointing
+                            if debug and 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
+                                mem_size = act_details['avg_mem_size_bytes']
+                                if mem_size > 1024*1024:  # Only log significant activations (>1MB)
+                                    print(f"  Discarded {mem_size/(1024**2):.2f} MB for activation {act_name} (will recompute)")
                 
                 # Remove memory for tensors that are no longer needed
                 if node_rank in activations_by_last_fw_use_rank:
@@ -256,19 +292,31 @@ class ActivationCheckpointingAlgorithm:
                                 fw_inter_mem -= act_details['avg_mem_size_bytes']
             
             # Calculate current memory consumption
-            current_mem = fw_active_mem + bw_active_mem + fw_inter_mem + bw_inter_mem
+            current_mem = fw_active_mem + bw_active_mem + fw_inter_mem + bw_inter_mem + fixed_overhead_bytes
             
             # Update peak memory
-            peak_mem = max(peak_mem, current_mem)
+            if current_mem > peak_mem:
+                peak_mem = current_mem
+                if debug:
+                    print(f"  New peak memory: {peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
+                    print(f"    Breakdown: FW active={fw_active_mem/(1024**3):.3f} GB, BW active={bw_active_mem/(1024**3):.3f} GB")
+                    print(f"    FW inter={fw_inter_mem/(1024**3):.3f} GB, BW inter={bw_inter_mem/(1024**3):.3f} GB")
+                    print(f"    Fixed overhead={fixed_overhead_bytes/(1024**3):.3f} GB")
             
             # Also consider the peak memory during this specific operation
             if 'avg_peak_mem_node' in node_details and pd.notna(node_details['avg_peak_mem_node']):
-                peak_mem = max(peak_mem, node_details['avg_peak_mem_node'])
+                node_peak = node_details['avg_peak_mem_node'] + fixed_overhead_bytes
+                if node_peak > peak_mem:
+                    peak_mem = node_peak
+                    if debug:
+                        print(f"  New peak memory from node operation: {peak_mem/(1024**3):.3f} GB at node {node_name}")
         
         if debug:
             print(f"Memory simulation complete.")
             print(f"Peak memory: {peak_mem / (1024**3):.3f} GB")
             print(f"Final execution time: {total_execution_time:.4f}s")
+            print(f"Memory savings from activation checkpointing: {sum(act_details['avg_mem_size_bytes'] for act_name, decision in current_schedule.items() if decision == 'RECOMPUTE' for act_details in [self._get_activation_details(act_name)] if act_details is not None and 'avg_mem_size_bytes' in act_details) / (1024**3):.3f} GB")
+            print(f"Computation overhead from recomputation: {recompute_time_total:.4f}s")
         
         return peak_mem, total_execution_time
 
@@ -382,7 +430,8 @@ class ActivationCheckpointingAlgorithm:
                 print(f"DEBUG: Considering activation: {r_cand}, recomp_ratio: {recomp_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s")
                 
                 # Always choose to recompute to save memory
-                # This is the core of activation checkpointing - we discard activations and recompute them
+                # This is the core of activation checkpointing - we discard activations during forward pass
+                # and recompute them during backward pass when needed
                 print(f"Choosing to RECOMPUTE {r_cand} (memory saved: {mem_size:.2f} MB, recompute overhead: {recomp_time:.6f}s)")
                 current_schedule[r_cand] = 'RECOMPUTE'
                 recomps.add(r_cand)
@@ -444,6 +493,16 @@ class ActivationCheckpointingAlgorithm:
         """
         Select the candidate with maximum recompute ratio (memory_size / recompute_time).
         Only consider candidates with significant memory size to make recomputation worthwhile.
+        
+        This is a key function for activation checkpointing. It identifies which activation
+        will give us the best memory savings relative to its recomputation cost.
+        
+        The ratio memory_size / recompute_time represents:
+        - Higher values = more memory saved per unit of recomputation time
+        - Lower values = less memory saved per unit of recomputation time
+        
+        We want to prioritize activations with high ratios to maximize memory savings
+        while minimizing the computational overhead of recomputation.
         """
         max_ratio = -1
         max_candidate = None
