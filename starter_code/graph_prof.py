@@ -75,7 +75,7 @@ class GraphProfiler(fx.Interpreter):
         # These should ideally be profiled on the target hardware.
         self.BYTES_PER_SEC_CPU_TO_GPU = 10 * (1024**3)
         self.BYTES_PER_SEC_GPU_TO_CPU = 10 * (1024**3)
-        self.GPU_MEMORY_LIMIT_MIB = 40 * 1024 # Example: 40 GiB in MiB
+        self.GPU_MEMORY_LIMIT_MIB = 4 * 1024 # Fixed 4 GiB memory limit for activation checkpointing
 
         # --- First Pass: Rank nodes, find boundaries, identify initial Params/Grads ---
         _fused_adam_node: fx.Node | None = None

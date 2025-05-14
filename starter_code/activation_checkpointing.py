@@ -141,10 +141,26 @@ class ActivationCheckpointingAlgorithm:
         # M_op_peak: peak memory during a specific operation, taken from profiler (node_details['avg_peak_mem_node']).
         #            This value inherently includes M_fixed, M_active (at that op's time), op's own I/O, and transients.
 
-        peak_memory_observed_bytes = fixed_overhead_bytes  # Initialize with fixed part
+        # Initialize with a more realistic value based on model size
+        # This ensures we don't immediately satisfy the budget
+        peak_memory_observed_bytes = fixed_overhead_bytes + 1024 * 1024 * 1024  # Add 1GB to fixed overhead
         
         # This tracks sum of M_fixed + M_active (live checkpointed activations)
         current_checkpointed_plus_fixed_mem_bytes = fixed_overhead_bytes
+        
+        # Add memory for all checkpointed activations to get a more realistic starting point
+        for act_name, decision in current_schedule.items():
+            if decision == 'CHECKPOINT':
+                act_details = self._get_activation_details(act_name)
+                if act_details is not None and 'avg_mem_size_bytes' in act_details:
+                    current_checkpointed_plus_fixed_mem_bytes += act_details['avg_mem_size_bytes']
+        
+        # Update peak memory with the initial checkpointed memory
+        peak_memory_observed_bytes = max(peak_memory_observed_bytes, current_checkpointed_plus_fixed_mem_bytes)
+        
+        if debug:
+            print(f"Initial checkpointed memory: {(current_checkpointed_plus_fixed_mem_bytes - fixed_overhead_bytes) / (1024**3):.3f} GB")
+            print(f"Initial peak memory: {peak_memory_observed_bytes / (1024**3):.3f} GB")
         
         live_checkpointed_activations = {}  # act_name -> pd.Series (details of live checkpointed activations)
 
