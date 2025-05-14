@@ -13,8 +13,9 @@
 
 ## Recent Changes
 
-*   
+*
 * [2025-05-14 11:09:41] - Added detailed logging to `starter_code/graph_rewriter.py::find_node_by_name` to debug node lookup failures.
+* [2025-05-14 12:20:00] - Modified `starter_code/ac_comparison.py` to output detailed results from Stage 2 (activation checkpointing algorithm) before proceeding to Stage 3. Added code to save AC decisions to a CSV file, print a detailed summary of decisions, show top activations chosen for recomputation, and display estimated memory savings and recomputation overhead.
 
 ## Open Questions/Issues
 

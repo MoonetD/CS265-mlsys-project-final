@@ -476,6 +476,82 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
         if debug:
             print(f"[DEBUG] Algorithm made {len(ac_decisions)} decisions")
             print(f"[DEBUG] RECOMPUTE: {recompute_count}, CHECKPOINT: {checkpoint_count}")
+            
+        # Save AC decisions to a CSV file
+        reports_dir = ensure_reports_directory()
+        ac_decisions_file = os.path.join(reports_dir, f"ac_decisions_bs{batch_size}.csv")
+        print(f"\n--- Saving AC decisions to {ac_decisions_file} ---")
+        
+        try:
+            # Create a DataFrame from the decisions
+            decisions_df = pd.DataFrame({
+                'activation_name': list(ac_decisions.keys()),
+                'decision': list(ac_decisions.values()),
+                'memory_size_bytes': [ac_algo.activation_stats_df.loc[act, 'avg_mem_size_bytes']
+                                     if act in ac_algo.activation_stats_df.index else 0
+                                     for act in ac_decisions.keys()],
+                'recomp_time_s': [ac_algo.activation_stats_df.loc[act, 'recomp_time_s']
+                                 if act in ac_algo.activation_stats_df.index else 0
+                                 for act in ac_decisions.keys()],
+                'creation_rank': [ac_algo.activation_stats_df.loc[act, 'creation_rank']
+                                 if act in ac_algo.activation_stats_df.index else 0
+                                 for act in ac_decisions.keys()],
+                'first_bw_use_rank': [ac_algo.activation_stats_df.loc[act, 'first_bw_use_rank']
+                                     if act in ac_algo.activation_stats_df.index else 0
+                                     for act in ac_decisions.keys()]
+            })
+            
+            # Save to CSV
+            decisions_df.to_csv(ac_decisions_file, index=False)
+            print(f"Successfully saved {len(decisions_df)} AC decisions to CSV")
+            
+            # Print detailed summary of decisions
+            print("\n--- Detailed Summary of AC Decisions ---")
+            print(f"Total activations: {len(ac_decisions)}")
+            print(f"RECOMPUTE: {recompute_count} ({recompute_count/len(ac_decisions)*100:.1f}%)")
+            print(f"CHECKPOINT: {checkpoint_count} ({checkpoint_count/len(ac_decisions)*100:.1f}%)")
+            
+            # Calculate total memory savings and recomputation overhead
+            total_memory_bytes = sum(decisions_df['memory_size_bytes'])
+            recompute_memory_bytes = sum(decisions_df[decisions_df['decision'] == 'RECOMPUTE']['memory_size_bytes'])
+            memory_savings_bytes = recompute_memory_bytes  # Memory saved by recomputing instead of checkpointing
+            
+            total_recomp_time = sum(decisions_df[decisions_df['decision'] == 'RECOMPUTE']['recomp_time_s'])
+            
+            print(f"\nEstimated memory savings: {memory_savings_bytes / (1024**2):.2f} MiB")
+            print(f"Estimated recomputation overhead: {total_recomp_time:.4f} seconds")
+            
+            # Show top activations chosen for recomputation
+            print("\n--- Top Activations Chosen for Recomputation ---")
+            # Sort by memory size (largest first)
+            top_recompute = decisions_df[decisions_df['decision'] == 'RECOMPUTE'].sort_values(
+                by='memory_size_bytes', ascending=False
+            ).head(20)  # Show top 20
+            
+            if len(top_recompute) > 0:
+                print(f"{'Activation Name':<30} {'Memory Size (MiB)':<20} {'Recomp Time (ms)':<20}")
+                print("-" * 70)
+                for _, row in top_recompute.iterrows():
+                    print(f"{row['activation_name']:<30} {row['memory_size_bytes'] / (1024**2):<20.2f} {row['recomp_time_s'] * 1000:<20.4f}")
+            else:
+                print("No activations marked for recomputation")
+                
+            # Run memory simulation to get more accurate estimates
+            print("\n--- Memory Simulation Results ---")
+            peak_memory, total_exec_time = ac_algo._simulate_memory_usage(
+                ac_decisions,
+                fixed_overhead_bytes=0.5 * (1024**3),  # 0.5 GB fixed overhead
+                debug=False
+            )
+            print(f"Simulated peak memory: {peak_memory / (1024**3):.2f} GB")
+            print(f"Simulated execution time: {total_exec_time:.4f} seconds")
+            
+        except Exception as e:
+            print(f"Error saving AC decisions or generating summary: {e}")
+            if debug:
+                print(f"[DEBUG] Exception details: {str(e)}")
+                import traceback
+                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
     except Exception as e:
         print(f"Error running activation checkpointing algorithm: {e}")
         if debug:

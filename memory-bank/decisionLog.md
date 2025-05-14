@@ -17,6 +17,23 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Code)
+[2025-05-14 12:20:00] - Enhanced `ac_comparison.py` to output detailed Stage 2 results before proceeding to Stage 3.
+
+**Rationale:**
+The user wanted to see intermediate results from Stage 2 (activation checkpointing algorithm) before proceeding to Stage 3 (graph rewriter) to gain better visibility into what the activation checkpointing algorithm decides. This enhancement provides transparency into the decision-making process and allows for better analysis of the algorithm's behavior.
+
+**Details:**
+Modified `starter_code/ac_comparison.py` to:
+1. Save AC decisions to a CSV file (`ac_decisions_bs{batch_size}.csv`) in the reports directory
+2. Print a detailed summary of the decisions, showing how many activations are marked for RECOMPUTE vs CHECKPOINT
+3. Show the top 20 activations chosen for recomputation, along with their memory sizes and recomputation times
+4. Display the estimated memory savings and recomputation overhead based on these decisions
+5. Run a memory simulation to provide more accurate estimates of peak memory and execution time
+
+The implementation ensures the script still proceeds to Stage 3 after outputting these intermediate results, maintaining the original workflow while adding valuable diagnostic information.
+
+---
 ### Decision (Documentation)
 [2025-05-14 12:11:00] - Created comprehensive summary report of activation checkpointing implementation.
 

@@ -8,6 +8,7 @@ This file tracks the project's progress using a task list format.
 ## Completed Tasks
 
 *
+* [2025-05-14 12:20:00] - Completed Task: Modified `starter_code/ac_comparison.py` to output detailed results from Stage 2 (activation checkpointing algorithm) before proceeding to Stage 3. Added code to save AC decisions to a CSV file, print a detailed summary of decisions, show top activations chosen for recomputation, and display estimated memory savings and recomputation overhead.
 * [2025-05-14 12:11:00] - Completed Task: Created comprehensive summary report (`REPORT.md`) documenting the three stages of activation checkpointing implementation, key findings, improvements made, performance results, and recommendations for future work.
 * [2025-05-14 12:03:00] - Completed Task: Fixed batch-specific CSV loading in `ac_comparison.py` and naming inconsistencies between components. Successfully tested with `conda run -n ml_env python starter_code/ac_comparison.py --batch-sizes 32 --memory-budget 1.5 --timeout 10`. The script now correctly loads batch-specific CSVs from the reports directory.
 * [2025-05-14 12:02:00] - Completed Task: Generated fresh batch-specific CSVs with `conda run -n ml_env python starter_code/batch_memory_analysis.py --batch-sizes 32`. Verified that the CSVs are correctly generated in the reports directory.
