@@ -13,30 +13,40 @@ import torch
 import torch.fx as fx
 from typing import Dict, List, Set, Tuple, Any, Optional
 
-def find_node_by_name(graph: fx.Graph, name: str) -> Optional[fx.Node]:
+def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> Optional[fx.Node]:
     """
-    Find a node in the graph by name, with fallbacks for partial matches.
+    Find a node in the graph by name, with multiple fallback strategies.
     
     Args:
         graph: The FX graph
         name: The name of the node to find
+        activation_liveness: Optional dictionary with activation liveness information
         
     Returns:
         The node if found, None otherwise
     """
-    # Try exact match first
+    # Strategy 1: Exact match
     for node in graph.nodes:
         if node.name == name:
             return node
     
-    # Try partial matches
+    # Strategy 2: Match by rank if activation_liveness is provided
+    if activation_liveness and name in activation_liveness:
+        creation_rank = activation_liveness[name].get('creation_rank')
+        if creation_rank is not None:
+            for node in graph.nodes:
+                if hasattr(node, 'meta') and node.meta.get('rank') == creation_rank:
+                    print(f"Found node {node.name} by rank {creation_rank} for activation {name}")
+                    return node
+    
+    # Strategy 3: Partial matches
     for node in graph.nodes:
         # Check if the node name contains the target name or vice versa
         if name in node.name or node.name in name:
             print(f"Found partial match: node.name={node.name}, target={name}")
             return node
             
-    # Try without suffix (e.g., "relu_1" -> "relu")
+    # Strategy 4: Try without suffix (e.g., "relu_1" -> "relu")
     if '_' in name:
         base_name = name.split('_')[0]
         for node in graph.nodes:
@@ -44,10 +54,19 @@ def find_node_by_name(graph: fx.Graph, name: str) -> Optional[fx.Node]:
                 print(f"Found base name match: node.name={node.name}, base_name={base_name}")
                 return node
     
+    # Strategy 5: Match by operation type
+    if '.' in name:
+        op_type = name.split('.')[0]
+        for node in graph.nodes:
+            if op_type in node.name:
+                print(f"Found operation type match: node.name={node.name}, op_type={op_type}")
+                return node
+    
+    print(f"Warning: Could not find node for activation {name} in the graph")
     return None
 
-def extract_subgraph_for_activation(graph: fx.Graph, act_name: str, 
-                                   activation_liveness: Dict[str, Dict[str, int]]) -> List[fx.Node]:
+def extract_subgraph_for_activation(graph: fx.Graph, act_name: str,
+                                   activation_liveness: Dict[str, Dict[str, int]]) -> Tuple[List[fx.Node], Set[fx.Node]]:
     """
     Extract the subgraph needed to recompute an activation.
     
@@ -57,22 +76,22 @@ def extract_subgraph_for_activation(graph: fx.Graph, act_name: str,
         activation_liveness: Dict with activation liveness information
         
     Returns:
-        List of nodes in the subgraph, in execution order
+        Tuple of (list of nodes in the subgraph, set of input nodes)
     """
     if act_name not in activation_liveness:
         print(f"Warning: Activation {act_name} not found in activation_liveness")
-        return []
+        return [], set()
     
     # Get the node that produced this activation
-    act_node = find_node_by_name(graph, act_name)
+    act_node = find_node_by_name(graph, act_name, activation_liveness)
     if not act_node:
         print(f"Warning: Node {act_name} not found in graph")
-        return []
+        return [], set()
     
     # Get the creation rank and last forward use rank
     if "creation_rank" not in activation_liveness[act_name] or "last_fw_use_rank" not in activation_liveness[act_name]:
         print(f"Warning: Missing rank information for activation {act_name}")
-        return []
+        return [], set()
         
     creation_rank = activation_liveness[act_name]["creation_rank"]
     last_fw_use_rank = activation_liveness[act_name]["last_fw_use_rank"]
@@ -90,7 +109,26 @@ def extract_subgraph_for_activation(graph: fx.Graph, act_name: str,
         if isinstance(node_rank, int) and creation_rank <= node_rank <= last_fw_use_rank:
             subgraph_nodes.append(node)
     
-    return subgraph_nodes
+    if not subgraph_nodes:
+        print(f"Warning: No nodes found in subgraph for activation {act_name}")
+        return [], set()
+    
+    # Sort nodes by rank to ensure correct execution order
+    subgraph_nodes.sort(key=lambda n: getattr(n, "meta", {}).get("rank", 0))
+    
+    # Identify inputs to the subgraph
+    subgraph_node_set = set(subgraph_nodes)
+    inputs = set()
+    
+    # Find all nodes that are used by the subgraph but not in the subgraph
+    for node in subgraph_nodes:
+        for input_node in node.all_input_nodes:
+            if input_node not in subgraph_node_set:
+                # This is an input to the subgraph
+                inputs.add(input_node)
+    
+    print(f"Extracted subgraph for {act_name} with {len(subgraph_nodes)} nodes and {len(inputs)} inputs")
+    return subgraph_nodes, inputs
 
 def identify_subgraph_inputs(subgraph_nodes: List[fx.Node], 
                             kept_activations: Set[str]) -> Set[fx.Node]:
@@ -139,61 +177,29 @@ def extract_recomputation_subgraphs(graph: fx.Graph,
     kept_activations = set(act for act, decision in ac_decisions.items()
                           if decision == 'CHECKPOINT')
     
-    # Create a mapping between activation names in the profiler and nodes in the graph
-    # This is needed because the node names in the traced graph might be different
-    # from the activation names in the profiler
-    name_to_node_map = {}
-    for node in graph.nodes:
-        # Try different variations of the node name
-        node_name = node.name
-        name_to_node_map[node_name] = node
-        
-        # Try without suffix (e.g., "relu_1" -> "relu")
-        if '_' in node_name:
-            base_name = node_name.split('_')[0]
-            name_to_node_map[base_name] = node
+    print(f"Processing {len(recomp_activations)} activations marked for RECOMPUTE")
+    print(f"Found {len(kept_activations)} activations marked for CHECKPOINT")
     
-    # Print some debug info
-    print(f"Found {len(name_to_node_map)} nodes in the graph")
-    print(f"First few node names: {list(name_to_node_map.keys())[:5]}")
-    
-    for act_name in recomp_activations[:10]:  # Process first 10 for debugging
-        # Try to find the node in the graph
-        node = None
-        if act_name in name_to_node_map:
-            node = name_to_node_map[act_name]
-            print(f"Found node {node.name} for activation {act_name}")
-        else:
-            # Try to find a similar name
-            for node_name in name_to_node_map:
-                if act_name in node_name or node_name in act_name:
-                    node = name_to_node_map[node_name]
-                    print(f"Found similar node {node.name} for activation {act_name}")
-                    break
-            
-            if not node:
-                print(f"Warning: Could not find node for activation {act_name} in the graph")
-                continue
-        
+    # Process all recomputation activations
+    for act_name in recomp_activations:
         # Extract the subgraph for this activation
-        subgraph_nodes = extract_subgraph_for_activation(graph, act_name, activation_liveness)
+        subgraph_nodes, subgraph_inputs = extract_subgraph_for_activation(graph, act_name, activation_liveness)
         
         if not subgraph_nodes:
             print(f"Warning: Could not extract subgraph for activation {act_name}")
             continue
-            
-        # Identify the inputs to this subgraph
-        subgraph_inputs = identify_subgraph_inputs(subgraph_nodes, kept_activations)
         
         # Store the subgraph and its inputs
         recomp_subgraphs[act_name] = (subgraph_nodes, subgraph_inputs)
-        
-        print(f"Extracted subgraph for activation {act_name} with {len(subgraph_nodes)} nodes and {len(subgraph_inputs)} inputs")
-        
+    
+    # Print summary
+    valid_subgraphs = sum(1 for nodes, _ in recomp_subgraphs.values() if nodes)
+    print(f"Successfully extracted {valid_subgraphs} subgraphs out of {len(recomp_activations)} activations marked for recomputation")
+    
     return recomp_subgraphs
 
-def insert_subgraph_before_node(graph: fx.Graph, 
-                               insertion_point: fx.Node, 
+def insert_subgraph_before_node(graph: fx.Graph,
+                               insertion_point: fx.Node,
                                subgraph_nodes: List[fx.Node],
                                subgraph_inputs: Set[fx.Node],
                                env: Dict[fx.Node, fx.Node]) -> fx.Node:
@@ -210,21 +216,55 @@ def insert_subgraph_before_node(graph: fx.Graph,
     Returns:
         The last node inserted (corresponding to the recomputed activation)
     """
-    with graph.inserting_before(insertion_point):
-        # Create a mapping from original nodes to their copies
-        for node in subgraph_nodes:
-            # Skip nodes that are inputs (they already exist)
-            if node in subgraph_inputs:
-                continue
-                
-            # Copy the node, mapping its inputs through the environment
-            copied_node = graph.node_copy(node, lambda n: env[n] if n in env else n)
-            env[node] = copied_node
+    if not subgraph_nodes:
+        print("Warning: No subgraph nodes to insert")
+        return None
+        
+    # Create a local environment for this subgraph insertion
+    local_env = {}
+    
+    # First, map all inputs to their corresponding nodes in the target graph
+    for input_node in subgraph_inputs:
+        if input_node in env:
+            local_env[input_node] = env[input_node]
+        else:
+            print(f"Warning: Input node {input_node.name} not found in environment")
+            # Try to find a node with the same name in the target graph
+            for node in graph.nodes:
+                if node.name == input_node.name:
+                    local_env[input_node] = node
+                    break
+    
+    # Now insert the subgraph
+    try:
+        with graph.inserting_before(insertion_point):
+            # Process nodes in order
+            for node in subgraph_nodes:
+                # Skip nodes that are inputs (they already exist)
+                if node in subgraph_inputs:
+                    continue
+                    
+                # Copy the node, mapping its inputs through the environment
+                try:
+                    # Use the local environment first, then fall back to the global environment
+                    copied_node = graph.node_copy(node, lambda n: local_env.get(n, env.get(n, n)))
+                    local_env[node] = copied_node
+                    env[node] = copied_node  # Update the global environment too
+                except Exception as e:
+                    print(f"Error copying node {node.name}: {e}")
+                    continue
             
-        # The last node in the subgraph corresponds to the recomputed activation
-        return env[subgraph_nodes[-1]] if subgraph_nodes else None
+            # The last node in the subgraph corresponds to the recomputed activation
+            if subgraph_nodes[-1] in local_env:
+                return local_env[subgraph_nodes[-1]]
+            else:
+                print(f"Warning: Last node {subgraph_nodes[-1].name} not found in local environment")
+                return None
+    except Exception as e:
+        print(f"Error inserting subgraph: {e}")
+        return None
 
-def rewrite_graph_with_recomputation(graph: fx.Graph, 
+def rewrite_graph_with_recomputation(graph: fx.Graph,
                                     subgraphs: Dict[str, Tuple[List[fx.Node], Set[fx.Node]]],
                                     activation_liveness: Dict[str, Dict[str, int]]) -> fx.Graph:
     """
@@ -238,6 +278,8 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
     Returns:
         The rewritten FX graph
     """
+    print(f"Rewriting graph with {len(subgraphs)} recomputation subgraphs")
+    
     # Create a copy of the graph to modify
     new_graph = copy.deepcopy(graph)
     
@@ -246,12 +288,20 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
     for original_node, new_node in zip(graph.nodes, new_graph.nodes):
         env[original_node] = new_node
     
+    # Track successful insertions
+    successful_insertions = 0
+    
     # For each activation marked for recomputation
     for act_name, (subgraph_nodes, subgraph_inputs) in subgraphs.items():
         if not subgraph_nodes:
+            print(f"Skipping {act_name}: No subgraph nodes")
             continue
             
         # Get the first backward use rank for this activation
+        if act_name not in activation_liveness or "first_bw_use_rank" not in activation_liveness[act_name]:
+            print(f"Skipping {act_name}: Missing first_bw_use_rank")
+            continue
+            
         first_bw_use_rank = activation_liveness[act_name]["first_bw_use_rank"]
         
         # Find the node with this rank in the new graph
@@ -263,22 +313,40 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
                 break
                 
         if not first_bw_use_node:
+            print(f"Skipping {act_name}: Could not find first backward use node with rank {first_bw_use_rank}")
             continue
             
-        # Insert the recomputation subgraph before the first backward use
-        recomputed_node = insert_subgraph_before_node(
-            new_graph, first_bw_use_node, subgraph_nodes, subgraph_inputs, env)
-            
-        if recomputed_node:
-            # Find the original activation node in the new graph
-            original_act_node = find_node_by_name(new_graph, act_name)
-            
-            if original_act_node:
-                # Replace uses of the original activation with the recomputed one
-                original_act_node.replace_all_uses_with(recomputed_node)
+        print(f"Inserting recomputation subgraph for {act_name} before node {first_bw_use_node.name} (rank {first_bw_use_rank})")
+        
+        try:
+            # Insert the recomputation subgraph before the first backward use
+            recomputed_node = insert_subgraph_before_node(
+                new_graph, first_bw_use_node, subgraph_nodes, subgraph_inputs, env)
                 
-                # Don't erase the original node as it might be used elsewhere
-                # or be part of the graph structure
+            if recomputed_node:
+                # Find the original activation node in the new graph
+                original_act_node = find_node_by_name(new_graph, act_name, activation_liveness)
+                
+                if original_act_node:
+                    # Replace uses of the original activation with the recomputed one
+                    original_act_node.replace_all_uses_with(recomputed_node)
+                    print(f"Successfully replaced uses of {act_name} with recomputed node {recomputed_node.name}")
+                    successful_insertions += 1
+                else:
+                    print(f"Warning: Could not find original activation node {act_name} in new graph")
+            else:
+                print(f"Warning: Failed to insert recomputation subgraph for {act_name}")
+        except Exception as e:
+            print(f"Error inserting recomputation subgraph for {act_name}: {e}")
+    
+    print(f"Successfully inserted {successful_insertions} recomputation subgraphs")
+    
+    # Validate the rewritten graph
+    try:
+        new_graph.lint()
+        print("Graph validation passed")
+    except Exception as e:
+        print(f"Warning: Graph validation failed: {e}")
         
     return new_graph
 

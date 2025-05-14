@@ -16,6 +16,21 @@ This file records architectural and implementation decisions using a list format
 ## Implementation Details
 
 *
+### Decision (Code)
+[2025-05-14 10:21:00] - Added timeout mechanism to activation checkpointing algorithm.
+
+**Rationale:**
+The activation checkpointing algorithm was getting stuck when running with a low memory budget (e.g., 1.5 GB). This was because the algorithm needed to process many candidates before meeting the budget, and some operations like `_calculate_swap_overhead_v2` and `_simulate_memory_usage` are computationally expensive. A timeout mechanism ensures the algorithm terminates within a reasonable time, even if it can't find an optimal solution.
+
+**Details:**
+1. Added a `timeout_seconds` parameter to the `decide_checkpoints` method (default: 60 seconds)
+2. Added time tracking in the main loop to check if the timeout has been reached
+3. Added a warning message if the algorithm times out, explaining that the returned schedule may not be optimal
+4. Added command-line argument `--timeout` to control the timeout duration
+5. Updated the call to `decide_checkpoints` to pass the timeout parameter
+
+These changes ensure the algorithm always terminates within a reasonable time, even with challenging memory constraints, and provides the best solution found so far.
+---
 ---
 ### Decision (Code)
 [2025-05-12 18:18:27] - Implemented static graph analysis in `GraphProfiler.__init__`.

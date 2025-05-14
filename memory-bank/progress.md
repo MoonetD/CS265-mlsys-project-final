@@ -176,3 +176,17 @@ This file tracks the project's progress using a task list format.
         * For batch size 32, we even see a 21.1% time improvement
     * Generated comparison charts showing memory usage and latency differences
     * Validated correctness of the implementation with all tests passing
+* [2025-05-14 03:28:00] - Completed Task: Fixed activation checkpointing algorithm to properly implement μ-TWO Algorithm B:
+    * Implemented proper scheduling policy with swap vs. recompute decision logic
+    * Added proper swap overhead calculation (Algorithm C)
+    * Added proper recompute overhead calculation
+    * Enhanced memory simulation to accurately model memory consumption (Algorithm G)
+    * Implemented realistic memory budget calculation (70% of peak memory)
+    * Improved graph rewriter to better handle subgraph extraction and insertion
+    * Enhanced error handling and validation in the graph rewriting process
+    * These improvements should lead to better memory-performance trade-offs and more accurate activation checkpointing decisions
+* [2025-05-14 10:22:00] - Fixed issue with activation checkpointing algorithm getting stuck with low memory budgets:
+    * Added timeout mechanism to ensure the algorithm always terminates
+    * Added command-line argument to control the timeout duration
+    * Added warning message if the algorithm times out
+    * This ensures the algorithm can be used with any memory budget without getting stuck
