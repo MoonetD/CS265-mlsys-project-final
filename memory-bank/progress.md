@@ -116,3 +116,13 @@ This file tracks the project's progress using a task list format.
     * Ensured CSV files are saved in the main directory to be consistent with existing CSV files
     * Updated the main function to print information about the generated CSV files
     * These changes enable Stage 2 to use batch-specific profiling data for activation checkpointing analysis
+* [2025-05-14 00:03:53] - Completed Task: Enhanced batch memory analysis script with comprehensive visualizations:
+    * Modified `starter_code/batch_memory_analysis.py` to include batch size 64 in addition to existing sizes (4, 8, 16, 32)
+    * Added an 8 GB (8192 MiB) OOM cap line to all visualizations for better memory limit representation
+    * Created three types of visualizations:
+        * Enhanced bar graph showing peak memory usage with the OOM cap line
+        * Memory vs. execution rank graph for all batch sizes showing FW/BW boundaries and OOM cap
+        * Stacked bar chart showing memory breakdown (weights, gradients, feature maps) for different batch sizes
+    * Implemented helper functions `create_memory_vs_rank_plots()` and `create_memory_breakdown_chart()`
+    * Ensured all visualizations are saved to the reports/ directory with appropriate filenames
+    * Maintained existing CSV generation functionality for compatibility with Stage 2

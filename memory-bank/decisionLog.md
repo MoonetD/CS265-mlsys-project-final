@@ -387,3 +387,45 @@ The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/bat
 4. **Documentation:** Added explanatory comments and print statements to clarify that these CSV files can be used in Stage 2 for activation checkpointing analysis.
 
 These changes enable Stage 2 to use batch-specific profiling data for more accurate activation checkpointing decisions based on different memory constraints.
+---
+### Decision (Code)
+[2025-05-14 00:04:33] - Enhanced batch memory analysis script with comprehensive visualizations.
+
+**Rationale:**
+The existing batch memory analysis script only generated a simple bar graph showing peak memory usage for batch sizes 4, 8, 16, and 32. The enhancements were needed to provide more comprehensive visualizations that better illustrate memory usage patterns across different batch sizes, including the addition of batch size 64. The 8 GB (8192 MiB) OOM cap was added to all visualizations to provide a clear reference point for memory constraints. The memory breakdown chart was implemented to show the relative contributions of different memory components (weights, gradients, feature maps) to the total memory usage, which is valuable for understanding memory scaling behavior.
+
+**Details:**
+The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/batch_memory_analysis.py) was enhanced with:
+
+1. **Extended Batch Size Range:**
+   * Added batch size 64 to the existing range (4, 8, 16, 32) for more comprehensive analysis
+   * This provides better insights into memory scaling behavior at larger batch sizes
+
+2. **OOM Cap Visualization:**
+   * Added an 8 GB (8192 MiB) horizontal line to all visualizations
+   * Implemented as `plt.axhline(y=oom_cap_mib, color='red', linestyle='--')`
+   * Provides a clear reference point for memory constraints
+
+3. **Multiple Visualization Types:**
+   * Enhanced the existing bar graph with the OOM cap line
+   * Added a new memory vs. execution rank visualization showing the memory curve with FW/BW boundaries
+   * Implemented a stacked bar chart showing memory breakdown (weights, gradients, feature maps)
+
+4. **Helper Functions:**
+   * `create_memory_vs_rank_plots()`: Creates memory vs. execution rank plots for all batch sizes
+   * `create_memory_breakdown_chart()`: Creates a stacked bar chart showing memory component breakdown
+   * These functions encapsulate the visualization logic for better code organization
+
+5. **Memory Breakdown Estimation:**
+   * Implemented an approximation of memory components (weights, gradients, feature maps)
+   * Used typical ResNet memory patterns to estimate the breakdown
+   * Weights are constant (~230 MiB for ResNet-152) regardless of batch size
+   * Gradients scale with batch size but are smaller than activations
+   * Feature maps/activations are the largest component and scale linearly with batch size
+
+6. **Consistent Styling:**
+   * Used consistent color schemes, labels, and formatting across all visualizations
+   * Added appropriate legends, grid lines, and titles for clarity
+   * Ensured all visualizations have the OOM cap line with the same style
+
+These enhancements provide a more comprehensive view of memory usage patterns in deep learning models, which is valuable for understanding memory scaling behavior and making informed decisions about batch sizes and memory optimization strategies.

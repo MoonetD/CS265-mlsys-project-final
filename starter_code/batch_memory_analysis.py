@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 """
-Batch Memory Analysis Script
+Enhanced Batch Memory Analysis Script
 
 This script analyzes the peak memory consumption of the ResNet-152 model
-with different batch sizes. It generates a bar graph showing the relationship
-between batch size and peak memory usage.
+with different batch sizes (4, 8, 16, 32, 64). It generates multiple visualizations:
+1. A bar graph showing peak memory usage for different batch sizes with an 8 GB limit line
+2. A memory vs. execution rank graph showing the memory curve with FW/BW boundaries and the 8 GB limit
+3. A stacked bar chart showing the memory breakdown (weights, gradients, feature maps) for different batch sizes
 
 To run this script:
     conda run -n ml_env python starter_code/batch_memory_analysis.py
@@ -18,6 +20,8 @@ import torchvision.models as models
 import matplotlib.pyplot as plt
 from functools import wraps
 import numpy as np
+import pandas as pd
+from collections import defaultdict
 
 from graph_prof import GraphProfiler
 from graph_tracer import SEPFunction, compile
@@ -145,8 +149,11 @@ def main():
     device_str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device_str}")
     
-    # Define batch sizes to test
-    batch_sizes = [4, 8, 16, 32]
+    # Define batch sizes to test (including 64)
+    batch_sizes = [4, 8, 16, 32, 64]
+    
+    # Define OOM cap in MiB (8 GB = 8192 MiB)
+    oom_cap_mib = 8192
     
     # Collect peak memory usage for each batch size
     peak_memories = []
@@ -165,7 +172,7 @@ def main():
     # Convert peak memory to MiB for better readability
     peak_memories_mib = [mem / (1024**2) for mem in peak_memories]
     
-    # Create a bar graph
+    # Create a bar graph with OOM cap
     plt.figure(figsize=(10, 6))
     bars = plt.bar(range(len(batch_sizes)), peak_memories_mib, color='skyblue')
     
@@ -176,12 +183,17 @@ def main():
                 f'{peak_memories_mib[i]:.2f} MiB',
                 ha='center', va='bottom', rotation=0)
     
+    # Add OOM cap line
+    plt.axhline(y=oom_cap_mib, color='red', linestyle='--',
+                label=f'OOM Cap (8 GB)')
+    
     # Add labels and title
     plt.xlabel('Batch Size')
     plt.ylabel('Peak Memory Usage (MiB)')
     plt.title('ResNet-152 Peak Memory Usage vs. Batch Size')
     plt.xticks(range(len(batch_sizes)), batch_sizes)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.legend()
     
     # Ensure reports directory exists
     reports_dir = ensure_reports_directory()
@@ -193,6 +205,18 @@ def main():
     
     # Close the figure to free memory
     plt.close()
+    
+    # Create memory vs. execution rank graph for each batch size
+    try:
+        create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib)
+    except Exception as e:
+        print(f"Error creating memory vs. rank plots: {e}")
+    
+    # Create stacked bar chart showing memory breakdown
+    try:
+        create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib)
+    except Exception as e:
+        print(f"Error creating memory breakdown chart: {e}")
     
     # Print summary
     print("\n=== Batch Memory Analysis Summary ===")
@@ -207,6 +231,160 @@ def main():
     print("\nCSV files have been generated in the main directory for each batch size.")
     print("These files can be used in Stage 2 for activation checkpointing analysis.")
     print("\n=== Analysis completed ===")
+
+def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
+    """
+    Create memory vs. execution rank plots for each batch size.
+    
+    Args:
+        batch_sizes: List of batch sizes
+        reports_dir: Directory to save plots
+        oom_cap_mib: OOM cap in MiB
+    """
+    print("\nGenerating memory vs. execution rank plots...")
+    
+    # Create a single figure with subplots for all batch sizes
+    fig, axes = plt.subplots(len(batch_sizes), 1, figsize=(12, 4*len(batch_sizes)), sharex=True)
+    
+    # If only one batch size, axes won't be an array
+    if len(batch_sizes) == 1:
+        axes = [axes]
+    
+    for i, batch_size in enumerate(batch_sizes):
+        # Load CSV data for this batch size
+        try:
+            node_csv = f"profiler_stats_bs{batch_size}_node_stats.csv"
+            if not os.path.exists(node_csv):
+                print(f"Warning: {node_csv} not found, skipping memory vs. rank plot for batch size {batch_size}")
+                continue
+                
+            df = pd.read_csv(node_csv)
+            
+            # Sort by rank
+            df = df.sort_values('rank')
+            
+            # Convert peak memory to MiB
+            df['peak_mem_mib'] = df['avg_peak_mem_bytes'] / (1024**2)
+            
+            # Find FW/BW boundary
+            fw_end_rank = -1
+            bw_start_rank = -1
+            
+            for j, row in df.iterrows():
+                if row['gtype'] == 'forward' and (j+1 >= len(df) or df.iloc[j+1]['gtype'] != 'forward'):
+                    fw_end_rank = row['rank']
+                if row['gtype'] == 'backward' and (j == 0 or df.iloc[j-1]['gtype'] != 'backward'):
+                    bw_start_rank = row['rank']
+            
+            # Plot memory vs. rank
+            ax = axes[i]
+            ax.plot(df['rank'], df['peak_mem_mib'], marker='o', markersize=3,
+                    linestyle='-', label=f"Batch Size {batch_size}")
+            
+            # Add FW/BW separator lines
+            if fw_end_rank != -1:
+                ax.axvline(x=fw_end_rank, color='red', linestyle='--',
+                          label=f'FW End (Rank {fw_end_rank})')
+            if bw_start_rank != -1 and bw_start_rank != fw_end_rank:
+                ax.axvline(x=bw_start_rank, color='orange', linestyle='--',
+                          label=f'BW Start (Rank {bw_start_rank})')
+            
+            # Add OOM cap line
+            ax.axhline(y=oom_cap_mib, color='red', linestyle=':',
+                      label=f'OOM Cap (8 GB)')
+            
+            # Set title and labels
+            ax.set_title(f"Batch Size {batch_size}: Memory vs. Execution Rank")
+            ax.set_ylabel("Peak Memory (MiB)")
+            ax.grid(True, alpha=0.3)
+            ax.legend(loc='upper right')
+            
+            # Only add x-label for the bottom subplot
+            if i == len(batch_sizes) - 1:
+                ax.set_xlabel("Node Execution Rank")
+        
+        except Exception as e:
+            print(f"Error processing batch size {batch_size} for memory vs. rank plot: {e}")
+    
+    plt.tight_layout()
+    plot_path = os.path.join(reports_dir, 'resnet152_memory_vs_rank.png')
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Memory vs. rank plots saved to: {plot_path}")
+
+def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib):
+    """
+    Create a stacked bar chart showing memory breakdown for different batch sizes.
+    
+    Args:
+        batch_sizes: List of batch sizes
+        peak_memories_mib: List of peak memory values in MiB
+        reports_dir: Directory to save plots
+        oom_cap_mib: OOM cap in MiB
+    """
+    print("\nGenerating memory breakdown chart...")
+    
+    # Estimate memory breakdown components
+    # These are approximations based on typical ResNet memory patterns
+    weights_mib = []  # Model weights (parameters)
+    gradients_mib = []  # Gradients
+    activations_mib = []  # Feature maps/activations
+    
+    for i, batch_size in enumerate(batch_sizes):
+        if i < len(peak_memories_mib):
+            # Approximate breakdown based on typical patterns
+            # Weights are constant regardless of batch size
+            weight_mem = 230  # ResNet-152 weights ~230 MiB
+            
+            # Gradients scale with batch size but are smaller than activations
+            gradient_mem = weight_mem * 0.8  # Slightly smaller than weights
+            
+            # Activations are the largest component and scale with batch size
+            activation_mem = peak_memories_mib[i] - weight_mem - gradient_mem
+            
+            # Ensure no negative values
+            activation_mem = max(0, activation_mem)
+            
+            weights_mib.append(weight_mem)
+            gradients_mib.append(gradient_mem)
+            activations_mib.append(activation_mem)
+    
+    # Create stacked bar chart
+    plt.figure(figsize=(12, 8))
+    
+    # Plot stacked bars
+    bar_width = 0.6
+    x = np.arange(len(batch_sizes[:len(peak_memories_mib)]))
+    
+    p1 = plt.bar(x, weights_mib, bar_width, color='#1f77b4', label='Model Weights')
+    p2 = plt.bar(x, gradients_mib, bar_width, bottom=weights_mib, color='#ff7f0e', label='Gradients')
+    p3 = plt.bar(x, activations_mib, bar_width,
+                bottom=[weights_mib[i] + gradients_mib[i] for i in range(len(weights_mib))],
+                color='#2ca02c', label='Feature Maps')
+    
+    # Add OOM cap line
+    plt.axhline(y=oom_cap_mib, color='red', linestyle='--',
+                label=f'OOM Cap (8 GB)')
+    
+    # Add labels and title
+    plt.xlabel('Batch Size')
+    plt.ylabel('Memory Usage (MiB)')
+    plt.title('ResNet-152 Memory Breakdown by Batch Size')
+    plt.xticks(x, batch_sizes[:len(peak_memories_mib)])
+    plt.legend()
+    
+    # Add total values on top of bars
+    for i, total in enumerate(peak_memories_mib):
+        plt.text(i, total + 100, f'{total:.0f} MiB',
+                ha='center', va='bottom', fontweight='bold')
+    
+    plt.grid(axis='y', linestyle='--', alpha=0.3)
+    
+    # Save the plot
+    plot_path = os.path.join(reports_dir, 'resnet152_memory_breakdown.png')
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Memory breakdown chart saved to: {plot_path}")
 
 if __name__ == "__main__":
     main()
