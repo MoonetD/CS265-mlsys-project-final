@@ -14,10 +14,36 @@ import torch.fx as fx
 from typing import Dict, List, Set, Tuple, Any, Optional
 
 def find_node_by_name(graph: fx.Graph, name: str) -> Optional[fx.Node]:
-    """Find a node in the graph by its name."""
+    """
+    Find a node in the graph by name, with fallbacks for partial matches.
+    
+    Args:
+        graph: The FX graph
+        name: The name of the node to find
+        
+    Returns:
+        The node if found, None otherwise
+    """
+    # Try exact match first
     for node in graph.nodes:
         if node.name == name:
             return node
+    
+    # Try partial matches
+    for node in graph.nodes:
+        # Check if the node name contains the target name or vice versa
+        if name in node.name or node.name in name:
+            print(f"Found partial match: node.name={node.name}, target={name}")
+            return node
+            
+    # Try without suffix (e.g., "relu_1" -> "relu")
+    if '_' in name:
+        base_name = name.split('_')[0]
+        for node in graph.nodes:
+            if node.name == base_name or base_name in node.name:
+                print(f"Found base name match: node.name={node.name}, base_name={base_name}")
+                return node
+    
     return None
 
 def extract_subgraph_for_activation(graph: fx.Graph, act_name: str, 
@@ -91,7 +117,7 @@ def identify_subgraph_inputs(subgraph_nodes: List[fx.Node],
     
     return inputs
 
-def extract_recomputation_subgraphs(graph: fx.Graph, 
+def extract_recomputation_subgraphs(graph: fx.Graph,
                                    ac_decisions: Dict[str, str],
                                    activation_liveness: Dict[str, Dict[str, int]]) -> Dict[str, Tuple[List[fx.Node], Set[fx.Node]]]:
     """
@@ -108,12 +134,47 @@ def extract_recomputation_subgraphs(graph: fx.Graph,
     recomp_subgraphs = {}
     
     # Get activations marked for recomputation and those kept
-    recomp_activations = [act for act, decision in ac_decisions.items() 
+    recomp_activations = [act for act, decision in ac_decisions.items()
                          if decision == 'RECOMPUTE']
-    kept_activations = set(act for act, decision in ac_decisions.items() 
+    kept_activations = set(act for act, decision in ac_decisions.items()
                           if decision == 'CHECKPOINT')
     
-    for act_name in recomp_activations:
+    # Create a mapping between activation names in the profiler and nodes in the graph
+    # This is needed because the node names in the traced graph might be different
+    # from the activation names in the profiler
+    name_to_node_map = {}
+    for node in graph.nodes:
+        # Try different variations of the node name
+        node_name = node.name
+        name_to_node_map[node_name] = node
+        
+        # Try without suffix (e.g., "relu_1" -> "relu")
+        if '_' in node_name:
+            base_name = node_name.split('_')[0]
+            name_to_node_map[base_name] = node
+    
+    # Print some debug info
+    print(f"Found {len(name_to_node_map)} nodes in the graph")
+    print(f"First few node names: {list(name_to_node_map.keys())[:5]}")
+    
+    for act_name in recomp_activations[:10]:  # Process first 10 for debugging
+        # Try to find the node in the graph
+        node = None
+        if act_name in name_to_node_map:
+            node = name_to_node_map[act_name]
+            print(f"Found node {node.name} for activation {act_name}")
+        else:
+            # Try to find a similar name
+            for node_name in name_to_node_map:
+                if act_name in node_name or node_name in act_name:
+                    node = name_to_node_map[node_name]
+                    print(f"Found similar node {node.name} for activation {act_name}")
+                    break
+            
+            if not node:
+                print(f"Warning: Could not find node for activation {act_name} in the graph")
+                continue
+        
         # Extract the subgraph for this activation
         subgraph_nodes = extract_subgraph_for_activation(graph, act_name, activation_liveness)
         

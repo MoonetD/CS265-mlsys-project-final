@@ -121,15 +121,59 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
     if ac_decisions:
         recompute_target = sum(1 for v in ac_decisions.values() if v == 'RECOMPUTE')
     
-    # For now, we'll skip the graph rewriter approach and use the bottleneck checkpointing approach
-    # This is because the node names in the activation_liveness dictionary don't match the node names in the traced graph
-    # In a real-world implementation, we would need to map between these two naming schemes
-    if False and ac_decisions and activation_liveness and recompute_target > 0:
+    # Try to use the graph rewriter approach if we have AC decisions and activation liveness info
+    if ac_decisions and activation_liveness and recompute_target > 0:
         try:
             print(f"Using graph rewriter approach with {recompute_target} activations marked for recomputation")
-            # ... (existing code)
+            
+            # Create a sample input for tracing
+            sample_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
+            
+            # Trace the model to get an FX graph
+            traced_model = trace_model_for_ac(model, sample_input)
+            
+            if traced_model:
+                # Extract subgraphs for recomputation
+                subgraphs = extract_recomputation_subgraphs(
+                    traced_model.graph,
+                    ac_decisions,
+                    activation_liveness
+                )
+                
+                print(f"Extracted {len(subgraphs)} subgraphs for recomputation")
+                
+                # Check if we have any valid subgraphs
+                valid_subgraphs = {k: v for k, v in subgraphs.items() if v[0]}  # Filter out empty node lists
+                
+                if valid_subgraphs:
+                    # Print some details about the subgraphs for debugging
+                    for act_name, (nodes, inputs) in list(valid_subgraphs.items())[:5]:  # Show first 5 for brevity
+                        print(f"  Subgraph for {act_name}: {len(nodes)} nodes, {len(inputs)} inputs")
+                        print(f"    First few nodes: {[n.name for n in nodes[:3]]}")
+                        print(f"    First few inputs: {[n.name for n in list(inputs)[:3]]}")
+                    
+                    # Rewrite the graph with recomputation
+                    rewritten_graph = rewrite_graph_with_recomputation(
+                        traced_model.graph,
+                        valid_subgraphs,
+                        activation_liveness
+                    )
+                    
+                    # Apply the rewritten graph to the model
+                    model_with_ac = apply_rewritten_graph(
+                        model_with_ac,
+                        traced_model.graph,
+                        rewritten_graph
+                    )
+                    
+                    print(f"Successfully applied graph rewriting for activation checkpointing")
+                    return model_with_ac
+                else:
+                    print(f"No valid subgraphs extracted, falling back to bottleneck checkpointing")
+            else:
+                print(f"Failed to trace model, falling back to bottleneck checkpointing")
         except Exception as e:
-            print(f"Error in graph rewriter approach: {e}")
+            print(f"Error in graph rewriter approach: {str(e)}")
             print(f"Falling back to bottleneck checkpointing")
     else:
         print(f"Using bottleneck checkpointing approach")

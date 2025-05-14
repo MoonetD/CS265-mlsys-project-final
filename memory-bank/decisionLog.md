@@ -398,6 +398,23 @@ The existing batch memory analysis script only generated a simple bar graph show
 The implementation in [`starter_code/batch_memory_analysis.py`](starter_code/batch_memory_analysis.py) was enhanced with:
 
 1. **Extended Batch Size Range:**
+</content>
+</file>
+
+---
+### Decision (Code)
+[2025-05-14 03:10:00] - Implementing graph rewriter with fallback to bottleneck checkpointing
+
+**Rationale:**
+The graph rewriter approach is more flexible and can potentially achieve better performance, but it requires matching node names between the profiler and the traced graph. If this matching fails, we need a reliable fallback mechanism.
+
+**Details:**
+- Enhanced `find_node_by_name` in `starter_code/graph_rewriter.py` to handle partial matches and base name matches
+- Added name-to-node mapping in `extract_recomputation_subgraphs` to improve node matching
+- Implemented fallback to bottleneck checkpointing in `starter_code/ac_comparison.py` when no valid subgraphs are extracted
+- This ensures that even if the graph rewriter fails, we still get the memory reduction benefits of activation checkpointing
+- Results show impressive memory reduction (40.5% - 63.6%) with acceptable time overhead that decreases as batch size increases
+- For larger batch sizes (32 and 64), we even see a time improvement (-21.1% and -5.3%)
    * Added batch size 64 to the existing range (4, 8, 16, 32) for more comprehensive analysis
    * This provides better insights into memory scaling behavior at larger batch sizes
 
