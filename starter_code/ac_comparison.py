@@ -121,7 +121,7 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
     
     Args:
         model: The model to apply checkpointing to
-        ac_decisions: Dictionary mapping activation names to 'CHECKPOINT' or 'RECOMPUTE'
+        ac_decisions: Dictionary mapping activation names to 'RETAINED' or 'RECOMPUTE'
         percentage: Percentage of bottleneck blocks to apply checkpointing to if ac_decisions is None
         activation_liveness: Dictionary with activation liveness information
         debug: Whether to print debug information
@@ -141,8 +141,8 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
     checkpoint_target = 0
     if ac_decisions:
         recompute_target = sum(1 for v in ac_decisions.values() if v == 'RECOMPUTE')
-        checkpoint_target = sum(1 for v in ac_decisions.values() if v == 'CHECKPOINT')
-        print(f"AC decisions: {recompute_target} RECOMPUTE, {checkpoint_target} CHECKPOINT")
+        checkpoint_target = sum(1 for v in ac_decisions.values() if v == 'RETAINED')
+        print(f"AC decisions: {recompute_target} RECOMPUTE, {checkpoint_target} RETAINED")
         
         if debug:
             print(f"[DEBUG] AC decisions details:")
@@ -470,12 +470,12 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
         
         # Count decisions
         recompute_count = sum(1 for decision in ac_decisions.values() if decision == 'RECOMPUTE')
-        checkpoint_count = sum(1 for decision in ac_decisions.values() if decision == 'CHECKPOINT')
-        print(f"AC decisions: {recompute_count} RECOMPUTE, {checkpoint_count} CHECKPOINT")
+        checkpoint_count = sum(1 for decision in ac_decisions.values() if decision == 'RETAINED')
+        print(f"AC decisions: {recompute_count} RECOMPUTE, {checkpoint_count} RETAINED")
         
         if debug:
             print(f"[DEBUG] Algorithm made {len(ac_decisions)} decisions")
-            print(f"[DEBUG] RECOMPUTE: {recompute_count}, CHECKPOINT: {checkpoint_count}")
+            print(f"[DEBUG] RECOMPUTE: {recompute_count}, RETAINED: {checkpoint_count}")
             
         # Save AC decisions to a CSV file
         reports_dir = ensure_reports_directory()
@@ -509,7 +509,7 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
             print("\n--- Detailed Summary of AC Decisions ---")
             print(f"Total activations: {len(ac_decisions)}")
             print(f"RECOMPUTE: {recompute_count} ({recompute_count/len(ac_decisions)*100:.1f}%)")
-            print(f"CHECKPOINT: {checkpoint_count} ({checkpoint_count/len(ac_decisions)*100:.1f}%)")
+            print(f"RETAINED: {checkpoint_count} ({checkpoint_count/len(ac_decisions)*100:.1f}%)")
             
             # Calculate total memory savings and recomputation overhead
             total_memory_bytes = sum(decisions_df['memory_size_bytes'])

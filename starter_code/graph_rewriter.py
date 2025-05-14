@@ -15,7 +15,7 @@ from typing import Dict, List, Set, Tuple, Any, Optional
 
 def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> Optional[fx.Node]:
     """
-    Find a node in the graph by name, simplified to use exact FX node names.
+    Find a node in the graph primarily by rank, with name matching as fallback.
     
     Args:
         graph: The FX graph
@@ -25,22 +25,48 @@ def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[
     Returns:
         The node if found, None otherwise
     """
-    # Strategy 1: Exact match (which should now work in most cases)
-    for node in graph.nodes:
-        if node.name == name:
-            return node
-    
-    # Strategy 2: Match by rank as fallback (if activation_liveness is provided)
+    # Strategy 1: Match by rank (if activation_liveness is provided)
     if activation_liveness and name in activation_liveness:
         creation_rank = activation_liveness[name].get('creation_rank')
         if creation_rank is not None:
+            # Create a mapping of ranks to nodes for efficient lookup
+            rank_to_node = {}
             for node in graph.nodes:
-                if hasattr(node, 'meta') and node.meta.get('rank') == creation_rank:
-                    print(f"Found node {node.name} by rank {creation_rank} for activation {name}")
+                if hasattr(node, 'meta') and 'rank' in node.meta:
+                    rank_to_node[node.meta['rank']] = node
+            
+            # Try to find the exact rank
+            if creation_rank in rank_to_node:
+                node = rank_to_node[creation_rank]
+                print(f"Found node {node.name} by exact rank {creation_rank} for activation {name}")
+                return node
+            
+            # If exact rank not found, try to find the closest rank
+            # This is useful if the ranks in the graph are slightly different from the ranks in activation_liveness
+            if rank_to_node:
+                # Filter ranks to only include those that are close to the target rank
+                # This prevents finding the same node for very different target ranks
+                close_ranks = [r for r in rank_to_node.keys() if abs(r - creation_rank) < 100]
+                
+                if close_ranks:
+                    closest_rank = min(close_ranks, key=lambda r: abs(r - creation_rank))
+                    node = rank_to_node[closest_rank]
+                    print(f"Found node {node.name} by closest rank {closest_rank} (target: {creation_rank}) for activation {name}")
                     return node
+                else:
+                    print(f"No ranks close enough to target rank {creation_rank} for activation {name}")
+    
+    # Strategy 2: Exact name match as fallback
+    for node in graph.nodes:
+        if node.name == name:
+            print(f"Found node {node.name} by exact name match for activation {name}")
+            return node
     
     # If not found, log detailed information
     print(f"Warning: Could not find node for activation {name} in the graph")
+    if activation_liveness and name in activation_liveness:
+        print(f"  Activation creation_rank: {activation_liveness[name].get('creation_rank')}")
+        print(f"  Available graph node ranks: {[node.meta.get('rank') for node in graph.nodes if hasattr(node, 'meta') and 'rank' in node.meta][:10]}...")
     return None
 
 def extract_subgraph_for_activation(graph: fx.Graph, act_name: str,
@@ -81,11 +107,50 @@ def extract_subgraph_for_activation(graph: fx.Graph, act_name: str,
     
     # Find all nodes between creation and last forward use
     subgraph_nodes = []
+    # Create a mapping of ranks to nodes for efficient lookup
+    rank_to_node = {}
     for node in graph.nodes:
-        # Get the node's rank (if available in meta)
-        node_rank = getattr(node, "meta", {}).get("rank", -1)
-        if isinstance(node_rank, int) and creation_rank <= node_rank <= last_fw_use_rank:
-            subgraph_nodes.append(node)
+        if hasattr(node, 'meta') and 'rank' in node.meta:
+            rank_to_node[node.meta['rank']] = node
+    
+    # Find all nodes between creation and last forward use
+    # Use the actual ranks in the graph, not the ranks from activation_liveness
+    graph_ranks = sorted(rank_to_node.keys())
+    
+    # Find the closest graph ranks to creation_rank and last_fw_use_rank
+    if graph_ranks:
+        # Find a reasonable range of ranks to consider for creation_rank
+        close_creation_ranks = [r for r in graph_ranks if abs(r - creation_rank) < 100]
+        if close_creation_ranks:
+            closest_creation_rank = min(close_creation_ranks, key=lambda r: abs(r - creation_rank))
+        else:
+            print(f"Warning: No ranks close enough to creation_rank {creation_rank} for activation {act_name}")
+            closest_creation_rank = min(graph_ranks, key=lambda r: abs(r - creation_rank))
+        
+        # Find a reasonable range of ranks to consider for last_fw_use_rank
+        close_last_fw_ranks = [r for r in graph_ranks if abs(r - last_fw_use_rank) < 100]
+        if close_last_fw_ranks:
+            closest_last_fw_rank = min(close_last_fw_ranks, key=lambda r: abs(r - last_fw_use_rank))
+        else:
+            print(f"Warning: No ranks close enough to last_fw_use_rank {last_fw_use_rank} for activation {act_name}")
+            closest_last_fw_rank = min(graph_ranks, key=lambda r: abs(r - last_fw_use_rank))
+        
+        # Ensure closest_creation_rank <= closest_last_fw_rank
+        if closest_creation_rank > closest_last_fw_rank:
+            print(f"Warning: Adjusted ranks for activation {act_name} (creation: {closest_creation_rank}, last_fw: {closest_last_fw_rank})")
+            closest_creation_rank, closest_last_fw_rank = closest_last_fw_rank, closest_creation_rank
+        
+        # Expand the range slightly to ensure we capture all relevant nodes
+        # This helps ensure we get a more complete subgraph
+        rank_range_min = max(0, closest_creation_rank - 5)
+        rank_range_max = min(max(graph_ranks), closest_last_fw_rank + 5)
+        
+        print(f"Extracting subgraph for {act_name} with rank range: {rank_range_min} to {rank_range_max}")
+        
+        # Get all nodes with ranks between rank_range_min and rank_range_max
+        for rank in graph_ranks:
+            if rank_range_min <= rank <= rank_range_max:
+                subgraph_nodes.append(rank_to_node[rank])
     
     if not subgraph_nodes:
         print(f"Warning: No nodes found in subgraph for activation {act_name}")
@@ -208,10 +273,29 @@ def insert_subgraph_before_node(graph: fx.Graph,
         else:
             print(f"Warning: Input node {input_node.name} not found in environment")
             # Try to find a node with the same name in the target graph
+            found = False
             for node in graph.nodes:
                 if node.name == input_node.name:
                     local_env[input_node] = node
+                    found = True
                     break
+            
+            # If we still can't find it by name, try to find it by rank
+            if not found and hasattr(input_node, 'meta') and 'rank' in input_node.meta:
+                input_rank = input_node.meta['rank']
+                closest_node = None
+                closest_rank_diff = float('inf')
+                
+                for node in graph.nodes:
+                    if hasattr(node, 'meta') and 'rank' in node.meta:
+                        rank_diff = abs(node.meta['rank'] - input_rank)
+                        if rank_diff < closest_rank_diff:
+                            closest_rank_diff = rank_diff
+                            closest_node = node
+                
+                if closest_node and closest_rank_diff < 100:  # Only use if reasonably close
+                    local_env[input_node] = closest_node
+                    print(f"Found input node {input_node.name} by rank proximity (rank diff: {closest_rank_diff})")
     
     # Now insert the subgraph
     try:
@@ -282,14 +366,32 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
             
         first_bw_use_rank = activation_liveness[act_name]["first_bw_use_rank"]
         
-        # Find the node with this rank in the new graph
+        # Find the node with this rank in the new graph using a similar approach as extract_subgraph_for_activation
         first_bw_use_node = None
+        
+        # Create a mapping of ranks to nodes for efficient lookup
+        rank_to_node = {}
         for node in new_graph.nodes:
-            node_rank = getattr(node, "meta", {}).get("rank", -1)
-            if isinstance(node_rank, int) and node_rank == first_bw_use_rank:
-                first_bw_use_node = node
-                break
-                
+            if hasattr(node, 'meta') and 'rank' in node.meta:
+                rank_to_node[node.meta['rank']] = node
+        
+        # Find the closest graph rank to first_bw_use_rank
+        if rank_to_node:
+            # Get all ranks in the graph
+            graph_ranks = sorted(rank_to_node.keys())
+            
+            # Find a reasonable range of ranks to consider for first_bw_use_rank
+            close_ranks = [r for r in graph_ranks if abs(r - first_bw_use_rank) < 100]
+            if close_ranks:
+                closest_rank = min(close_ranks, key=lambda r: abs(r - first_bw_use_rank))
+                first_bw_use_node = rank_to_node[closest_rank]
+                print(f"Found first backward use node {first_bw_use_node.name} by closest rank {closest_rank} (target: {first_bw_use_rank}) for activation {act_name}")
+            else:
+                print(f"Warning: No ranks close enough to first_bw_use_rank {first_bw_use_rank} for activation {act_name}")
+                closest_rank = min(graph_ranks, key=lambda r: abs(r - first_bw_use_rank))
+                first_bw_use_node = rank_to_node[closest_rank]
+                print(f"Using fallback: Found node {first_bw_use_node.name} by closest rank {closest_rank} (target: {first_bw_use_rank}) for activation {act_name}")
+        
         if not first_bw_use_node:
             print(f"Skipping {act_name}: Could not find first backward use node with rank {first_bw_use_rank}")
             continue
@@ -306,9 +408,37 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
                 original_act_node = find_node_by_name(new_graph, act_name, activation_liveness)
                 
                 if original_act_node:
-                    # Replace uses of the original activation with the recomputed one
-                    original_act_node.replace_all_uses_with(recomputed_node)
-                    print(f"Successfully replaced uses of {act_name} with recomputed node {recomputed_node.name}")
+                    # We need to be careful about replacing uses of the original activation
+                    # We only want to replace uses that occur AFTER the first backward use
+                    # This ensures we don't disrupt the forward pass
+                    
+                    # Get the rank of the first backward use
+                    first_bw_use_rank = activation_liveness[act_name].get("first_bw_use_rank", -1)
+                    
+                    # Find all users of the original activation
+                    users_to_replace = []
+                    for user in original_act_node.users:
+                        # Check if this user is in the backward pass (has rank >= first_bw_use_rank)
+                        user_rank = getattr(user, "meta", {}).get("rank", -1)
+                        if user_rank >= first_bw_use_rank:
+                            users_to_replace.append(user)
+                    
+                    # Replace only the backward pass uses
+                    for user in users_to_replace:
+                        # Find all arguments to this user that reference the original activation
+                        for i, arg in enumerate(user.args):
+                            if arg is original_act_node:
+                                # Replace this argument with the recomputed node
+                                new_args = list(user.args)
+                                new_args[i] = recomputed_node
+                                user.args = tuple(new_args)
+                        
+                        # Also check kwargs
+                        for key, arg in user.kwargs.items():
+                            if arg is original_act_node:
+                                user.kwargs[key] = recomputed_node
+                    
+                    print(f"Successfully replaced {len(users_to_replace)} backward uses of {act_name} with recomputed node {recomputed_node.name}")
                     successful_insertions += 1
                 else:
                     print(f"Warning: Could not find original activation node {act_name} in new graph")
@@ -371,15 +501,53 @@ def trace_model_for_ac(model: torch.nn.Module,
         # Add rank metadata to the traced graph
         # This is critical for matching nodes between the profiler and rewriter
         print(f"Adding rank metadata to {len(list(gm.graph.nodes))} nodes in traced graph")
-        for i, node in enumerate(gm.graph.nodes):
+        
+        # First, identify forward and backward sections
+        # We'll use this to assign more meaningful ranks that better align with the profiler
+        fw_nodes = []
+        bw_nodes = []
+        
+        # Heuristic: nodes before the first gradient-related node are forward nodes
+        # Nodes after are backward nodes
+        found_backward = False
+        for node in gm.graph.nodes:
+            # Look for gradient-related operations as indicators of backward pass
+            if (node.op == 'call_function' and 'grad' in str(node.target).lower()) or \
+               (node.op == 'call_method' and 'backward' in str(node.target).lower()):
+                found_backward = True
+            
+            if found_backward:
+                bw_nodes.append(node)
+            else:
+                fw_nodes.append(node)
+        
+        # Assign ranks with a gap between forward and backward to better match profiler ranks
+        # Forward ranks: 0 to 999
+        # Backward ranks: 1000+
+        fw_step = 1000 // max(1, len(fw_nodes))
+        for i, node in enumerate(fw_nodes):
             if not hasattr(node, 'meta'):
                 node.meta = {}
-            node.meta['rank'] = i
-            
-            # Print the first few nodes for debugging
+            node.meta['rank'] = i * fw_step
+            node.meta['gtype'] = 'fw'
+        
+        for i, node in enumerate(bw_nodes):
+            if not hasattr(node, 'meta'):
+                node.meta = {}
+            node.meta['rank'] = 1000 + i
+            node.meta['gtype'] = 'bw'
+        
+        # Print the first few nodes for debugging
+        for i, node in enumerate(gm.graph.nodes):
             if i < 5:
-                print(f"Node {i}: name='{node.name}', op='{node.op}', meta_rank='{node.meta['rank']}'")
-                
+                print(f"Node {i}: name='{node.name}', op='{node.op}', meta_rank='{node.meta['rank']}', gtype='{node.meta['gtype']}'")
+        
+        # Print some additional debugging information
+        print(f"Graph node count: {len(list(gm.graph.nodes))}")
+        print(f"Forward nodes: {len(fw_nodes)}, Backward nodes: {len(bw_nodes)}")
+        print(f"First 10 node names: {[node.name for node in list(gm.graph.nodes)[:10]]}")
+        print(f"First 10 node ranks: {[node.meta.get('rank') for node in list(gm.graph.nodes)[:10]]}")
+        
         # Recompile the graph to ensure metadata is properly attached
         gm.recompile()
         return gm

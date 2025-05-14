@@ -7,6 +7,8 @@
 
 ## Current Focus
 
+* [2025-05-14 12:44:30] - Enhanced backward node lookup in graph rewriter for activation checkpointing by modifying `rewrite_graph_with_recomputation` to find the closest graph rank to the first_bw_use_rank from activation_liveness, making the backward node lookup more robust.
+* [2025-05-14 12:42:00] - Fixed subgraph extraction for recomputation in activation checkpointing by modifying `graph_rewriter.py` to use node ranks instead of name matching. This resolves the "Warning: Could not find node for activation" errors by making node lookup more robust.
 * Investigating subgraph extraction failures in `GraphRewriter.rewrite_graph_for_recomputation()`. (Resolved by improving node lookup)
 * [2025-05-14 11:12:00] - Diagnosing `GraphRewriter` subgraph extraction failures. Detailed logging added to `find_node_by_name`. Logs confirm name and rank mismatches between profiler data and rewriter's graph.
 * [2025-05-14 12:11:00] - Created comprehensive summary report (`REPORT.md`) documenting the three stages of activation checkpointing implementation, key findings, improvements made, performance results, and recommendations for future work.

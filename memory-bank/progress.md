@@ -5,6 +5,8 @@ This file tracks the project's progress using a task list format.
 
 *
 
+* [2025-05-14 12:44:30] - Completed Task: Enhanced backward node lookup in graph rewriter for activation checkpointing. Modified `rewrite_graph_with_recomputation` in `starter_code/graph_rewriter.py` to find the closest graph rank to the first_bw_use_rank from activation_liveness, making the backward node lookup more robust.
+* [2025-05-14 12:42:00] - Completed Task: Fixed subgraph extraction for recomputation in the activation checkpointing implementation. Modified `find_node_by_name` and `extract_subgraph_for_activation` in `starter_code/graph_rewriter.py` to use node ranks instead of name matching, making the node lookup more robust and reliable. Enhanced `trace_model_for_ac` with additional debugging information.
 ## Completed Tasks
 
 *
