@@ -361,37 +361,32 @@ class ActivationCheckpointingAlgorithm:
             # Process a batch of candidates at a time for efficiency
             candidates_to_process = list(candidate_set)[:batch_size]
             
+            print(f"Processing {len(candidates_to_process)} candidates in this batch")
+            
             for act_name in candidates_to_process:
-                # Select swap candidate with maximum inactive time
-                s_cand = self._get_max_inactive_time_candidate(candidate_set)
-                if s_cand is None:
-                    continue
-                    
-                # Calculate swap overhead
-                s_overhead, prompt_node = self._calculate_swap_overhead_v2(s_cand, last_prompt)
-                
-                # Select recompute candidate with maximum recompute ratio
+                # For activation checkpointing, we only consider recomputation
+                # Select candidate with maximum memory savings potential (memory size / recompute time)
                 r_cand = self._get_max_recompute_ratio_candidate(candidate_set)
                 if r_cand is None:
+                    print(f"DEBUG: No valid recompute candidate found")
                     continue
-                    
-                # Calculate recompute overhead
-                r_overhead = self._calculate_recompute_overhead_v2(r_cand)
                 
-                # Make decision based on overhead comparison
-                if s_overhead < r_overhead:
-                    # Choose to swap
-                    print(f"Choosing to CHECKPOINT {s_cand} (swap overhead: {s_overhead:.6f}s, recompute overhead: {r_overhead:.6f}s)")
-                    current_schedule[s_cand] = 'CHECKPOINT'
-                    swaps.add(s_cand)
-                    last_prompt = prompt_node
-                    cand = s_cand
-                else:
-                    # Choose to recompute
-                    print(f"Choosing to RECOMPUTE {r_cand} (swap overhead: {s_overhead:.6f}s, recompute overhead: {r_overhead:.6f}s)")
-                    current_schedule[r_cand] = 'RECOMPUTE'
-                    recomps.add(r_cand)
-                    cand = r_cand
+                # Get details for debugging
+                r_details = self._get_activation_details(r_cand)
+                
+                # Calculate memory savings and recompute overhead
+                mem_size = r_details.get('avg_mem_size_bytes', 0) / (1024 * 1024)  # Convert to MB
+                recomp_time = r_details.get('recomp_time_s', 0)
+                recomp_ratio = r_details.get('avg_mem_size_bytes', 0) / (recomp_time + 1e-10)
+                
+                print(f"DEBUG: Considering activation: {r_cand}, recomp_ratio: {recomp_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s")
+                
+                # Always choose to recompute to save memory
+                # This is the core of activation checkpointing - we discard activations and recompute them
+                print(f"Choosing to RECOMPUTE {r_cand} (memory saved: {mem_size:.2f} MB, recompute overhead: {recomp_time:.6f}s)")
+                current_schedule[r_cand] = 'RECOMPUTE'
+                recomps.add(r_cand)
+                cand = r_cand
                 
                 # Remove chosen candidate from set
                 candidate_set.remove(cand)
@@ -402,8 +397,8 @@ class ActivationCheckpointingAlgorithm:
                 # Update remaining candidates based on this decision
                 self._update_candidates(cand, recomp_cnt, candidate_set)
                 
-                # Update swap prompts if needed
-                self._update_swap_prompts(swaps, candidate_set)
+                # We don't need to update swap prompts since we're only doing recomputation
+                # self._update_swap_prompts(swaps, candidate_set)
                 
                 # Check if memory budget is met after this decision
                 current_peak_memory, _ = self._simulate_memory_usage(current_schedule, fixed_overhead_bytes)
@@ -448,9 +443,19 @@ class ActivationCheckpointingAlgorithm:
     def _get_max_recompute_ratio_candidate(self, candidate_set):
         """
         Select the candidate with maximum recompute ratio (memory_size / recompute_time).
+        Only consider candidates with significant memory size to make recomputation worthwhile.
         """
         max_ratio = -1
         max_candidate = None
+        
+        print(f"DEBUG: _get_max_recompute_ratio_candidate - Checking {len(candidate_set)} candidates")
+        
+        # Count candidates with valid recompute ratios
+        valid_candidates = 0
+        significant_candidates = 0
+        
+        # Minimum memory size to consider for recomputation (1 MB)
+        MIN_MEMORY_SIZE_BYTES = 1 * 1024 * 1024
         
         for act_name in candidate_set:
             act_details = self._get_activation_details(act_name)
@@ -466,10 +471,26 @@ class ActivationCheckpointingAlgorithm:
             if pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
                 continue
                 
+            valid_candidates += 1
+            
+            # Skip candidates with very small memory size
+            if mem_size < MIN_MEMORY_SIZE_BYTES:
+                continue
+                
+            significant_candidates += 1
             ratio = mem_size / recomp_time
+            
             if ratio > max_ratio:
                 max_ratio = ratio
                 max_candidate = act_name
+        
+        print(f"DEBUG: _get_max_recompute_ratio_candidate - Found {valid_candidates} valid candidates, {significant_candidates} with significant memory size")
+        if max_candidate:
+            act_details = self._get_activation_details(max_candidate)
+            mem_size = act_details['avg_mem_size_bytes'] / (1024 * 1024)  # Convert to MB
+            print(f"DEBUG: _get_max_recompute_ratio_candidate - Best candidate: {max_candidate} with ratio: {max_ratio:.2f}, mem_size: {mem_size:.2f} MB")
+        else:
+            print(f"DEBUG: _get_max_recompute_ratio_candidate - No valid candidate found with significant memory size")
                 
         return max_candidate
         
@@ -488,12 +509,16 @@ class ActivationCheckpointingAlgorithm:
         """
         act_details = self._get_activation_details(act_name)
         if act_details is None:
+            print(f"DEBUG: _calculate_swap_overhead_v2 - No details found for {act_name}")
             return float('inf'), last_prompt
             
         # Get first backward access node and swap time
-        first_bw_use = act_details['first_bw_use_rank']
-        if pd.isna(first_bw_use):
+        first_bw_use = act_details.get('first_bw_use_rank', None)
+        if pd.isna(first_bw_use) or first_bw_use is None:
+            print(f"DEBUG: _calculate_swap_overhead_v2 - No first_bw_use_rank for {act_name}")
             return float('inf'), last_prompt
+            
+        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} first_bw_use_rank: {first_bw_use}")
             
         bw_access = None
         for _, node_details in self.node_stats_df.iterrows():
@@ -502,11 +527,17 @@ class ActivationCheckpointingAlgorithm:
                 break
                 
         if bw_access is None:
+            print(f"DEBUG: _calculate_swap_overhead_v2 - No node found with rank {first_bw_use}")
             return float('inf'), last_prompt
             
-        swap_time = act_details['avg_swap_time_s']
-        if pd.isna(swap_time):
+        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} bw_access: {bw_access}")
+            
+        swap_time = act_details.get('avg_swap_time_s', None)
+        if pd.isna(swap_time) or swap_time is None:
+            print(f"DEBUG: _calculate_swap_overhead_v2 - No avg_swap_time_s for {act_name}")
             return float('inf'), last_prompt
+            
+        print(f"DEBUG: _calculate_swap_overhead_v2 - {act_name} swap_time: {swap_time:.6f}s")
             
         # Check if we're in peak memory interval
         # This is a simplification - in a full implementation, we would need to
@@ -533,7 +564,13 @@ class ActivationCheckpointingAlgorithm:
         
         # Case 3: Partial overlap
         # Return the remaining swap time as the overhead
-        return max(0, remaining_swap_time), bw_access
+        # Ensure swap overhead is never zero to make fair comparison with recompute overhead
+        MIN_SWAP_OVERHEAD = 0.000001  # 1 microsecond
+        
+        # Calculate the final swap overhead
+        swap_overhead = max(MIN_SWAP_OVERHEAD, remaining_swap_time)
+        
+        return swap_overhead, bw_access
         
     def _calculate_recompute_overhead_v2(self, act_name):
         """
@@ -547,12 +584,15 @@ class ActivationCheckpointingAlgorithm:
         """
         act_details = self._get_activation_details(act_name)
         if act_details is None:
+            print(f"DEBUG: _calculate_recompute_overhead_v2 - No details found for {act_name}")
             return float('inf')
             
-        recomp_time = act_details['recomp_time_s']
-        if pd.isna(recomp_time):
+        recomp_time = act_details.get('recomp_time_s', None)
+        if pd.isna(recomp_time) or recomp_time is None:
+            print(f"DEBUG: _calculate_recompute_overhead_v2 - No recomp_time_s for {act_name}")
             return float('inf')
             
+        print(f"DEBUG: _calculate_recompute_overhead_v2 - {act_name} recomp_time: {recomp_time:.6f}s")
         return recomp_time
         
     def _update_recomps(self, cand, recomps):

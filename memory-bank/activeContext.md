@@ -154,3 +154,15 @@
     * Properly validate model correctness by comparing outputs with appropriate tolerances
     * Show realistic memory reduction (22.2%) and time overhead (1.5%) for batch size 4
     * Generate accurate comparison charts with correct memory and time measurements
+* [2025-05-14 03:25:00] - Current Focus: Implementing the activation checkpointing algorithm from μ-TWO paper
+* [2025-05-14 03:26:00] - Recent Changes: Fixed activation checkpointing algorithm to properly implement μ-TWO Algorithm B
+* [2025-05-14 03:27:00] - Recent Changes: Enhanced memory simulation to accurately model memory consumption (Algorithm G)
+* [2025-05-14 10:20:00] - Current Focus: Adding timeout mechanism to activation checkpointing algorithm to prevent it from getting stuck with low memory budgets
+* [2025-05-14 10:21:00] - Recent Changes: Added timeout mechanism to activation checkpointing algorithm
+* [2025-05-14 10:35:00] - Current Focus: Refocusing activation checkpointing algorithm on recomputation only
+* [2025-05-14 10:35:00] - Recent Changes: Modified the algorithm to only consider recomputation, not swapping
+* [2025-05-14 10:37:00] - Recent Changes: Tested activation checkpointing with multiple batch sizes (4, 8, 16, 32)
+* [2025-05-14 10:38:00] - Current Focus: Implementing Stage 3: Graph Extractor and Rewriter for activation checkpointing
+* [2025-05-14 10:38:00] - Open Questions/Issues: Why is the graph rewriter unable to extract subgraphs for activations marked for recomputation?
+* [2025-05-14 10:38:00] - Open Questions/Issues: How can we improve the node name matching in the graph rewriter to correctly identify activations?
+* [2025-05-14 10:38:00] - Open Questions/Issues: Should we implement a more robust fallback mechanism when subgraph extraction fails?

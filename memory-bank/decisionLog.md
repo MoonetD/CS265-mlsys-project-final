@@ -31,6 +31,20 @@ The activation checkpointing algorithm was getting stuck when running with a low
 
 These changes ensure the algorithm always terminates within a reasonable time, even with challenging memory constraints, and provides the best solution found so far.
 ---
+### Decision (Code)
+[2025-05-14 10:35:00] - Refocused activation checkpointing algorithm on recomputation only.
+
+**Rationale:**
+After reviewing the project requirements and the μ-TWO paper, we realized that the project is specifically focused on activation checkpointing through recomputation, not swapping. The original algorithm was considering both swapping and recomputation, but the project requirements in Phase 2 specifically mention implementing "the activation checkpointing algorithm in Π-TWO that decides the subset of the activations to be retained and the subset of the activations to be recomputed."
+
+**Details:**
+1. Modified the algorithm to only consider recomputation, not swapping
+2. Removed the swap overhead calculation and comparison
+3. Simplified the decision-making process to always choose recomputation for activations with high memory-to-recompute-time ratio
+4. Removed unnecessary swap-related code and variables
+
+These changes align the implementation more closely with the project requirements and resulted in better memory reduction (40.50% vs 22.17% previously) with a reasonable time overhead (47.20%).
+---
 ---
 ### Decision (Code)
 [2025-05-12 18:18:27] - Implemented static graph analysis in `GraphProfiler.__init__`.
