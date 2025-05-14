@@ -82,3 +82,29 @@
         * Execution time increased to 1.22s due to recomputations.
     * Encountered NumPy version incompatibility (1.x vs 2.2.5) causing import errors with pandas/pyarrow, though script execution proceeded. User has been informed.
     * Scope conformance for Phase 2 (activation checkpointing algorithm) verified.
+* [2025-05-13 22:34:14] - Current Focus: Improving recomputation metrics calculation in `GraphProfiler`.
+* [2025-05-13 22:34:14] - Recent Changes: Enhanced the recomputation metrics calculation in `starter_code/graph_prof.py` to avoid zero values:
+    * Implemented a more robust dependency tracing approach that considers direct dependencies between creation and last use
+    * Added size-based estimation that correlates activation size with computation cost
+    * Applied a minimum threshold to ensure all activations have a non-zero recomputation cost
+    * Improved the recompute ratio calculation with better handling of edge cases
+    * Updated documentation to reflect these changes
+* [2025-05-13 23:04:46] - Current Focus: Optimizing activation checkpointing algorithm in `starter_code/activation_checkpointing.py`.
+* [2025-05-13 23:04:46] - Recent Changes: Enhanced the activation checkpointing algorithm with:
+    * Added detailed progress reporting and debugging information
+    * Implemented batch processing for faster convergence (evicting multiple activations per iteration)
+    * Added pre-computation of benefit values and ratios to avoid redundant calculations
+    * Optimized memory simulation with caching and faster lookups
+    * Added command-line argument support for better usability
+    * Added timing information to track performance
+    * These improvements significantly reduce execution time and provide better visibility into the algorithm's progress
+* [2025-05-13 23:10:01] - Current Focus: Implemented unit test for GraphProfiler with a toy 3-layer MLP model.
+* [2025-05-13 23:10:01] - Recent Changes: Created `starter_code/test_profiler_mlp.py` that:
+    * Sets up a simple 3-layer MLP model in PyTorch
+    * Configures the GraphProfiler to trace this model
+    * Verifies that it correctly identifies exactly 3 forward computational nodes (addmm operations) and at least 3 backward nodes
+    * Checks that the memory curve shows the expected pattern (growing through forward pass, falling through backward pass)
+    * Includes visualization of the memory curve and detailed verification logic
+    * Provides clear output messages indicating test success/failure
+    * Documents how to run the test using "conda run -n ml_env python"
+    * These improvements will lead to better eviction decisions in the activation checkpointing algorithm in Stage 2

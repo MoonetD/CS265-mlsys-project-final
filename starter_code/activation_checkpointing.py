@@ -86,7 +86,7 @@ class ActivationCheckpointingAlgorithm:
             return None
         return self.node_stats_df.loc[node_name]
 
-    def _simulate_memory_usage(self, current_schedule, fixed_overhead_bytes=0):
+    def _simulate_memory_usage(self, current_schedule, fixed_overhead_bytes=0, debug=False):
         """
         Simulates peak memory usage and total execution time based on a given schedule.
         Inspired by Algorithm G from the u-TWO paper.
@@ -94,29 +94,48 @@ class ActivationCheckpointingAlgorithm:
         Args:
             current_schedule (dict): Activation name to decision ('CHECKPOINT', 'RECOMPUTE').
             fixed_overhead_bytes (float): Estimated memory for parameters, gradients, optimizer.
+            debug (bool): Whether to print detailed debug information.
 
         Returns:
             float: Estimated peak GPU memory in bytes.
             float: Total execution time in seconds.
         """
+        if debug:
+            print(f"Starting memory simulation with {len(current_schedule)} activations...")
+            print(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.3f} GB")
+            
         # --- Calculate Total Execution Time ---
         # Start with sum of all base node run times
+        if debug:
+            print("Calculating total execution time...")
+            
         total_execution_time = self.node_stats_df['avg_run_time_s'].sum()
+        
         # Add recomputation times for activations scheduled for RECOMPUTE
+        recompute_count = 0
+        recompute_time_total = 0.0
+        
         for act_name, decision in current_schedule.items():
             if decision == 'RECOMPUTE':
                 act_details = self._get_activation_details(act_name)
                 # Ensure act_details is a Series and 'recomp_time' exists
                 if act_details is not None and isinstance(act_details, pd.Series) and \
                    'recomp_time_s' in act_details.index and pd.notna(act_details['recomp_time_s']):
-                    total_execution_time += act_details['recomp_time_s']
-                elif act_details is None:
-                    # This might happen if an activation in current_schedule is not in activation_stats_df
-                    # Or if it was filtered out earlier. Should be handled by how current_schedule is built.
-                    pass
+                    recomp_time = act_details['recomp_time_s']
+                    total_execution_time += recomp_time
+                    recompute_time_total += recomp_time
+                    recompute_count += 1
+
+        if debug:
+            print(f"Base execution time: {total_execution_time - recompute_time_total:.4f}s")
+            print(f"Added recomputation time for {recompute_count} activations: {recompute_time_total:.4f}s")
+            print(f"Total execution time: {total_execution_time:.4f}s")
 
 
         # --- Simulate Peak Memory Usage (Algorithm G inspired) ---
+        if debug:
+            print("Simulating peak memory usage...")
+            
         # M_fixed: memory for parameters, gradients, optimizer states. Provided by fixed_overhead_bytes.
         # M_active: memory for currently live checkpointed activations.
         # M_op_peak: peak memory during a specific operation, taken from profiler (node_details['avg_peak_mem_node']).
@@ -129,13 +148,43 @@ class ActivationCheckpointingAlgorithm:
         
         live_checkpointed_activations = {}  # act_name -> pd.Series (details of live checkpointed activations)
 
+        # Get execution order once and cache it
         execution_order = self._get_node_execution_order()
         if not execution_order:
             # Return inf for memory if order can't be determined, but use calculated time
+            if debug:
+                print("Warning: Could not determine execution order.")
             return float('inf'), total_execution_time
 
+        # Pre-fetch all node details to avoid repeated lookups
+        if debug:
+            print("Pre-fetching node details...")
+        node_details_cache = {}
         for node_name in execution_order:
-            node_details = self._get_node_details(node_name) # This returns a pd.Series
+            node_details_cache[node_name] = self._get_node_details(node_name)
+            
+        # Create a mapping from rank to activations created at that rank for faster lookup
+        if debug:
+            print("Creating rank-to-activations mapping...")
+        activations_by_creation_rank = {}
+        for act_idx, act_details_series in self.activation_stats_df.iterrows():
+            if pd.notna(act_details_series['creation_rank']):
+                rank = int(act_details_series['creation_rank'])
+                if rank not in activations_by_creation_rank:
+                    activations_by_creation_rank[rank] = []
+                activations_by_creation_rank[rank].append(act_details_series)
+
+        # Process nodes in execution order
+        total_nodes = len(execution_order)
+        if debug:
+            print(f"Processing {total_nodes} nodes in execution order...")
+            
+        for i, node_name in enumerate(execution_order):
+            # Print progress every 10% of nodes
+            if debug and i % max(1, total_nodes // 10) == 0:
+                print(f"  Processing node {i+1}/{total_nodes} ({(i+1)/total_nodes*100:.1f}%)...")
+                
+            node_details = node_details_cache[node_name]
             if node_details is None:
                 continue
             
@@ -150,10 +199,10 @@ class ActivationCheckpointingAlgorithm:
             # 2. Update current_checkpointed_plus_fixed_mem_bytes based on liveness changes of checkpointed activations.
             #    A. Add newly created checkpointed activations to the live set.
             if node_gtype == 'fw':
-                # Iterate through all activations to find those created by this FW node (matching creation_rank)
-                for act_idx, act_details_series in self.activation_stats_df.iterrows():
-                    if pd.notna(act_details_series['creation_rank']) and act_details_series['creation_rank'] == node_rank:
-                        act_name = act_details_series['activation_name'] # Get the name from the correct column
+                # Use the pre-computed mapping to find activations created at this rank
+                if node_rank in activations_by_creation_rank:
+                    for act_details_series in activations_by_creation_rank[node_rank]:
+                        act_name = act_details_series['activation_name']
                         act_mem_size = act_details_series['avg_mem_size_bytes']
 
                         if pd.isna(act_mem_size) or act_mem_size <= 0:
@@ -190,10 +239,15 @@ class ActivationCheckpointingAlgorithm:
             #    This is the sum of fixed overhead and all currently live checkpointed activations.
             peak_memory_observed_bytes = max(peak_memory_observed_bytes, current_checkpointed_plus_fixed_mem_bytes)
             
+        if debug:
+            print(f"Memory simulation complete.")
+            print(f"Peak memory: {peak_memory_observed_bytes / (1024**3):.3f} GB")
+            print(f"Final execution time: {total_execution_time:.4f}s")
+            
         return peak_memory_observed_bytes, total_execution_time
 
 
-    def decide_checkpoints(self, fixed_overhead_gb=2.0):
+    def decide_checkpoints(self, fixed_overhead_gb=2.0, debug=False, batch_size=50, max_iterations=1000):
         """
         Decides which activations to checkpoint and which to recompute.
         Implements a simplified version of Algorithm B from the u-TWO paper.
@@ -202,113 +256,142 @@ class ActivationCheckpointingAlgorithm:
             fixed_overhead_gb (float): Estimated fixed memory overhead for parameters,
                                        gradients, optimizer states in GB. This is a simplification.
                                        The paper's Algorithm G would determine this more dynamically.
+            debug (bool): Whether to print detailed debug information.
+            batch_size (int): Number of activations to evict at once for faster convergence.
+            max_iterations (int): Maximum number of iterations to prevent infinite loops.
+            
         Returns:
             dict: A schedule mapping activation names to 'CHECKPOINT' or 'RECOMPUTE'.
         """
+        print(f"Starting checkpoint decision algorithm...")
+        print(f"Fixed overhead: {fixed_overhead_gb} GB, Memory budget: {self.memory_budget_bytes / (1024**3):.2f} GB")
+        
         fixed_overhead_bytes = fixed_overhead_gb * (1024**3)
 
         # Initial state: checkpoint all activations
+        print("Initializing schedule with all activations checkpointed...")
         current_schedule = {
             act_name: 'CHECKPOINT'
             for act_name in self.activation_stats_df['activation_name'] # Iterate using the correct column name
             if pd.notna(self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes']) and self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes'] > 0
         }
         
+        print(f"Initial schedule has {len(current_schedule)} activations marked for CHECKPOINT")
+        
         # Filter out activations with no valid size or recompute stats
+        print("Filtering valid activations...")
         valid_activations_df = self.activation_stats_df.dropna(subset=['avg_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'last_fw_use_rank'])
         valid_activations_df = valid_activations_df[valid_activations_df['avg_mem_size_bytes'] > 0]
+        print(f"Found {len(valid_activations_df)} valid activations for consideration")
 
+        # Pre-compute benefit values for all activations to avoid repeated calculations
+        print("Pre-computing benefit values...")
+        benefit_cache = {}
+        ratio_cache = {}
+        
+        for act_name in valid_activations_df.index:
+            act_details = self._get_activation_details(act_name)
+            if act_details is None:
+                continue
+                
+            # Calculate benefit components
+            creation_rank = act_details['creation_rank']
+            last_fw_use = act_details['last_fw_use_rank']
+            last_bw_use = act_details['last_bw_use_rank']
+            
+            # Determine effective last use rank
+            effective_last_use_rank = last_fw_use
+            if pd.notna(last_bw_use) and last_bw_use > effective_last_use_rank:
+                effective_last_use_rank = last_bw_use
+                
+            if pd.isna(creation_rank) or pd.isna(effective_last_use_rank):
+                continue
+                
+            live_duration_ranks = effective_last_use_rank - creation_rank
+            if live_duration_ranks <= 0:
+                live_duration_ranks = 1
+                
+            memory_saved = act_details['avg_mem_size_bytes']
+            if memory_saved <= 0:
+                continue
+                
+            benefit = live_duration_ranks * memory_saved
+            benefit_cache[act_name] = benefit
+            
+            # Also pre-compute ratio
+            recomp_time, _ = self._calculate_recompute_overhead(act_name)
+            if benefit == 0:
+                ratio = float('inf')
+            else:
+                ratio = recomp_time / benefit
+                
+            ratio_cache[act_name] = ratio
 
-        while True:
-            current_peak_memory, current_exec_time = self._simulate_memory_usage(current_schedule, fixed_overhead_bytes)
+        iteration = 0
+        while iteration < max_iterations:
+            iteration += 1
+            print(f"\nIteration {iteration}/{max_iterations}")
+            
+            # Run memory simulation with debug info on first iteration
+            current_peak_memory, current_exec_time = self._simulate_memory_usage(
+                current_schedule,
+                fixed_overhead_bytes,
+                debug=(iteration == 1 and debug)
+            )
             
             print(f"Simulated peak memory: {current_peak_memory / (1024**3):.2f} GB. Budget: {self.memory_budget_bytes / (1024**3):.2f} GB. Exec time: {current_exec_time:.2f}s")
+            print(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'CHECKPOINT')}")
+            print(f"Current recompute count: {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')}")
 
+            # Check if we've met the budget
             if current_peak_memory <= self.memory_budget_bytes:
                 print("Memory budget met.")
                 break # Budget met
 
-            # Find candidate to evict (move from CHECKPOINT to RECOMPUTE)
-            # Algorithm B, lines 6-13: minimize overhead(a) / benefit(a)
-            best_candidate = None
-            min_ratio = float('inf')
-            # Initialize max_benefit_at_min_ratio for tie-breaking
-            max_benefit_at_min_ratio = -1.0
-
+            # Check if we've run out of checkpointed activations
             if not any(decision == 'CHECKPOINT' for decision in current_schedule.values()):
                 print("Warning: No checkpointed activations left to evict, but still over budget. Check fixed_overhead or budget.")
                 break
-
+                
+            # Find candidates to evict (move from CHECKPOINT to RECOMPUTE)
+            print(f"Finding up to {batch_size} candidates to evict...")
+            candidates = []
 
             for act_name, decision in current_schedule.items():
                 if decision == 'CHECKPOINT':
-                    act_details = self._get_activation_details(act_name)
-                    if act_details is None or act_name not in valid_activations_df.index:
+                    if act_name not in valid_activations_df.index:
                         continue
-
-                    # Overhead: recomputation time
-                    recomp_time, _ = self._calculate_recompute_overhead(act_name)
-                    # Removed the problematic skip:
-                    # if recomp_time == 0 and act_details['avg_mem_size_bytes'] > 0:
-                    #     continue
-
-                    # Benefit: memory saved * "live time"
-                    # "live time" can be approximated by the span of ranks it's active.
-                    # Paper uses max_live_time(a) or avg_live_time(a).
-                    # Let's use (last_fw_use_rank - creation_rank) as a proxy for now.
-                    # A more accurate live time would consider backward pass usage too.
-                    # Effective live interval: from creation_rank to last_bw_use_rank (if exists, else last_fw_use_rank)
-                    
-                    creation_rank = act_details['creation_rank']
-                    last_fw_use = act_details['last_fw_use_rank']
-                    # first_bw_use = act_details['first_bw_use_rank'] # Not directly used in this benefit calc
-                    last_bw_use = act_details['last_bw_use_rank']
-
-                    # Determine the effective end of life for the activation
-                    effective_last_use_rank = last_fw_use
-                    if pd.notna(last_bw_use) and last_bw_use > effective_last_use_rank :
-                         effective_last_use_rank = last_bw_use
-                    
-                    if pd.isna(creation_rank) or pd.isna(effective_last_use_rank):
-                        # print(f"Skipping {act_name}: missing rank info for benefit calculation.")
-                        continue
-                    
-                    live_duration_ranks = effective_last_use_rank - creation_rank
-                    if live_duration_ranks <= 0: # Should not happen for valid activations
-                        live_duration_ranks = 1 # Avoid division by zero, give it some weight
-
-                    memory_saved = act_details['avg_mem_size_bytes']
-                    if memory_saved <= 0:
-                        continue # No benefit if it takes no memory
-
-                    benefit = live_duration_ranks * memory_saved 
-                                        
-                    if benefit == 0: # Avoid division by zero if benefit is unexpectedly zero
-                        ratio = float('inf')
-                    else:
-                        ratio = recomp_time / benefit
-                    
-                    # print(f"Candidate {act_name}: recomp_time={recomp_time:.4f}, mem_saved={memory_saved/1024**2:.2f}MB, live_ranks={live_duration_ranks}, benefit={benefit:.2f}, ratio={ratio:.6f}")
-
-                    current_act_benefit = benefit
-
-                    if ratio < min_ratio:
-                        min_ratio = ratio
-                        max_benefit_at_min_ratio = current_act_benefit
-                        best_candidate = act_name
-                    elif ratio == min_ratio:
-                        # Tie-breaking: if ratios are equal (especially if 0),
-                        # prefer the one with greater benefit.
-                        if current_act_benefit > max_benefit_at_min_ratio:
-                            max_benefit_at_min_ratio = current_act_benefit
-                            best_candidate = act_name
+                        
+                    # Use cached values if available
+                    if act_name in ratio_cache and act_name in benefit_cache:
+                        ratio = ratio_cache[act_name]
+                        benefit = benefit_cache[act_name]
+                        candidates.append((act_name, ratio, benefit))
+                        
+            # Sort candidates by ratio (ascending) and then by benefit (descending) for tie-breaking
+            candidates.sort(key=lambda x: (x[1], -x[2]))
             
-            if best_candidate:
-                print(f"Evicting {best_candidate} (ratio: {min_ratio:.6f}, benefit: {max_benefit_at_min_ratio:.2f}) to RECOMPUTE.")
-                current_schedule[best_candidate] = 'RECOMPUTE'
-            else:
-                print("Could not find a suitable candidate to evict. Algorithm might be stuck or all options exhausted.")
-                break # No candidate found, or all are already RECOMPUTE
+            # Take the top batch_size candidates
+            batch_candidates = candidates[:batch_size]
+            
+            if not batch_candidates:
+                print("Could not find any suitable candidates to evict. Algorithm might be stuck or all options exhausted.")
+                break
+                
+            # Evict all candidates in the batch
+            for act_name, ratio, benefit in batch_candidates:
+                print(f"Evicting {act_name} (ratio: {ratio:.6f}, benefit: {benefit:.2f}) to RECOMPUTE.")
+                current_schedule[act_name] = 'RECOMPUTE'
+                
+            # If we're only evicting one activation per iteration, print more details
+            if len(batch_candidates) == 1:
+                act_name, ratio, benefit = batch_candidates[0]
+                act_details = self._get_activation_details(act_name)
+                if act_details is not None:
+                    mem_size = act_details['avg_mem_size_bytes'] / (1024**2)  # Convert to MB
+                    print(f"  Memory saved: {mem_size:.2f} MB")
+                    if 'recomp_time_s' in act_details:
+                        print(f"  Recomputation time: {act_details['recomp_time_s']:.6f}s")
 
         self.schedule = current_schedule
         return self.schedule
@@ -327,24 +410,53 @@ if __name__ == "__main__":
     # Let's try a budget that forces some recomputation.
     memory_budget = 0.05  # GB
 
+    # Parse command line arguments
+    import argparse
+    import time
+    
+    parser = argparse.ArgumentParser(description='Activation Checkpointing Algorithm')
+    parser.add_argument('--debug', action='store_true', help='Enable debug output')
+    parser.add_argument('--batch-size', type=int, default=50, help='Number of activations to evict per iteration')
+    parser.add_argument('--max-iterations', type=int, default=1000, help='Maximum number of iterations')
+    parser.add_argument('--memory-budget', type=float, default=memory_budget, help='Memory budget in GB')
+    parser.add_argument('--fixed-overhead', type=float, default=0.1, help='Fixed overhead in GB')
+    args = parser.parse_args()
+
     print(f"Starting Activation Checkpointing Algorithm...")
     print(f"Node Stats: {node_stats_file}")
     print(f"Activation Stats: {activation_stats_file}")
-    print(f"Memory Budget: {memory_budget} GB")
+    print(f"Memory Budget: {args.memory_budget} GB")
+    print(f"Fixed Overhead: {args.fixed_overhead} GB")
+    print(f"Batch Size: {args.batch_size}")
+    print(f"Max Iterations: {args.max_iterations}")
+    print(f"Debug Mode: {'Enabled' if args.debug else 'Disabled'}")
 
     try:
+        print("Loading data...")
+        start_time = time.time()
+        
         ac_algo = ActivationCheckpointingAlgorithm(
             node_stats_path=node_stats_file,
             activation_stats_path=activation_stats_file,
-            memory_budget_gb=memory_budget
+            memory_budget_gb=args.memory_budget
         )
+        
+        load_time = time.time() - start_time
+        print(f"Data loaded in {load_time:.2f} seconds")
 
-        # You might want to pass a more realistic fixed_overhead_gb based on your model
-        # E.g., ResNet-152 parameters are ~232MB. Grads ~232MB. Optimizer states can be 1x or 2x of params.
-        # So, roughly 0.7GB to 1GB could be a starting point for fixed overhead.
-        # The paper's Algorithm G is more precise.
-        # Let's use 1 GB for parameters, gradients, and optimizer states as a rough estimate.
-        final_schedule = ac_algo.decide_checkpoints(fixed_overhead_gb=0.1)
+        # Run the algorithm with the specified parameters
+        print("\nRunning checkpoint decision algorithm...")
+        start_time = time.time()
+        
+        final_schedule = ac_algo.decide_checkpoints(
+            fixed_overhead_gb=args.fixed_overhead,
+            debug=args.debug,
+            batch_size=args.batch_size,
+            max_iterations=args.max_iterations
+        )
+        
+        algorithm_time = time.time() - start_time
+        print(f"\nAlgorithm completed in {algorithm_time:.2f} seconds")
         
         print("\nFinal Activation Checkpointing Schedule:")
         recomputed_count = 0
@@ -361,9 +473,17 @@ if __name__ == "__main__":
         print(f"Number of activations to RECOMPUTE: {recomputed_count}")
         print(f"Number of activations to CHECKPOINT: {checkpointed_count}")
 
-        final_peak_mem, final_exec_time = ac_algo._simulate_memory_usage(final_schedule, fixed_overhead_bytes=0.1 * (1024**3))
+        # Run final simulation with debug output
+        print("\nRunning final memory simulation...")
+        final_peak_mem, final_exec_time = ac_algo._simulate_memory_usage(
+            final_schedule,
+            fixed_overhead_bytes=args.fixed_overhead * (1024**3),
+            debug=args.debug
+        )
+        
         print(f"Estimated Peak GPU Memory with schedule: {final_peak_mem / (1024**3):.2f} GB")
         print(f"Estimated Total Execution Time with schedule: {final_exec_time:.2f} s")
+        print(f"Total processing time: {time.time() - start_time + load_time:.2f} seconds")
 
     except FileNotFoundError:
         print("Execution failed: Ensure profiler CSV files are in the correct path.")

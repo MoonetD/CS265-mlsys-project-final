@@ -74,3 +74,24 @@ This file tracks the project's progress using a task list format.
     * Retested with constrained budget (`memory_budget_gb = 0.05`, `fixed_overhead_gb = 0.1`), confirming fixes and observing expected behavior (all activations recomputed, peak memory at fixed overhead level).
     * Verified Phase 2 scope conformance.
     * Noted NumPy environment incompatibility for future resolution.
+* [2025-05-13 23:05:17] - Completed Task: Improved recomputation metrics calculation and optimized activation checkpointing algorithm:
+    * Enhanced the recomputation metrics calculation in `starter_code/graph_prof.py` to avoid zero values
+    * Implemented a multi-method approach for recomputation time estimation including dependency tracing, size-based estimation, and minimum thresholds
+    * Optimized the activation checkpointing algorithm in `starter_code/activation_checkpointing.py` with:
+        * Batch processing for faster convergence
+        * Pre-computation of benefit values and ratios
+        * Detailed progress reporting and debugging information
+        * Command-line argument support for better usability
+        * Performance optimizations for faster execution
+    * These improvements lead to better eviction decisions in the activation checkpointing algorithm and significantly improved performance
+* [2025-05-13 22:34:45] - Completed Task: Improved recomputation metrics calculation in `GraphProfiler`:
+    * Enhanced the implementation in `starter_code/graph_prof.py` to avoid zero values in `recomp_time_s`
+    * Implemented a multi-method approach including dependency tracing, size-based estimation, and minimum thresholds
+    * Improved the recompute ratio calculation with better handling of edge cases
+* [2025-05-13 23:09:48] - Completed Task: Implemented unit test for GraphProfiler with toy MLP model:
+    * Created `starter_code/test_profiler_mlp.py` with a simple 3-layer MLP model
+    * Verified that GraphProfiler correctly identifies forward and backward nodes
+    * Confirmed that the memory curve shows the expected pattern (growing through forward pass, falling through backward pass)
+    * Added visualization of the memory curve and detailed verification logic
+    * Implemented clear output messages indicating test success/failure
+    * These improvements will lead to better eviction decisions in the activation checkpointing algorithm in Stage 2

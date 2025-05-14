@@ -221,3 +221,88 @@ Findings:
 *   The simulation logic in `_simulate_memory_usage` correctly excludes activations marked `RECOMPUTE` from the `current_checkpointed_plus_fixed_mem_bytes` calculation. This means their `avg_mem_size_bytes` does not contribute to the memory occupied by *checkpointed* tensors during their inactive period.
 *   The observed behavior (peak memory not dropping below `fixed_overhead_gb`) is expected when `fixed_overhead_gb` itself is significant and/or exceeds the `memory_budget_gb`. The reported peak is the maximum of (fixed_overhead + live_checkpointed_activations_memory) and (peak_during_node_execution). If fixed_overhead is the dominant value, or if a specific node's execution peak (which includes fixed components) is high, the overall simulated peak will reflect that.
 *   No code changes were deemed necessary for this part of the simulation logic, as it correctly models the non-contribution of `RECOMPUTE`d activations to the pool of *checkpointed* memory. The re-test results confirmed this behavior under the constrained budget.
+---
+### Decision (Code)
+[2025-05-13 23:05:01] - Optimized activation checkpointing algorithm in `starter_code/activation_checkpointing.py`.
+
+**Rationale:**
+The activation checkpointing algorithm was taking too long to run without providing any visibility into its progress. This made it difficult to debug and understand what was happening during execution. Additionally, the algorithm was inefficient, recalculating the same values repeatedly and processing activations one at a time. These issues needed to be addressed to make the algorithm more usable and efficient.
+
+**Details:**
+The implementation was enhanced with several optimizations:
+
+1. **Improved Debugging and Visibility**:
+   - Added detailed progress reporting throughout the algorithm
+   - Added timing information to track performance
+   - Added command-line argument support for controlling debug output and algorithm parameters
+
+2. **Performance Optimizations**:
+   - Implemented batch processing to evict multiple activations per iteration (controlled by `--batch-size` parameter)
+   - Pre-computed benefit values and ratios for all activations to avoid redundant calculations
+   - Added caching for node details and activation creation ranks
+   - Optimized memory simulation with faster lookups
+
+3. **Usability Improvements**:
+   - Added command-line argument parsing for better control over algorithm parameters
+   - Added early termination with `--max-iterations` parameter to prevent infinite loops
+   - Improved error handling and reporting
+
+4. **Memory Efficiency**:
+   - Used more efficient data structures for tracking activations
+   - Reduced redundant memory allocations
+
+These changes significantly improved the algorithm's performance and usability, making it more practical for real-world use. The algorithm now provides clear visibility into its progress and can be easily configured through command-line arguments.
+
+Reference: [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py)
+---
+### Decision (Code)
+[2025-05-13 22:34:27] - Improved recomputation metrics calculation in `GraphProfiler` to avoid zero values.
+
+**Rationale:**
+The existing implementation of recomputation metrics calculation in `GraphProfiler.aggregate_stats` often resulted in `recomp_time_s` values of 0 in the profiler_stats_activation_stats.csv. This was problematic for the activation checkpointing algorithm in Stage 2, as it led to suboptimal eviction decisions when many activations had the same recomputation ratio (0 or infinity). A more robust approach was needed to ensure meaningful recomputation metrics that could better differentiate between activations.
+
+**Details:**
+The implementation was enhanced with a multi-method approach:
+1. **Improved Dependency Tracing**: Instead of summing all node times between creation and last use (which was noted as an overestimate), the new approach:
+   - Counts the creation node's time directly
+   - Applies a dependency factor (0.5) to subsequent nodes to more accurately represent the dependency relationship
+   - Only includes nodes with non-zero execution time to avoid skipping important operations
+
+2. **Size-Based Estimation**: Added a correlation between activation size and computation cost:
+   - Larger activations typically require more computation to produce
+   - Implemented a minimum recomputation time based on activation size (1 microsecond per KB)
+
+3. **Minimum Threshold**: Ensured all activations have a non-zero recomputation cost:
+   - Applied a global minimum threshold of 1 microsecond
+   - This prevents zero values while maintaining relative ordering of small activations
+
+4. **Improved Ratio Calculation**: Enhanced the recompute ratio calculation:
+   - Ensured a minimum swap time to avoid division by zero
+   - For activations with negligible original swap time, adjusted the ratio based on activation size
+   - This prioritizes larger activations when swap times are similar
+
+These changes ensure that the recomputation metrics provide meaningful values for the activation checkpointing algorithm, leading to better memory-performance trade-offs in Stage 2.
+
+---
+### Decision (Code)
+[2025-05-13 23:10:13] - Implemented unit test for GraphProfiler with a toy 3-layer MLP model.
+
+**Rationale:**
+A dedicated unit test was needed to verify the GraphProfiler's correctness with a simple, controlled model. A 3-layer MLP was chosen as it provides a clear, predictable structure with exactly 3 forward computational nodes (linear layers) and their corresponding backward operations, making it ideal for testing the profiler's ability to correctly identify and categorize nodes. The test also verifies the memory curve pattern, which should show memory growing during the forward pass and decreasing during the backward pass.
+
+**Details:**
+The implementation in [`starter_code/test_profiler_mlp.py`](starter_code/test_profiler_mlp.py) includes:
+
+1. A `SimpleMLP` class with 3 linear layers and ReLU activations
+2. A `train_step` function that performs a forward pass, loss calculation, backward pass, and optimizer step
+3. A `graph_transformation` function that profiles the model execution and verifies the results
+4. A `verify_profiler_results` function that checks:
+   - The presence of exactly 3 forward computational nodes (addmm operations)
+   - The presence of at least 3 backward computational nodes
+   - The correct identification of forward/backward boundaries
+   - The expected memory curve pattern
+5. A `plot_memory_curve` function that visualizes the memory usage during execution
+6. Clear output messages indicating test success/failure
+
+The test revealed that in the traced graph, linear layers appear as 'addmm' operations rather than 'linear' or 'fc' nodes, which was an important insight for correctly identifying computational nodes in the profiler.
+Reference: [`starter_code/graph_prof.py`](starter_code/graph_prof.py:358)
