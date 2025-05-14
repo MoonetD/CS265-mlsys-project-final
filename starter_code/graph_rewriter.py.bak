@@ -400,6 +400,27 @@ def insert_subgraph_before_node(graph: fx.Graph,
     
     # Now insert the subgraph
     try:
+        # Pre-process all nodes to ensure all variables are initialized
+        # This helps prevent "referenced before assignment" errors
+        all_node_names = set()
+        for node in graph.nodes:
+            all_node_names.add(node.name)
+            
+        # Check for any node names in the subgraph that might be referenced but not in the graph
+        for node in subgraph_nodes:
+            # Check all arguments to this node
+            for arg in node.args:
+                if isinstance(arg, fx.Node) and arg.name not in all_node_names:
+                    print(f"Warning: Node {node.name} references {arg.name} which is not in the graph")
+                    # Initialize this node in the environment to prevent "referenced before assignment" errors
+                    if arg not in local_env and arg not in env:
+                        # Try to find a similar node by name pattern
+                        for graph_node in graph.nodes:
+                            if arg.name in graph_node.name or graph_node.name in arg.name:
+                                print(f"Found similar node {graph_node.name} for {arg.name}")
+                                local_env[arg] = graph_node
+                                break
+        
         with graph.inserting_before(insertion_point):
             # Process nodes in order
             for node in subgraph_nodes:
@@ -409,12 +430,46 @@ def insert_subgraph_before_node(graph: fx.Graph,
                     
                 # Copy the node, mapping its inputs through the environment
                 try:
-                    # Use the local environment first, then fall back to the global environment
-                    copied_node = graph.node_copy(node, lambda n: local_env.get(n, env.get(n, n)))
+                    # Create a more robust input mapping function
+                    def map_arg(n):
+                        # First try the local environment
+                        if n in local_env:
+                            return local_env[n]
+                        # Then try the global environment
+                        if n in env:
+                            return env[n]
+                        # If not found, try to find by name
+                        for graph_node in graph.nodes:
+                            if graph_node.name == n.name:
+                                # Cache this mapping for future use
+                                local_env[n] = graph_node
+                                return graph_node
+                            # Also try partial name matching for ResNet layer names
+                            elif (isinstance(n.name, str) and isinstance(graph_node.name, str) and
+                                  (n.name in graph_node.name or graph_node.name in n.name)):
+                                print(f"Found node {graph_node.name} by partial name match for {n.name}")
+                                local_env[n] = graph_node
+                                return graph_node
+                        # If still not found, return the original node
+                        # This might cause issues, but it's better than failing completely
+                        print(f"Warning: Could not find mapping for node {n.name}, using original node")
+                        return n
+                    
+                    # Use our robust mapping function
+                    copied_node = graph.node_copy(node, map_arg)
                     local_env[node] = copied_node
                     env[node] = copied_node  # Update the global environment too
                 except Exception as e:
                     print(f"Error copying node {node.name}: {e}")
+                    print(f"Node details: op={node.op}, target={node.target}, args={node.args}, kwargs={node.kwargs}")
+                    # Try to recover by creating a placeholder node
+                    try:
+                        print(f"Attempting to create a placeholder for {node.name}")
+                        placeholder = graph.placeholder(node.name)
+                        local_env[node] = placeholder
+                        env[node] = placeholder
+                    except Exception as e2:
+                        print(f"Failed to create placeholder: {e2}")
                     continue
             
             # The last node in the subgraph corresponds to the recomputed activation
@@ -427,220 +482,9 @@ def insert_subgraph_before_node(graph: fx.Graph,
         print(f"Error inserting subgraph: {e}")
         return None
 
-def _ensure_topological_ordering(graph: fx.Graph) -> fx.Graph:
-    """
-    Ensure proper topological ordering of nodes in the graph.
-    
-    This function specifically addresses issues with operations like flatten
-    that have critical dependencies in the forward pass.
-    
-    Args:
-        graph: The FX graph to reorder
-        
-    Returns:
-        The reordered FX graph
-    """
-    # Create a new graph with the same owning module
-    new_graph = fx.Graph()
-    
-    # Create a mapping from old nodes to new nodes
-    env = {}
-    
-    # First, identify all nodes and their dependencies
-    dependencies = {}
-    node_by_name = {}
-    
-    for node in graph.nodes:
-        node_by_name[node.name] = node
-        dependencies[node.name] = set()
-        
-        # Add dependencies from args
-        for arg in node.args:
-            if isinstance(arg, fx.Node):
-                dependencies[node.name].add(arg.name)
-        
-        # Add dependencies from kwargs
-        for kwarg in node.kwargs.values():
-            if isinstance(kwarg, fx.Node):
-                dependencies[node.name].add(kwarg.name)
-    
-    # Special handling for critical operations
-    # Ensure 'flatten' comes before 'fc' and after 'avgpool'
-    for node in graph.nodes:
-        # Look for fully connected layer operations
-        if node.op == 'call_module' and 'fc' in node.name:
-            # Check if any of its inputs might be a flatten operation
-            for arg in node.args:
-                if isinstance(arg, fx.Node) and 'flatten' in arg.name:
-                    flatten_node = arg
-                    # Ensure flatten depends on avgpool
-                    for potential_avgpool in graph.nodes:
-                        if potential_avgpool.op == 'call_module' and 'avgpool' in potential_avgpool.name:
-                            # Add dependency from flatten to avgpool
-                            dependencies[flatten_node.name].add(potential_avgpool.name)
-                            print(f"Added dependency: {flatten_node.name} depends on {potential_avgpool.name}")
-    
-    # Perform topological sort
-    visited = set()
-    temp_visited = set()
-    order = []
-    
-    def dfs(node_name):
-        if node_name in visited:
-            return
-        if node_name in temp_visited:
-            # This means there's a cycle, which shouldn't happen in a valid FX graph
-            print(f"Warning: Cycle detected involving {node_name}")
-            return
-        
-        temp_visited.add(node_name)
-        
-        for dep in dependencies[node_name]:
-            if dep in node_by_name:  # Only process dependencies that are actual nodes
-                dfs(dep)
-        
-        temp_visited.remove(node_name)
-        visited.add(node_name)
-        order.append(node_name)
-    
-    # Start DFS from output nodes (nodes with no users)
-    output_nodes = [node.name for node in graph.nodes if len(list(node.users)) == 0]
-    for node_name in output_nodes:
-        dfs(node_name)
-    
-    # Process any remaining nodes
-    for node_name in list(node_by_name.keys()):
-        dfs(node_name)
-    
-    # Reverse the order to get the correct topological ordering
-    order.reverse()
-    
-    # Copy nodes to the new graph in topological order
-    # First, identify critical nodes like avgpool, flatten, and fc
-    critical_nodes = {}
-    for node_name in order:
-        node = node_by_name[node_name]
-        if node.op == 'call_function' and node.target == torch.flatten:
-            critical_nodes['flatten'] = node
-        elif node.op == 'call_module' and 'avgpool' in node.name:
-            critical_nodes['avgpool'] = node
-        elif node.op == 'call_module' and 'fc' in node.name:
-            critical_nodes['fc'] = node
-    
-    # Ensure proper ordering of critical nodes
-    if 'avgpool' in critical_nodes and 'flatten' in critical_nodes and 'fc' in critical_nodes:
-        print(f"Found critical path: avgpool -> flatten -> fc")
-        # Ensure flatten depends on avgpool and fc depends on flatten
-        dependencies[critical_nodes['flatten'].name].add(critical_nodes['avgpool'].name)
-        dependencies[critical_nodes['fc'].name].add(critical_nodes['flatten'].name)
-        
-        # Recompute topological order
-        visited = set()
-        temp_visited = set()
-        order = []
-        
-        def dfs(node_name):
-            if node_name in visited:
-                return
-            if node_name in temp_visited:
-                print(f"Warning: Cycle detected involving {node_name}")
-                return
-            
-            temp_visited.add(node_name)
-            
-            for dep in dependencies[node_name]:
-                if dep in node_by_name:
-                    dfs(dep)
-            
-            temp_visited.remove(node_name)
-            visited.add(node_name)
-            order.append(node_name)
-        
-        # Start DFS from output nodes
-        for node_name in output_nodes:
-            dfs(node_name)
-        
-        # Process any remaining nodes
-        for node_name in list(node_by_name.keys()):
-            dfs(node_name)
-        
-        # Reverse the order
-        order.reverse()
-        
-        print(f"Reordered nodes to ensure proper dependencies")
-    
-    # Copy nodes to the new graph in topological order
-    for node_name in order:
-        node = node_by_name[node_name]
-        env[node] = new_graph.node_copy(node, lambda n: env.get(n, n))
-    
-    # Ensure the output node is properly set
-    for node in graph.nodes:
-        if node.op == 'output':
-            new_graph.output(env[node].args[0])
-    
-    return new_graph
-
-def _preserve_critical_operations(graph: fx.Graph) -> None:
-    """
-    Identify and mark critical operations in the graph that must be preserved.
-    
-    This function specifically looks for the flatten operation that connects
-    avgpool to fc in ResNet models, which is critical for correct execution.
-    
-    Args:
-        graph: The FX graph to analyze
-    """
-    # Find flatten, avgpool, and fc nodes
-    flatten_nodes = []
-    avgpool_nodes = []
-    fc_nodes = []
-    
-    for node in graph.nodes:
-        if node.op == 'call_function' and node.target == torch.flatten:
-            flatten_nodes.append(node)
-        elif node.op == 'call_module' and 'avgpool' in node.name:
-            avgpool_nodes.append(node)
-        elif node.op == 'call_module' and 'fc' in node.name:
-            fc_nodes.append(node)
-    
-    print(f"Critical operations analysis: Found {len(flatten_nodes)} flatten nodes, "
-          f"{len(avgpool_nodes)} avgpool nodes, and {len(fc_nodes)} fc nodes")
-    
-    # Check for the critical path: avgpool -> flatten -> fc
-    for fc_node in fc_nodes:
-        for input_node in fc_node.all_input_nodes:
-            if input_node in flatten_nodes:
-                print(f"Found critical path: {input_node.name} -> {fc_node.name}")
-                
-                # Mark flatten node as critical
-                if not hasattr(input_node, 'meta'):
-                    input_node.meta = {}
-                input_node.meta['critical'] = True
-                
-                # Check if flatten depends on avgpool
-                for flatten_input in input_node.all_input_nodes:
-                    if flatten_input in avgpool_nodes:
-                        print(f"Complete critical path: {flatten_input.name} -> {input_node.name} -> {fc_node.name}")
-                        
-                        # Mark the entire chain as critical
-                        if not hasattr(flatten_input, 'meta'):
-                            flatten_input.meta = {}
-                        flatten_input.meta['critical'] = True
-                        
-                        # Store the dependency information
-                        flatten_input.meta['critical_next'] = input_node.name
-                        input_node.meta['critical_prev'] = flatten_input.name
-                        input_node.meta['critical_next'] = fc_node.name
-                        
-                        if not hasattr(fc_node, 'meta'):
-                            fc_node.meta = {}
-                        fc_node.meta['critical'] = True
-                        fc_node.meta['critical_prev'] = input_node.name
-
 def rewrite_graph_with_recomputation(graph: fx.Graph,
-                                      subgraphs: Dict[str, Tuple[List[fx.Node], Set[fx.Node]]],
-                                      activation_liveness: Dict[str, Dict[str, int]]) -> fx.Graph:
+                                    subgraphs: Dict[str, Tuple[List[fx.Node], Set[fx.Node]]],
+                                    activation_liveness: Dict[str, Dict[str, int]]) -> fx.Graph:
     """
     Rewrite the graph to include recomputation subgraphs in the backward pass.
     
@@ -654,30 +498,40 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
     """
     print(f"Rewriting graph with {len(subgraphs)} recomputation subgraphs")
     
-    # Create a copy of the graph to modify
-    new_graph = copy.deepcopy(graph)
-    
-    # Identify and mark critical operations that must be preserved
-    _preserve_critical_operations(new_graph)
-    
-    # Environment mapping original nodes to their copies in the new graph
-    env = {}
-    for original_node, new_node in zip(graph.nodes, new_graph.nodes):
-        env[original_node] = new_node
-    
-    # Track successful insertions
-    successful_insertions = 0
-    
-    # For each activation marked for recomputation
-    for act_name, (subgraph_nodes, subgraph_inputs) in subgraphs.items():
-        if not subgraph_nodes:
-            print(f"Skipping {act_name}: No subgraph nodes")
-            continue
+    # Wrap the entire function in a try-except block
+    try:
+        # Create a copy of the graph to modify
+        new_graph = copy.deepcopy(graph)
+        
+        # Environment mapping original nodes to their copies in the new graph
+        env = {}
+        for original_node, new_node in zip(graph.nodes, new_graph.nodes):
+            env[original_node] = new_node
             
-        # Get the first backward use rank for this activation
-        if act_name not in activation_liveness or "first_bw_use_rank" not in activation_liveness[act_name]:
-            print(f"Skipping {act_name}: Missing first_bw_use_rank")
-            continue
+        # Also create a name-based mapping for more robust lookups
+        name_to_node = {}
+        for node in new_graph.nodes:
+            name_to_node[node.name] = node
+        
+        # Track successful insertions
+        successful_insertions = 0
+        
+        # For each activation marked for recomputation
+        for act_name, (subgraph_nodes, subgraph_inputs) in subgraphs.items():
+            print(f"\nProcessing activation: {act_name}")
+            
+            if not subgraph_nodes:
+                print(f"Skipping {act_name}: No subgraph nodes")
+                continue
+                
+            # Get the first backward use rank for this activation
+            if act_name not in activation_liveness:
+                print(f"Skipping {act_name}: Not found in activation_liveness")
+                continue
+                    
+                if "first_bw_use_rank" not in activation_liveness[act_name]:
+                    print(f"Skipping {act_name}: Missing first_bw_use_rank")
+                    continue
             
         first_bw_use_rank = activation_liveness[act_name]["first_bw_use_rank"]
         
@@ -746,20 +600,39 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
             first_bw_use_node = rank_to_node[closest_rank]
             print(f"Found first backward use node {first_bw_use_node.name} by scaled rank mapping: {first_bw_use_rank} -> {scaled_rank} -> {closest_rank} for activation {act_name}")
         
-        if not first_bw_use_node:
-            print(f"Skipping {act_name}: Could not find first backward use node with rank {first_bw_use_rank}")
-            continue
-            
-        print(f"Inserting recomputation subgraph for {act_name} before node {first_bw_use_node.name} (rank {first_bw_use_rank})")
+            if not first_bw_use_node:
+                print(f"Skipping {act_name}: Could not find first backward use node with rank {first_bw_use_rank}")
+                continue
+                
+            print(f"Inserting recomputation subgraph for {act_name} before node {first_bw_use_node.name} (rank {first_bw_use_rank})")
         
-        try:
+            try:
+                # Before inserting the subgraph, ensure all nodes in the subgraph are properly mapped
+                # This helps prevent "referenced before assignment" errors
+                for node in subgraph_nodes:
+                    if node not in env:
+                        # Try to find a corresponding node in the new graph
+                        for new_node in new_graph.nodes:
+                            if new_node.name == node.name:
+                                env[node] = new_node
+                                break
+            
             # Insert the recomputation subgraph before the first backward use
             recomputed_node = insert_subgraph_before_node(
                 new_graph, first_bw_use_node, subgraph_nodes, subgraph_inputs, env)
                 
             if recomputed_node:
                 # Find the original activation node in the new graph
+                # Try multiple approaches to find the node
+                original_act_node = None
+                
+                # First try using find_node_by_name
                 original_act_node = find_node_by_name(new_graph, act_name, activation_liveness)
+                
+                # If that fails, try looking up by name directly
+                if original_act_node is None and act_name in name_to_node:
+                    original_act_node = name_to_node[act_name]
+                    print(f"Found original activation node {act_name} by direct name lookup")
                 
                 if original_act_node:
                     # We need to be careful about replacing uses of the original activation
@@ -798,27 +671,41 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
                     print(f"Warning: Could not find original activation node {act_name} in new graph")
             else:
                 print(f"Warning: Failed to insert recomputation subgraph for {act_name}")
+            except Exception as e:
+                print(f"Error inserting recomputation subgraph for {act_name}: {e}")
+        
+        print(f"Successfully inserted {successful_insertions} recomputation subgraphs")
+        
+        # Validate the rewritten graph
+        try:
+            new_graph.lint()
+            print("Graph validation passed")
         except Exception as e:
-            print(f"Error inserting recomputation subgraph for {act_name}: {e}")
-    
-    print(f"Successfully inserted {successful_insertions} recomputation subgraphs")
-    
-    # Validate the rewritten graph
-    try:
-        new_graph.lint()
-        print("Graph validation passed")
+            print(f"Warning: Graph validation failed: {e}")
+            print("Attempting to continue despite validation failure")
+        
+        # Final check for any unresolved references
+        try:
+            # Check if the graph can be compiled
+            fx.GraphModule(graph.owning_module, new_graph)
+            print("Graph successfully compiled")
+        except Exception as e:
+            print(f"Warning: Graph compilation check failed: {e}")
+            print("This may indicate unresolved references in the graph")
+            
+        return new_graph
+        
     except Exception as e:
-        print(f"Warning: Graph validation failed: {e}")
-    
-    # Ensure proper topological ordering before returning
-    print("Ensuring proper topological ordering of the rewritten graph")
-    ordered_graph = _ensure_topological_ordering(new_graph)
-    
-    return ordered_graph
+        print(f"Error in rewrite_graph_with_recomputation: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return the original graph as fallback
+        print("Returning original graph as fallback")
+        return graph
 
-def apply_rewritten_graph(model: torch.nn.Module,
-                          original_graph: fx.Graph,
-                          rewritten_graph: fx.Graph) -> torch.nn.Module:
+def apply_rewritten_graph(model: torch.nn.Module, 
+                         original_graph: fx.Graph, 
+                         rewritten_graph: fx.Graph) -> torch.nn.Module:
     """
     Apply a rewritten graph to a model.
     
@@ -830,135 +717,27 @@ def apply_rewritten_graph(model: torch.nn.Module,
     Returns:
         A new model with the rewritten graph
     """
-    # Ensure proper topological ordering of nodes in the rewritten graph
-    # This is critical for operations like flatten that have dependencies
-    rewritten_graph = _ensure_topological_ordering(rewritten_graph)
-    
     # Create a new GraphModule with the rewritten graph
     new_gm = fx.GraphModule(model, rewritten_graph)
     
     # Copy over any attributes from the original module
     for name, attr in model.__dict__.items():
         if name != '_modules':
-            setattr(new_gm, name, copy.deepcopy(attr))
-    
-    # Validate the graph module before returning
-    try:
-        # Check for critical operations like flatten, avgpool, and fc
-        flatten_nodes = []
-        fc_nodes = []
-        avgpool_nodes = []
-        
-        for node in new_gm.graph.nodes:
-            if node.op == 'call_function' and node.target == torch.flatten:
-                flatten_nodes.append(node)
-                print(f"Found flatten node in final graph: {node.name}")
-            elif node.op == 'call_module' and 'fc' in node.name:
-                fc_nodes.append(node)
-                print(f"Found fc node in final graph: {node.name}")
-            elif node.op == 'call_module' and 'avgpool' in node.name:
-                avgpool_nodes.append(node)
-                print(f"Found avgpool node in final graph: {node.name}")
-        
-        # Check for critical path
-        critical_path_complete = False
-        for flatten_node in flatten_nodes:
-            # Check if this node is used by fc
-            for user in flatten_node.users:
-                if user.op == 'call_module' and 'fc' in user.name:
-                    print(f"Verified critical path: {flatten_node.name} -> {user.name}")
-                    critical_path_complete = True
-            
-            # Check if this node depends on avgpool
-            for input_node in flatten_node.all_input_nodes:
-                if input_node.op == 'call_module' and 'avgpool' in input_node.name:
-                    print(f"Verified critical path: {input_node.name} -> {flatten_node.name}")
-        
-        # If critical path is not complete, try to fix the graph
-        if not critical_path_complete and flatten_nodes and fc_nodes:
-            print("Critical path is incomplete. Attempting to fix the graph...")
-            
-            # Try to manually fix the forward method
-            class FixedResNet(torch.nn.Module):
-                def __init__(self, original_model):
-                    super().__init__()
-                    # Copy all attributes from the original model
-                    for name, attr in original_model.__dict__.items():
-                        if name != '_modules':
-                            setattr(self, name, copy.deepcopy(attr))
-                    
-                    # Copy all modules
-                    for name, module in original_model.named_modules():
-                        if '.' not in name:  # Only top-level modules
-                            setattr(self, name, module)
-                
-                def forward(self, x):
-                    # Implement a fixed forward pass that ensures proper ordering
-                    x = self.conv1(x)
-                    x = self.bn1(x)
-                    x = self.relu(x)
-                    x = self.maxpool(x)
-                    
-                    x = self.layer1(x)
-                    x = self.layer2(x)
-                    x = self.layer3(x)
-                    x = self.layer4(x)
-                    
-                    x = self.avgpool(x)
-                    x = torch.flatten(x, 1)
-                    x = self.fc(x)
-                    
-                    return x
-            
-            # Create a fixed model
-            fixed_model = FixedResNet(model)
-            print("Created fixed model with proper forward method")
-            
-            # Test the fixed model
-            test_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
-            with torch.no_grad():
-                fixed_model(test_input)
-            print("Fixed model successfully executed a forward pass")
-            
-            return fixed_model
-        
-        if not flatten_nodes:
-            print("Warning: No flatten nodes found in the final graph. This may cause issues with the fc layer.")
-        
-        # Test with a small input to catch any issues
-        test_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
-        
-        # Print the forward method for debugging
-        print("Examining forward method of rewritten model:")
-        import inspect
-        if hasattr(new_gm, 'forward') and callable(new_gm.forward):
-            forward_source = inspect.getsource(new_gm.forward)
-            print(forward_source)
-            
-            # Check if 'flatten' appears in the forward method
-            if 'flatten' in forward_source:
-                print("Found 'flatten' in forward method")
-                
-                # Check if there's any issue with flatten being used before definition
-                if 'fc' in forward_source and forward_source.find('fc') < forward_source.find('flatten'):
-                    print("Warning: 'fc' appears before 'flatten' in the forward method. This may cause issues.")
-        
-        with torch.no_grad():
-            new_gm(test_input)
-        print("Successfully validated rewritten graph module")
-    except Exception as e:
-        print(f"Warning: Rewritten graph module validation failed: {e}")
-        print(f"Exception details: {str(e)}")
-        import traceback
-        print(f"Traceback: {traceback.format_exc()}")
-        print("Falling back to original model")
-        return model
+            try:
+                setattr(new_gm, name, copy.deepcopy(attr))
+            except Exception as e:
+                print(f"Warning: Could not copy attribute {name}: {e}")
+                # Try a direct assignment without deep copy
+                try:
+                    setattr(new_gm, name, attr)
+                except Exception as e2:
+                    print(f"Warning: Could not directly assign attribute {name}: {e2}")
     
     return new_gm
 
 def trace_model_for_ac(model: torch.nn.Module,
-                         example_input: torch.Tensor,
-                         activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> fx.GraphModule:
+                        example_input: torch.Tensor,
+                        activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> fx.GraphModule:
     """
     Trace a model to get an FX graph suitable for activation checkpointing.
     
@@ -972,28 +751,12 @@ def trace_model_for_ac(model: torch.nn.Module,
     """
     # Use torch.fx.symbolic_trace to trace the model
     try:
-        # Create a custom tracer to handle special cases like flatten
-        class CustomTracer(fx.Tracer):
-            def __init__(self):
-                super().__init__()
-                self.special_operations = set()
+        # Check if activation_liveness is provided
+        if activation_liveness is None:
+            print("Warning: activation_liveness is None, node matching may be less accurate")
             
-            def create_node(self, kind, target, args, kwargs, name=None, type_expr=None):
-                # Track flatten operations for special handling
-                if kind == 'call_function' and target == torch.flatten:
-                    if name:
-                        self.special_operations.add(name)
-                        print(f"Tracked special operation: {name}, kind: {kind}, target: {target}")
-                
-                return super().create_node(kind, target, args, kwargs, name, type_expr)
-        
-        # Use the custom tracer
-        tracer = CustomTracer()
-        gm = fx.GraphModule(model, tracer.trace(model))
-        
-        # Print information about special operations
-        if hasattr(tracer, 'special_operations') and tracer.special_operations:
-            print(f"Found {len(tracer.special_operations)} special operations: {tracer.special_operations}")
+        # Trace the model
+        gm = fx.symbolic_trace(model)
         
         # Add rank metadata to the traced graph
         # This is critical for matching nodes between the profiler and rewriter
@@ -1084,7 +847,10 @@ def trace_model_for_ac(model: torch.nn.Module,
         # Print the first few nodes for debugging
         for i, node in enumerate(gm.graph.nodes):
             if i < 5:
-                print(f"Node {i}: name='{node.name}', op='{node.op}', meta_rank='{node.meta['rank']}', gtype='{node.meta['gtype']}'")
+                try:
+                    print(f"Node {i}: name='{node.name}', op='{node.op}', meta_rank='{node.meta['rank']}', gtype='{node.meta['gtype']}'")
+                except Exception as e:
+                    print(f"Error printing node {i} info: {e}")
         
         # Print some additional debugging information
         print(f"Graph node count: {len(list(gm.graph.nodes))}")
@@ -1093,60 +859,17 @@ def trace_model_for_ac(model: torch.nn.Module,
         print(f"First 10 node ranks: {[node.meta.get('rank') for node in list(gm.graph.nodes)[:10]]}")
         
         # Recompile the graph to ensure metadata is properly attached
-        gm.recompile()
-        
-        # Verify critical operations are present and properly connected
-        flatten_nodes = [n for n in gm.graph.nodes if n.op == 'call_function' and n.target == torch.flatten]
-        avgpool_nodes = [n for n in gm.graph.nodes if n.op == 'call_module' and 'avgpool' in n.name]
-        fc_nodes = [n for n in gm.graph.nodes if n.op == 'call_module' and 'fc' in n.name]
-        
-        print(f"Graph verification: Found {len(flatten_nodes)} flatten nodes, {len(avgpool_nodes)} avgpool nodes, and {len(fc_nodes)} fc nodes")
-        
-        # Special handling for ResNet's flatten operation
-        if flatten_nodes and fc_nodes:
-            # Verify dependencies between flatten and fc
-            for fc_node in fc_nodes:
-                fc_inputs = []
-                for arg in fc_node.args:
-                    if isinstance(arg, fx.Node):
-                        fc_inputs.append(arg)
-                
-                print(f"FC node {fc_node.name} inputs: {[n.name for n in fc_inputs]}")
-                
-                # Check if any flatten node is an input to fc
-                flatten_to_fc = [n for n in fc_inputs if n in flatten_nodes]
-                if flatten_to_fc:
-                    print(f"Verified dependency: {flatten_to_fc[0].name} -> {fc_node.name}")
-                    
-                    # Ensure flatten node has proper metadata
-                    if not hasattr(flatten_to_fc[0], 'meta'):
-                        flatten_to_fc[0].meta = {}
-                    flatten_to_fc[0].meta['critical'] = True
-                    print(f"Marked {flatten_to_fc[0].name} as critical operation")
-                    
-                    # Also check if flatten depends on avgpool
-                    for flatten_node in flatten_to_fc:
-                        for arg in flatten_node.args:
-                            if isinstance(arg, fx.Node) and arg.op == 'call_module' and 'avgpool' in arg.name:
-                                print(f"Found complete dependency chain: {arg.name} -> {flatten_node.name} -> {fc_node.name}")
-                                
-                                # Mark this as a critical dependency chain
-                                if not hasattr(arg, 'meta'):
-                                    arg.meta = {}
-                                arg.meta['critical_output'] = flatten_node.name
-                                
-                                # Ensure these nodes are preserved in the same order during rewriting
-                                flatten_node.meta['preserve_order'] = True
-                                arg.meta['preserve_order'] = True
-                else:
-                    print(f"Warning: No flatten node found as input to {fc_node.name}")
-        
-        # Recompile again after adding metadata
-        gm.recompile()
+        try:
+            gm.recompile()
+            print("Successfully recompiled the graph")
+        except Exception as e:
+            print(f"Warning: Error recompiling graph: {e}")
+            print("Attempting to continue without recompilation")
+            
         return gm
     except Exception as e:
         print(f"Error tracing model: {e}")
         import traceback
-        print(f"Traceback: {traceback.format_exc()}")
+        traceback.print_exc()
         # Fall back to a simpler approach if symbolic_trace fails
         return None

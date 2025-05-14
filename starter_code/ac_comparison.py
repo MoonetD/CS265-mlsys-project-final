@@ -164,7 +164,7 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
                 print(f"[DEBUG] Created sample input for tracing: {sample_input.shape}")
             
             # Trace the model to get an FX graph
-            traced_model = trace_model_for_ac(model, sample_input)
+            traced_model = trace_model_for_ac(model, sample_input, activation_liveness)
             
             if debug and traced_model:
                 print(f"[DEBUG] Successfully traced model")
@@ -229,8 +229,22 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
                                 test_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
                                 if debug:
                                     print(f"[DEBUG] Testing rewritten model with input shape: {test_input.shape}")
+                                    
+                                    # Print the model's forward method to debug issues
+                                    print(f"[DEBUG] Rewritten model forward method:")
+                                    import inspect
+                                    print(inspect.getsource(rewritten_model.forward))
                                 
                                 with torch.no_grad():
+                                    # Trace the execution to identify where the error occurs
+                                    if debug:
+                                        print(f"[DEBUG] Tracing execution of rewritten model")
+                                        # Get all module names for debugging
+                                        module_names = {id(m): name for name, m in rewritten_model.named_modules()}
+                                        for name, module in rewritten_model.named_modules():
+                                            if 'avgpool' in name or 'fc' in name:
+                                                print(f"[DEBUG] Found module: {name}, type: {type(module)}")
+                                    
                                     output = rewritten_model(test_input)
                                 
                                 if debug:
@@ -244,6 +258,28 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
                                     print(f"[DEBUG] Exception details: {str(e)}")
                                     import traceback
                                     print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+                                    
+                                    # Try to identify the specific issue with flatten
+                                    if "flatten" in str(e):
+                                        print(f"[DEBUG] This appears to be an issue with the 'flatten' operation.")
+                                        print(f"[DEBUG] Checking graph structure for flatten and related operations...")
+                                        
+                                        # Check if flatten exists in the graph
+                                        flatten_nodes = [n for n in rewritten_model.graph.nodes if 'flatten' in n.name]
+                                        if flatten_nodes:
+                                            print(f"[DEBUG] Found {len(flatten_nodes)} flatten nodes in the graph")
+                                            for n in flatten_nodes:
+                                                print(f"[DEBUG]   Node: {n.name}, Op: {n.op}, Target: {n.target}")
+                                                print(f"[DEBUG]   Args: {n.args}")
+                                                print(f"[DEBUG]   Users: {[u.name for u in n.users]}")
+                                        else:
+                                            print(f"[DEBUG] No flatten nodes found in the graph")
+                                            
+                                        # Check for avgpool and fc nodes
+                                        avgpool_nodes = [n for n in rewritten_model.graph.nodes if 'avgpool' in n.name]
+                                        fc_nodes = [n for n in rewritten_model.graph.nodes if 'fc' in n.name]
+                                        print(f"[DEBUG] Found {len(avgpool_nodes)} avgpool nodes and {len(fc_nodes)} fc nodes")
+                                
                                 print("Falling back to bottleneck checkpointing")
                         else:
                             print("Failed to apply rewritten graph, falling back to bottleneck checkpointing")

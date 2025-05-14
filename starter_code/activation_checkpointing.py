@@ -23,7 +23,7 @@ class ActivationCheckpointingAlgorithm:
             raise
 
         self.memory_budget_bytes = memory_budget_gb * (1024**3)
-        self.schedule = {} # To store decisions: act_name -> 'CHECKPOINT' or 'RECOMPUTE'
+        self.schedule = {} # To store decisions: act_name -> 'RETAINED' or 'RECOMPUTE'
 
         # Preprocess data if necessary
         # Ensure 'activation_name' is suitable as a dictionary key and is the index
@@ -93,7 +93,7 @@ class ActivationCheckpointingAlgorithm:
         Implements Algorithm G from the μ-TWO paper.
 
         Args:
-            current_schedule (dict): Activation name to decision ('CHECKPOINT', 'RECOMPUTE').
+            current_schedule (dict): Activation name to decision ('RETAINED', 'RECOMPUTE').
             fixed_overhead_bytes (float): Estimated memory for parameters, gradients, optimizer.
             debug (bool): Whether to print detailed debug information.
 
@@ -145,7 +145,7 @@ class ActivationCheckpointingAlgorithm:
         
         # Calculate initial bw_inter_mem (all checkpointed activations)
         for act_name, decision in current_schedule.items():
-            if decision == 'CHECKPOINT':
+            if decision == 'RETAINED':
                 act_details = self._get_activation_details(act_name)
                 if act_details is not None and 'avg_mem_size_bytes' in act_details:
                     bw_inter_mem += act_details['avg_mem_size_bytes']
@@ -223,7 +223,7 @@ class ActivationCheckpointingAlgorithm:
                 if node_rank in activations_by_first_bw_use_rank:
                     for act_details in activations_by_first_bw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'CHECKPOINT':
+                        if current_schedule.get(act_name) == 'RETAINED':
                             if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
                                 bw_inter_mem += act_details['avg_mem_size_bytes']
                 
@@ -243,7 +243,7 @@ class ActivationCheckpointingAlgorithm:
                 if node_rank in activations_by_creation_rank:
                     for act_details in activations_by_creation_rank[node_rank]:
                         act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'CHECKPOINT':
+                        if current_schedule.get(act_name) == 'RETAINED':
                             if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
                                 fw_inter_mem += act_details['avg_mem_size_bytes']
                 
@@ -251,7 +251,7 @@ class ActivationCheckpointingAlgorithm:
                 if node_rank in activations_by_last_fw_use_rank:
                     for act_details in activations_by_last_fw_use_rank[node_rank]:
                         act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'CHECKPOINT':
+                        if current_schedule.get(act_name) == 'RETAINED':
                             if 'avg_mem_size_bytes' in act_details and pd.notna(act_details['avg_mem_size_bytes']):
                                 fw_inter_mem -= act_details['avg_mem_size_bytes']
             
@@ -287,7 +287,7 @@ class ActivationCheckpointingAlgorithm:
             timeout_seconds (int): Maximum time in seconds to run the algorithm before timing out.
             
         Returns:
-            dict: A schedule mapping activation names to 'CHECKPOINT' or 'RECOMPUTE'.
+            dict: A schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
         """
         print(f"Starting checkpoint decision algorithm...")
         print(f"Fixed overhead: {fixed_overhead_gb} GB, Memory budget: {self.memory_budget_bytes / (1024**3):.2f} GB")
@@ -297,12 +297,12 @@ class ActivationCheckpointingAlgorithm:
         # Initial state: checkpoint all activations
         print("Initializing schedule with all activations checkpointed...")
         current_schedule = {
-            act_name: 'CHECKPOINT'
+            act_name: 'RETAINED'
             for act_name in self.activation_stats_df['activation_name'] # Iterate using the correct column name
             if pd.notna(self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes']) and self.activation_stats_df.loc[act_name, 'avg_mem_size_bytes'] > 0
         }
         
-        print(f"Initial schedule has {len(current_schedule)} activations marked for CHECKPOINT")
+        print(f"Initial schedule has {len(current_schedule)} activations marked for RETAINED")
         
         # Filter out activations with no valid size or recompute stats
         print("Filtering valid activations...")
@@ -350,7 +350,7 @@ class ActivationCheckpointingAlgorithm:
             )
             
             print(f"Simulated peak memory: {current_peak_memory / (1024**3):.2f} GB. Budget: {self.memory_budget_bytes / (1024**3):.2f} GB. Exec time: {current_exec_time:.2f}s")
-            print(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'CHECKPOINT')}")
+            print(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'RETAINED')}")
             print(f"Current recompute count: {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')}")
 
             # Check if we've met the budget
@@ -415,7 +415,7 @@ class ActivationCheckpointingAlgorithm:
         elapsed_time = time.time() - start_time
         if elapsed_time > timeout_seconds:
             print(f"Warning: Algorithm timed out after {elapsed_time:.1f} seconds.")
-            print(f"Returning best schedule found so far with {sum(1 for d in current_schedule.values() if d == 'CHECKPOINT')} checkpoints and {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')} recomputes.")
+            print(f"Returning best schedule found so far with {sum(1 for d in current_schedule.values() if d == 'RETAINED')} checkpoints and {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')} recomputes.")
             print(f"This may not be optimal. Consider increasing the timeout or using a higher memory budget.")
         
         self.schedule = current_schedule
@@ -710,7 +710,7 @@ if __name__ == "__main__":
         print(f"\nSummary:")
         print(f"Total activations considered: {len(final_schedule)}")
         print(f"Number of activations to RECOMPUTE: {recomputed_count}")
-        print(f"Number of activations to CHECKPOINT: {checkpointed_count}")
+        print(f"Number of activations to RETAINED: {checkpointed_count}")
 
         # Run final simulation with debug output
         print("\nRunning final memory simulation...")
