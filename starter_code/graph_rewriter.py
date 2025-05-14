@@ -15,7 +15,7 @@ from typing import Dict, List, Set, Tuple, Any, Optional
 
 def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[Dict[str, Dict[str, int]]] = None) -> Optional[fx.Node]:
     """
-    Find a node in the graph by name, with multiple fallback strategies.
+    Find a node in the graph by name, simplified to use exact FX node names.
     
     Args:
         graph: The FX graph
@@ -25,12 +25,12 @@ def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[
     Returns:
         The node if found, None otherwise
     """
-    # Strategy 1: Exact match
+    # Strategy 1: Exact match (which should now work in most cases)
     for node in graph.nodes:
         if node.name == name:
             return node
     
-    # Strategy 2: Match by rank if activation_liveness is provided
+    # Strategy 2: Match by rank as fallback (if activation_liveness is provided)
     if activation_liveness and name in activation_liveness:
         creation_rank = activation_liveness[name].get('creation_rank')
         if creation_rank is not None:
@@ -39,29 +39,7 @@ def find_node_by_name(graph: fx.Graph, name: str, activation_liveness: Optional[
                     print(f"Found node {node.name} by rank {creation_rank} for activation {name}")
                     return node
     
-    # Strategy 3: Partial matches
-    for node in graph.nodes:
-        # Check if the node name contains the target name or vice versa
-        if name in node.name or node.name in name:
-            print(f"Found partial match: node.name={node.name}, target={name}")
-            return node
-            
-    # Strategy 4: Try without suffix (e.g., "relu_1" -> "relu")
-    if '_' in name:
-        base_name = name.split('_')[0]
-        for node in graph.nodes:
-            if node.name == base_name or base_name in node.name:
-                print(f"Found base name match: node.name={node.name}, base_name={base_name}")
-                return node
-    
-    # Strategy 5: Match by operation type
-    if '.' in name:
-        op_type = name.split('.')[0]
-        for node in graph.nodes:
-            if op_type in node.name:
-                print(f"Found operation type match: node.name={node.name}, op_type={op_type}")
-                return node
-    
+    # If not found, log detailed information
     print(f"Warning: Could not find node for activation {name} in the graph")
     return None
 
@@ -374,8 +352,8 @@ def apply_rewritten_graph(model: torch.nn.Module,
     
     return new_gm
 
-def trace_model_for_ac(model: torch.nn.Module, 
-                      example_input: torch.Tensor) -> fx.GraphModule:
+def trace_model_for_ac(model: torch.nn.Module,
+                       example_input: torch.Tensor) -> fx.GraphModule:
     """
     Trace a model to get an FX graph suitable for activation checkpointing.
     
@@ -389,6 +367,21 @@ def trace_model_for_ac(model: torch.nn.Module,
     # Use torch.fx.symbolic_trace to trace the model
     try:
         gm = fx.symbolic_trace(model)
+        
+        # Add rank metadata to the traced graph
+        # This is critical for matching nodes between the profiler and rewriter
+        print(f"Adding rank metadata to {len(list(gm.graph.nodes))} nodes in traced graph")
+        for i, node in enumerate(gm.graph.nodes):
+            if not hasattr(node, 'meta'):
+                node.meta = {}
+            node.meta['rank'] = i
+            
+            # Print the first few nodes for debugging
+            if i < 5:
+                print(f"Node {i}: name='{node.name}', op='{node.op}', meta_rank='{node.meta['rank']}'")
+                
+        # Recompile the graph to ensure metadata is properly attached
+        gm.recompile()
         return gm
     except Exception as e:
         print(f"Error tracing model: {e}")

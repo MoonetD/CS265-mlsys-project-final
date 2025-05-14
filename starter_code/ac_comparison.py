@@ -411,13 +411,38 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
         print(f"[DEBUG] Memory budget set to: {memory_budget_gb:.2f} GB")
     
     # Use batch-specific CSV files if available, otherwise use default
+    # First check in the main directory
     node_stats_file = f"profiler_stats_bs{batch_size}_node_stats.csv"
     activation_stats_file = f"profiler_stats_bs{batch_size}_activation_stats.csv"
     
-    if not os.path.exists(node_stats_file) or not os.path.exists(activation_stats_file):
+    # Also check in the reports directory
+    reports_dir = ensure_reports_directory()
+    reports_node_stats_file = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_node_stats.csv")
+    reports_activation_stats_file = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_activation_stats.csv")
+    
+    # Check if files exist in either location
+    if os.path.exists(node_stats_file) and os.path.exists(activation_stats_file):
+        print(f"Found batch-specific CSV files in main directory: {node_stats_file} and {activation_stats_file}")
+    elif os.path.exists(reports_node_stats_file) and os.path.exists(reports_activation_stats_file):
+        print(f"Found batch-specific CSV files in reports directory")
+        node_stats_file = reports_node_stats_file
+        activation_stats_file = reports_activation_stats_file
+    else:
         print(f"Batch-specific CSV files not found, using default CSV files")
         node_stats_file = "profiler_stats_node_stats.csv"
         activation_stats_file = "profiler_stats_activation_stats.csv"
+        
+        # If default files don't exist, check reports directory
+        if not os.path.exists(node_stats_file) or not os.path.exists(activation_stats_file):
+            reports_default_node = os.path.join(reports_dir, "profiler_stats_node_stats.csv")
+            reports_default_act = os.path.join(reports_dir, "profiler_stats_activation_stats.csv")
+            
+            if os.path.exists(reports_default_node) and os.path.exists(reports_default_act):
+                print(f"Using default CSV files from reports directory")
+                node_stats_file = reports_default_node
+                activation_stats_file = reports_default_act
+    
+    print(f"READING CSV FILES: {node_stats_file} and {activation_stats_file}")
     
     if debug:
         print(f"[DEBUG] Using node stats file: {node_stats_file}")

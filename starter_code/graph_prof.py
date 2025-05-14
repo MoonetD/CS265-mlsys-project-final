@@ -42,6 +42,7 @@ class GraphProfiler(fx.Interpreter):
         self.node_types: Dict[str, NodeType] = {}
         self.node_gtypes: Dict[str, str] = {} # To store 'forward', 'backward', or 'optimizer/other'
         self.activation_liveness: Dict[str, Dict[str, int]] = {}
+        # Remove the mapping between reported and original names - we'll use original names consistently
 
         self.param_node_names: Set[str] = set()
         self.grad_node_names: Set[str] = set()
@@ -170,7 +171,7 @@ class GraphProfiler(fx.Interpreter):
 
         # --- Third Pass: Activation Liveness ---
         for node in self.ranked_nodes:
-            node_name = node.name
+            node_name = node.name # Always use the original FX node name
             if self.node_types.get(node_name) == NodeType.ACT:
                 creation_rank = self.node_ranks[node]
                 last_fw_use_rank = -1
@@ -196,7 +197,7 @@ class GraphProfiler(fx.Interpreter):
                 if first_bw_use_rank == float('inf'): # Should not happen for ACT type by definition
                     first_bw_use_rank = -1
 
-                self.activation_liveness[node_name] = {
+                self.activation_liveness[node_name] = { # Use original node name as key
                     "creation_rank": creation_rank,
                     "last_fw_use_rank": last_fw_use_rank,
                     "first_bw_use_rank": first_bw_use_rank,
@@ -276,7 +277,7 @@ class GraphProfiler(fx.Interpreter):
         if (self.sep_fw_end_rank != -1 and current_rank <= self.sep_fw_end_rank) or \
            (self.sep_fw_end_rank == -1 and (self.sep_bw_start_rank == -1 or current_rank < self.sep_bw_start_rank)): # In forward pass
             if self.node_types.get(node_name) == NodeType.ACT:
-                liveness_info = self.activation_liveness.get(node_name)
+                liveness_info = self.activation_liveness.get(node_name, None)
                 # Use the *last recorded* memory size for this activation for simulation
                 if liveness_info and current_rank == liveness_info["last_fw_use_rank"] and \
                    node_name in self.memory_sizes and self.memory_sizes[node_name]:
@@ -351,6 +352,7 @@ class GraphProfiler(fx.Interpreter):
         name_to_node = {node.name: node for node in self.ranked_nodes}
 
         for act_name in self.activation_liveness.keys():
+            # Use the same name consistently - no mapping needed
             liveness = self.activation_liveness[act_name]
             last_fw_rank = liveness["last_fw_use_rank"]
             first_bw_rank = liveness["first_bw_use_rank"]
@@ -421,7 +423,8 @@ class GraphProfiler(fx.Interpreter):
                 # - High recomp_time → high ratio (avoid recomputing)
                 # - Low recomp_time → low ratio (prefer recomputing)
                 # Scale based on activation size to prioritize larger activations
-                mem_size_factor = min(1.0, self.avg_memory_sizes.get(act_name, 0.0) / (1024 * 1024))
+                # Note: self.avg_memory_sizes.get(original_act_name, 0.0) was already fetched as avg_mem_size
+                mem_size_factor = min(1.0, avg_mem_size / (1024 * 1024))
                 self.recompute_ratios[act_name] *= (0.1 + 0.9 * mem_size_factor)
 
     def reset_stats(self) -> None:
@@ -432,6 +435,7 @@ class GraphProfiler(fx.Interpreter):
         self.memory_sizes.clear()
         self.swap_times.clear()
         self.swapped_out_activations.clear() # Reset state for next run
+        # Remove the line that clears the mapping since we no longer use it
         # Averaged data dictionaries
         self.avg_run_times.clear()
         self.avg_peak_mem_node.clear()
@@ -628,7 +632,7 @@ class GraphProfiler(fx.Interpreter):
                     recomp_ratio = self.recompute_ratios.get(act_name, float('inf'))
 
                     writer.writerow({
-                        'activation_name': act_name,
+                        'activation_name': act_name, # Always use the original FX node name
                         'creation_rank': liveness['creation_rank'],
                         'last_fw_use_rank': liveness['last_fw_use_rank'],
                         'first_bw_use_rank': liveness['first_bw_use_rank'],

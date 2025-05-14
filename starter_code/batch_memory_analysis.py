@@ -4,8 +4,8 @@ Enhanced Batch Memory Analysis Script
 
 This script analyzes the peak memory consumption of the ResNet-152 model
 with different batch sizes (4, 8, 16, 32, 64). It generates multiple visualizations:
-1. A bar graph showing peak memory usage for different batch sizes with an 8 GB limit line
-2. A memory vs. execution rank graph showing the memory curve with FW/BW boundaries and the 8 GB limit
+1. A bar graph showing peak memory usage for different batch sizes with an 1.5 GB limit line
+2. A memory vs. execution rank graph showing the memory curve with FW/BW boundaries and the 1.5 GB limit
 3. A stacked bar chart showing the memory breakdown (weights, gradients, feature maps) for different batch sizes
 
 To run this script:
@@ -36,6 +36,8 @@ def train_step(model, optim, batch):
 
 # Global variable to store peak memory between function calls
 _peak_memory = 0
+# ADD THIS: Global variable to store the current batch size for filename generation
+_CURRENT_PROFILING_BATCH_SIZE = 0
 
 def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     """
@@ -47,10 +49,14 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
         Peak memory is stored in the global _peak_memory variable.
     """
     global _peak_memory
+    # ADD THIS: Access the global for the current batch size
+    global _CURRENT_PROFILING_BATCH_SIZE
     
-    # Get batch size from args
-    batch_size = args[2].shape[0]
-    print(f"\nProfiling batch size: {batch_size}")
+    # Get batch size from trace args (can be kept for debugging/logging if needed)
+    batch_size_from_trace_args = args[2].shape[0]
+    # Modify this print statement to clarify which batch size it's referring to
+    # and use the correct one for actual profiling context.
+    print(f"\nGraph transformation called. Trace args batch size: {batch_size_from_trace_args}. Actual profiling batch size: {_CURRENT_PROFILING_BATCH_SIZE}")
     
     # Initialize the GraphProfiler with the graph module
     graph_profiler = GraphProfiler(gm)
@@ -72,10 +78,39 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     # Aggregate and analyze the results
     graph_profiler.aggregate_stats(num_runs=profile_iters)
     
-    # Save stats to CSV with batch-size-specific prefix
-    csv_prefix = f"profiler_stats_bs{batch_size}"
-    graph_profiler.save_stats_to_csv(filename_prefix=csv_prefix)
-    print(f"CSV files saved with prefix: {csv_prefix}")
+    # Ensure reports directory exists for saving CSV files
+    reports_dir = ensure_reports_directory()
+    
+    # Save stats to CSV with batch-size-specific prefix in the reports directory
+    # USE THE CORRECT BATCH SIZE FOR THE FILENAME
+    csv_prefix = f"profiler_stats_bs{_CURRENT_PROFILING_BATCH_SIZE}"
+    csv_path = os.path.join(reports_dir, csv_prefix)
+    graph_profiler.save_stats_to_csv(filename_prefix=csv_path)
+    
+    # Verify that the CSV files were actually created
+    node_stats_path = f"{csv_path}_node_stats.csv"
+    activation_stats_path = f"{csv_path}_activation_stats.csv"
+    
+    if os.path.exists(node_stats_path) and os.path.exists(activation_stats_path):
+        print(f"CSV files successfully saved to: {node_stats_path} and {activation_stats_path}")
+    else:
+        missing_files = []
+        if not os.path.exists(node_stats_path):
+            missing_files.append(node_stats_path)
+        if not os.path.exists(activation_stats_path):
+            missing_files.append(activation_stats_path)
+        print(f"WARNING: The following CSV files were not created: {', '.join(missing_files)}")
+        # Try to create empty placeholder files to prevent errors in later analysis
+        try:
+            for missing_file in missing_files:
+                with open(missing_file, 'w') as f:
+                    if 'node_stats' in missing_file:
+                        f.write("rank,name,gtype,avg_peak_mem_bytes\n")
+                    else:
+                        f.write("name,avg_size_bytes\n")
+                print(f"Created empty placeholder file: {missing_file}")
+        except Exception as e:
+            print(f"Error creating placeholder CSV files: {e}")
     
     # Get the peak memory usage
     _peak_memory = max(graph_profiler.avg_peak_mem_node.values()) if graph_profiler.avg_peak_mem_node else 0
@@ -97,6 +132,10 @@ def profile_batch_size(batch_size, device_str='cuda:0'):
     Returns:
         The peak memory usage in bytes.
     """
+    # ADD THIS: Set the global variable before calling compile
+    global _CURRENT_PROFILING_BATCH_SIZE
+    _CURRENT_PROFILING_BATCH_SIZE = batch_size
+
     print(f"\n--- Profiling ResNet-152 with batch size {batch_size} ---")
     
     # Create ResNet-152 model
@@ -152,8 +191,8 @@ def main():
     # Define batch sizes to test (including 64)
     batch_sizes = [4, 8, 16, 32, 64]
     
-    # Define OOM cap in MiB (8 GB = 8192 MiB)
-    oom_cap_mib = 8192
+    # Define OOM cap in MiB (1.5 GB = 1536 MiB)
+    oom_cap_mib = 1536
     
     # Collect peak memory usage for each batch size
     peak_memories = []
@@ -185,7 +224,7 @@ def main():
     
     # Add OOM cap line
     plt.axhline(y=oom_cap_mib, color='red', linestyle='--',
-                label=f'OOM Cap (8 GB)')
+                label=f'OOM Cap (1.5 GB)')
     
     # Add labels and title
     plt.xlabel('Batch Size')
@@ -225,10 +264,16 @@ def main():
     for i, batch_size in enumerate(batch_sizes):
         if i < len(peak_memories_mib):
             csv_prefix = f"profiler_stats_bs{batch_size}"
-            csv_files = f"{csv_prefix}_node_stats.csv, {csv_prefix}_activation_stats.csv"
+            node_stats_path = os.path.join(reports_dir, f"{csv_prefix}_node_stats.csv")
+            activation_stats_path = os.path.join(reports_dir, f"{csv_prefix}_activation_stats.csv")
+            
+            node_status = "✓" if os.path.exists(node_stats_path) else "✗"
+            activation_status = "✓" if os.path.exists(activation_stats_path) else "✗"
+            
+            csv_files = f"Node stats: {node_status}, Activation stats: {activation_status}"
             print(f"{batch_size:<10} {peak_memories_mib[i]:<20.2f} {csv_files:<40}")
     
-    print("\nCSV files have been generated in the main directory for each batch size.")
+    print("\nCSV files have been generated in the reports directory for each batch size.")
     print("These files can be used in Stage 2 for activation checkpointing analysis.")
     print("\n=== Analysis completed ===")
 
@@ -253,7 +298,7 @@ def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
     for i, batch_size in enumerate(batch_sizes):
         # Load CSV data for this batch size
         try:
-            node_csv = f"profiler_stats_bs{batch_size}_node_stats.csv"
+            node_csv = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_node_stats.csv")
             if not os.path.exists(node_csv):
                 print(f"Warning: {node_csv} not found, skipping memory vs. rank plot for batch size {batch_size}")
                 continue
@@ -291,7 +336,7 @@ def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
             
             # Add OOM cap line
             ax.axhline(y=oom_cap_mib, color='red', linestyle=':',
-                      label=f'OOM Cap (8 GB)')
+                      label=f'OOM Cap (1.5 GB)')
             
             # Set title and labels
             ax.set_title(f"Batch Size {batch_size}: Memory vs. Execution Rank")
@@ -364,7 +409,7 @@ def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, o
     
     # Add OOM cap line
     plt.axhline(y=oom_cap_mib, color='red', linestyle='--',
-                label=f'OOM Cap (8 GB)')
+                label=f'OOM Cap (1.5 GB)')
     
     # Add labels and title
     plt.xlabel('Batch Size')

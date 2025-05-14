@@ -7,11 +7,14 @@
 
 ## Current Focus
 
-*   
+* Investigating subgraph extraction failures in `GraphRewriter.rewrite_graph_for_recomputation()`. (Resolved by improving node lookup)
+* [2025-05-14 11:12:00] - Diagnosing `GraphRewriter` subgraph extraction failures. Detailed logging added to `find_node_by_name`. Logs confirm name and rank mismatches between profiler data and rewriter's graph.
+* [2025-05-14 12:11:00] - Created comprehensive summary report (`REPORT.md`) documenting the three stages of activation checkpointing implementation, key findings, improvements made, performance results, and recommendations for future work.
 
 ## Recent Changes
 
 *   
+* [2025-05-14 11:09:41] - Added detailed logging to `starter_code/graph_rewriter.py::find_node_by_name` to debug node lookup failures.
 
 ## Open Questions/Issues
 
@@ -166,3 +169,38 @@
 * [2025-05-14 10:38:00] - Open Questions/Issues: Why is the graph rewriter unable to extract subgraphs for activations marked for recomputation?
 * [2025-05-14 10:38:00] - Open Questions/Issues: How can we improve the node name matching in the graph rewriter to correctly identify activations?
 * [2025-05-14 10:38:00] - Open Questions/Issues: Should we implement a more robust fallback mechanism when subgraph extraction fails?
+* [2025-05-14 10:47:00] - Debug Status Update: Reviewed `starter_code/graph_prof.py`. Confirmed correct generation of `profiler_stats_node_stats.csv` and `profiler_stats_activation_stats.csv`. Verified that key fields for Stage 2 activation checkpointing (`recomp_time_s`, `avg_mem_size_bytes`, `creation_rank`, `first_bw_use_rank`) are present and their sourcing/calculation logic aligns with previous debugging efforts documented in the Memory Bank.
+* [2025-05-14 10:49:00] - Debug Status Update: Reviewed `starter_code/graph_prof.py`. Confirmed correct generation of `profiler_stats_node_stats.csv` and `profiler_stats_activation_stats.csv`. Verified key fields for Stage 2 activation checkpointing are present. Executed `starter_code/test_profiler_mlp.py`, generated `mlp_profiler_stats_*.csv` files, and performed a sanity check on the first 20 lines of each, confirming data integrity and completeness.
+* [2025-05-14 10:51:00] - Debug Status Update: Reviewed `starter_code/activation_checkpointing.py::ActivationCheckpointingAlgorithm.decide_checkpoints()` and `_get_max_recompute_ratio_candidate()`. Confirmed:
+    * Correct loading and usage of profiler CSV data (`avg_mem_size_bytes`, `recomp_time_s`, etc.).
+    * Selection logic correctly maximizes `mem_size / recomp_time` ratio.
+    * `memory_budget_bytes` and `fixed_overhead_bytes` are appropriately considered in the simulation and decision loop.
+    * Loop termination conditions are robust (budget met, no candidates, iterations, timeout).
+    * The decision process for choosing activations to RECOMPUTE based on static profiler data is sound.
+* [2025-05-14 10:54:27] - Debug Status Update: Investigated subgraph extraction failure in `GraphRewriter`. Identified that activation names from `ac_decisions` (derived from profiler CSVs) are looked up in the FX graph using `find_node_by_name()`. Failures likely stem from mismatches between profiler-generated names and FX graph node names, or issues with rank metadata. The `find_node_by_name()` has multiple fallback strategies, but they might not cover all discrepancies.
+* [2025-05-14 11:01:21] - Recent Changes: Modified `trace_model_for_ac` in [`starter_code/graph_rewriter.py`](starter_code/graph_rewriter.py:377-396) to add `rank` metadata to each node in the graph it produces. This aims to improve the reliability of `find_node_by_name` by enabling its rank-based matching strategy.
+* [2025-05-14 11:07:20] - Current Focus: Investigating persistent subgraph extraction failures in `GraphRewriter` even after adding `rank` metadata to nodes. The `ac_comparison.py` script still fails to extract subgraphs and falls back to bottleneck checkpointing.
+* [2025-05-14 11:07:20] - Recent Changes: Tested the addition of `rank` metadata to nodes in `starter_code/graph_rewriter.py::trace_model_for_ac`. Test execution of `starter_code/ac_comparison.py` showed that subgraph extraction warnings persist and no subgraphs are extracted by the rewriter.
+* [2025-05-14 11:21:43] - Modified `starter_code/graph_prof.py` to use actual FX node names (or descriptive module target names) as `activation_name` in `profiler_stats_activation_stats.csv`. This involves:
+    * Introducing `activation_reported_to_original_name_map` to map reported names to original FX node names if they differ.
+    * Updating `__init__` to populate this map and key `activation_liveness` by the reported name.
+    * Modifying `aggregate_stats` and `save_stats_to_csv` to use this map for correct data lookup while ensuring the CSV uses the reported name.
+    * Clearing the new map in `reset_stats`.
+* [2025-05-14 11:23:45] - Starting task: Re-generate profiler stats and run AC comparison to verify activation naming fixes.
+* [2025-05-14 11:26:12] - Analyzed `ac_comparison.py` output. Subgraph extraction still fails due to persistent node name mismatches ("Warning: Could not find node..."). 0 subgraphs extracted. `ac_comparison.py` reported it could not find batch-specific CSVs (`profiler_stats_bs32_*.csv`) and used default CSVs, potentially meaning `GraphProfiler` naming changes were not tested by `ac_comparison.py`. Fallback to bottleneck checkpointing yielded 61.52% memory reduction and -95.94% time overhead.
+* [2025-05-14 12:00:00] - Fixed batch-specific CSV loading in `ac_comparison.py`. Modified the code to:
+    1. Check for batch-specific CSVs in both the main directory and the reports directory
+    2. Provide better logging about which files are being used
+    3. Fall back to default CSVs if batch-specific ones aren't found
+* [2025-05-14 12:00:00] - Simplified naming approach in `GraphProfiler` to use original FX node names consistently:
+    1. Removed the `activation_reported_to_original_name_map` mapping
+    2. Modified all code to use the original FX node names directly
+    3. Updated CSV generation to use consistent node names
+* [2025-05-14 12:00:00] - Simplified `find_node_by_name` in `graph_rewriter.py`:
+    1. Removed complex fallback strategies that were causing confusion
+    2. Focused on exact matching and rank-based matching
+    3. Improved error reporting
+* [2025-05-14 12:00:00] - Enhanced `trace_model_for_ac` in `graph_rewriter.py`:
+    1. Added better debugging output
+    2. Ensured metadata is properly attached to nodes
+    3. Added explicit recompilation of the graph
