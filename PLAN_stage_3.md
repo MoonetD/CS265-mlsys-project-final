@@ -14,7 +14,7 @@ This stage focuses on modifying the PyTorch computational graph (`fx.Graph`) bas
 *   [ ] **Implement Extraction Logic:** For each activation `act` marked for recomputation:
     *   Start from the node that originally computed `act` in the *forward pass graph*.
     *   Perform a backward traversal (following `node.args`) to identify all ancestor nodes within the forward pass that are necessary to compute `act`.
-    *   Stop traversal at placeholder nodes or nodes producing activations that were *kept* (not recomputed or swapped). These become the inputs (`recomp_srcs`) to the recomputation subgraph.
+    *   Stop traversal at placeholder nodes or nodes producing activations that were *kept* (not marked for recomputation). These become the inputs (`recomp_srcs`) to the recomputation subgraph.
     *   Collect the sequence of nodes forming the subgraph (`recomp_graph`) needed to compute `act` from `recomp_srcs`.
     *   Store this `recomp_graph` and its `recomp_srcs` (potentially already done in Stage 1, but verify/refine here).
 
@@ -29,8 +29,8 @@ This stage focuses on modifying the PyTorch computational graph (`fx.Graph`) bas
         *   Ensure the `args` and `kwargs` of the copied node correctly reference the new nodes created within the backward pass (using the `env` lookup). The inputs (`recomp_srcs`) need to be mapped to the corresponding nodes available *at the insertion point* in the backward pass (these might be kept activations or outputs of prior recomputations).
     *   The final node created in this insertion process corresponds to the recomputed activation `act`.
 *   [ ] **Update Node Usage:**
-    *   Use `original_node.replace_all_uses_with(recomputed_node)` to replace all uses of the *original* (now non-existent) activation node within the backward pass with the *newly recomputed* activation node. Note: The original node won't exist if it was discarded; ensure references in the backward pass point to the correct recomputed value. This might involve careful handling when initially constructing the backward graph or updating arguments of nodes like `first_bw_access`.
-*   [ ] **Handle Discarded Nodes:** Ensure that nodes corresponding to activations marked for recomputation are effectively removed or bypassed during the initial forward pass execution of the *modified* graph (this might be implicit if they are never used, or require explicit removal/modification depending on implementation).
+    *   Use `original_node.replace_all_uses_with(recomputed_node)` to replace all uses of the *original* (now non-existent) activation node within the backward pass with the *newly recomputed* activation node. Note: The original node won't exist if it was discarded during the forward pass; ensure references in the backward pass point to the correct recomputed value.
+*   [ ] **Handle Recomputed Activations:** Ensure that nodes corresponding to activations marked for recomputation are effectively removed or bypassed during the initial forward pass execution of the *modified* graph (this might be implicit if they are never used, or require explicit modification depending on implementation).
 
 ### 4. Finalization
 
@@ -40,7 +40,6 @@ This stage focuses on modifying the PyTorch computational graph (`fx.Graph`) bas
 ### 5. Integration & Testing
 
 *   [ ] **Integrate Rewriter:** Combine the rewriter logic with the output of the Stage 2 algorithm.
-*   [ ] **Test with Simple Graphs:** Create simple forward/backward graphs, manually mark nodes for recomputation, and verify the rewriter correctly extracts and inserts subgraphs.
-*   [ ] **Test with Target Models:** Run the full pipeline (Profile -> Decide -> Rewrite) on ResNet-152 and BERT.
+*   [ ] **Test with ResNet-152:** Run the full pipeline (Profile -> Decide -> Rewrite) on ResNet-152 as the primary model.
 *   [ ] **Verify Correctness:** Check if the output of the rewritten graph matches the output of the original graph (using `torch.allclose`).
-*   [ ] **Verify Performance:** Measure iteration latency and peak memory consumption of the rewritten graph (Deliverables 4b, 4c). Compare against the baseline (no AC) and ensure memory is reduced and latency increase is acceptable. Debug any graph errors or performance regressions.
+*   [ ] **Verify Performance:** Measure iteration latency and peak memory consumption of the rewritten graph. Compare against the baseline (no activation checkpointing) and ensure memory is reduced while keeping latency increase acceptable. Debug any graph errors or performance regressions.

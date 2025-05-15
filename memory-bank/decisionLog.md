@@ -17,6 +17,41 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Documentation)
+[2025-05-15 19:44:29] - Further refined PLAN_stage_2.md to focus only on core requirements for activation checkpointing.
+
+**Rationale:**
+After reviewing the project requirements and the Π-TWO paper, it became clear that some sections of PLAN_stage_2.md went beyond the core requirements. Specifically, the advanced performance optimizations in section 7 and some other elements were not essential for the basic implementation of the activation checkpointing algorithm. This refinement ensures the plan focuses on the most critical aspects of the algorithm as described in the Π-TWO paper.
+
+**Details:**
+1. Removed the advanced performance optimizations section (former section 7) as it went beyond the basic requirements
+2. Simplified the core scheduling logic to focus only on recomputation decisions
+3. Updated terminology to be more consistent with the rest of the project (e.g., `memory_budget` instead of `mem_limit`)
+4. Enhanced the integration section with Stage 3 to ensure proper coordination between components
+5. Added output options for CSV files to facilitate analysis and debugging
+6. Maintained the focus on recomputation-only approach, with no references to swapping or tensor offloading
+
+These changes ensure that the plan for Stage 2 is focused, achievable, and aligned with the core requirements of the project.
+
+---
+### Decision (Documentation)
+[2025-05-15 18:46:07] - Updated PLAN_stage_3.md to focus exclusively on activation checkpointing via recomputation.
+
+**Rationale:**
+The project's focus has shifted to implementing activation checkpointing through recomputation only, removing all references to swapping and tensor offloading to host memory. This aligns with the recent update to PLAN_stage_2.md and reflects the project's current direction. The recomputation-only approach is more practical for modern GPU architectures and provides a cleaner implementation path.
+
+**Details:**
+1. Removed all references to swapping and tensor offloading to host memory throughout the document
+2. Modified section 2 (Subgraph Extraction) to clarify that traversal stops at nodes producing activations that were "not marked for recomputation" rather than "not recomputed or swapped"
+3. Renamed section 3's "Handle Discarded Nodes" to "Handle Recomputed Activations" to better reflect the focus on recomputation
+4. Added two new sections:
+   - Section 6: Robust Error Handling - Addressing common challenges in graph extraction and rewriting
+   - Section 7: Performance Optimization - Focusing on efficiency improvements specific to recomputation
+5. Updated the testing section to focus on ResNet-152 as the primary target model
+6. Added specific tasks related to rank scaling and topological ordering based on insights from previous implementation challenges
+
+These changes provide a more focused and comprehensive plan for implementing the graph extraction and rewriting components needed for activation checkpointing via recomputation.
+---
 ### Decision (Code)
 [2025-05-14 13:07:00] - Fixed rank mismatch issue in graph rewriter for activation checkpointing.
 
@@ -849,3 +884,33 @@ Modified `rewrite_graph_with_recomputation` in `starter_code/graph_rewriter.py` 
 3. Use the node with the closest rank as the insertion point for the recomputation subgraph
 
 This change makes the backward node lookup more robust by using a similar approach as we did for subgraph extraction, where we find the closest rank instead of looking for an exact match. This should allow the graph rewriter to successfully insert recomputation subgraphs for activations marked for recomputation.
+---
+### Decision (Documentation)
+[2025-05-15 18:45:08] - Refocused PLAN_stage_2.md on activation checkpointing via recomputation only
+
+**Rationale:**
+After reviewing the project requirements and implementation progress, it was determined that the activation checkpointing strategy should focus exclusively on recomputation rather than including swapping and tensor offloading to host memory. This decision aligns with the core focus of the project and simplifies the implementation by removing complexity related to host memory management and data transfer overhead calculations.
+
+**Details:**
+1. Updated PLAN_stage_2.md to remove all references to swapping and tensor offloading
+2. Maintained the overall structure of the plan while focusing solely on the recomputation strategy
+3. Added new sections on Memory Simulation, Performance Optimization, and Integration with Stage 3
+4. Updated terminology throughout to use "CHECKPOINT" and "RECOMPUTE" consistently
+5. Removed the entire "Implement Swap Overhead Calculation" section
+6. Enhanced the Memory Simulation section to better explain how memory usage is tracked during execution
+
+This focused approach will lead to a cleaner implementation that better aligns with the project's core objectives of optimizing GPU memory usage through strategic activation recomputation.
+---
+### Decision (Documentation)
+[2025-05-15 19:48:37] - Updated PLAN_stage_3.md to focus only on core requirements for graph extractor and rewriter.
+
+**Rationale:**
+After reviewing the project requirements and the Π-TWO paper, it became clear that sections 6 (Robust Error Handling) and 7 (Performance Optimization) in PLAN_stage_3.md went beyond the basic requirements. Removing these sections ensures the plan focuses on the essential implementation aspects as described in the Π-TWO paper. Additionally, focusing specifically on ResNet-152 as the primary model aligns with the project's current direction and simplifies the testing process.
+
+**Details:**
+1. Removed section 6 (Robust Error Handling) which included fallback mechanisms, detailed logging, and graph integrity validation
+2. Removed section 7 (Performance Optimization) which included subgraph extraction optimization, node lookup enhancement, rank scaling, and topological ordering
+3. Modified the "Test with Target Models" task in section 5 to specifically focus on ResNet-152 as the primary model
+4. Maintained all core functionality required for implementing the graph extractor and rewriter
+
+These changes ensure that the plan for Stage 3 is focused, achievable, and aligned with the core requirements of the project.

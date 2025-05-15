@@ -16,6 +16,8 @@
 
 ## Recent Changes
 
+* [2025-05-15 18:46:07] - Updated PLAN_stage_3.md to focus exclusively on implementing the graph extraction and rewriting for activation checkpointing (recompute strategy). Removed all references to swapping and tensor offloading to host memory. Added new sections on Robust Error Handling and Performance Optimization to address common challenges in graph rewriting.
+* [2025-05-15 19:44:14] - Further refined PLAN_stage_2.md to focus only on the core requirements for the activation checkpointing algorithm implementation. Removed the advanced performance optimizations section and simplified the core scheduling logic to align with the Π-TWO paper's requirements.
 *
 * [2025-05-14 11:09:41] - Added detailed logging to `starter_code/graph_rewriter.py::find_node_by_name` to debug node lookup failures.
 * [2025-05-14 12:20:00] - Modified `starter_code/ac_comparison.py` to output detailed results from Stage 2 (activation checkpointing algorithm) before proceeding to Stage 3. Added code to save AC decisions to a CSV file, print a detailed summary of decisions, show top activations chosen for recomputation, and display estimated memory savings and recomputation overhead.
@@ -213,3 +215,5 @@
     1. Added better debugging output
     2. Ensured metadata is properly attached to nodes
     3. Added explicit recompilation of the graph
+* [2025-05-15 18:44:44] - Updated PLAN_stage_2.md to focus exclusively on activation checkpointing (recompute) strategy. Removed all references to swapping and tensor offloading to host memory while maintaining the overall structure of the plan. Added new sections on Memory Simulation, Performance Optimization, and Integration with Stage 3.
+* [2025-05-15 19:47:54] - Updated PLAN_stage_3.md to focus only on the core requirements for the graph extractor and rewriter implementation. Removed sections 6 (Robust Error Handling) and 7 (Performance Optimization) which go beyond the basic requirements from the Π-TWO paper. Also ensured the plan focuses only on implementing with ResNet-152 as the primary model.
