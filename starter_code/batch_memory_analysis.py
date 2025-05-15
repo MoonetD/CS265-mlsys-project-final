@@ -100,17 +100,9 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
         if not os.path.exists(activation_stats_path):
             missing_files.append(activation_stats_path)
         print(f"WARNING: The following CSV files were not created: {', '.join(missing_files)}")
-        # Try to create empty placeholder files to prevent errors in later analysis
-        try:
-            for missing_file in missing_files:
-                with open(missing_file, 'w') as f:
-                    if 'node_stats' in missing_file:
-                        f.write("rank,name,gtype,median_peak_mem_bytes\n")
-                    else:
-                        f.write("name,avg_size_bytes\n")
-                print(f"Created empty placeholder file: {missing_file}")
-        except Exception as e:
-            print(f"Error creating placeholder CSV files: {e}")
+        # Fail fast if CSV files are missing
+        if missing_files:
+            raise RuntimeError(f"Critical CSV files are missing: {', '.join(missing_files)}. Stage 1 profiling failed.")
     
     # Get the peak memory usage
     _peak_memory = max(graph_profiler.median_peak_mem_node.values()) if graph_profiler.median_peak_mem_node else 0
@@ -196,11 +188,28 @@ def main():
     
     # Collect peak memory usage for each batch size
     peak_memories = []
+    iter_times = []  # For latency-vs-batch plot
     
     try:
         for batch_size in batch_sizes:
             peak_memory = profile_batch_size(batch_size, device_str)
             peak_memories.append(peak_memory)
+            
+            # Load node stats CSV to get iteration time
+            try:
+                node_csv = os.path.join(ensure_reports_directory(), f"profiler_stats_bs{batch_size}_node_stats.csv")
+                if os.path.exists(node_csv):
+                    df = pd.read_csv(node_csv)
+                    iter_time = df['median_run_time_s'].sum()
+                    iter_times.append(iter_time)
+                    print(f"Iteration time for batch size {batch_size}: {iter_time:.6f} seconds")
+                else:
+                    print(f"Warning: Could not find {node_csv} to calculate iteration time")
+                    iter_times.append(0)
+            except Exception as e:
+                print(f"Error calculating iteration time for batch size {batch_size}: {e}")
+                iter_times.append(0)
+                
     except Exception as e:
         print(f"Error during profiling: {e}")
         # If we have at least one successful run, continue with plotting
@@ -210,6 +219,28 @@ def main():
     
     # Convert peak memory to MiB for better readability
     peak_memories_mib = [mem / (1024**2) for mem in peak_memories]
+    
+    # Create latency-vs-batch plot if we have data
+    if any(iter_times):
+        plt.figure(figsize=(10, 6))
+        plt.plot(batch_sizes[:len(iter_times)], iter_times, marker='o', linestyle='-', color='purple')
+        
+        # Add values on data points
+        for i, time in enumerate(iter_times):
+            if time > 0:  # Only label non-zero times
+                plt.text(batch_sizes[i], time + 0.01, f'{time:.3f}s', ha='center', va='bottom')
+        
+        plt.xlabel('Batch Size')
+        plt.ylabel('Iteration Time (seconds)')
+        plt.title('ResNet-152 Iteration Time vs. Batch Size')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        
+        # Save the plot
+        reports_dir = ensure_reports_directory()
+        plot_path = os.path.join(reports_dir, 'resnet152_latency_comparison.png')
+        plt.savefig(plot_path)
+        plt.close()
+        print(f"\nLatency comparison plot saved to: {plot_path}")
     
     # Create a bar graph with OOM cap
     plt.figure(figsize=(10, 6))
@@ -369,30 +400,47 @@ def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, o
     """
     print("\nGenerating memory breakdown chart...")
     
-    # Estimate memory breakdown components
-    # These are approximations based on typical ResNet memory patterns
+    # Compute memory breakdown components from CSV data
     weights_mib = []  # Model weights (parameters)
     gradients_mib = []  # Gradients
     activations_mib = []  # Feature maps/activations
     
     for i, batch_size in enumerate(batch_sizes):
         if i < len(peak_memories_mib):
-            # Approximate breakdown based on typical patterns
-            # Weights are constant regardless of batch size
-            weight_mem = 230  # ResNet-152 weights ~230 MiB
-            
-            # Gradients scale with batch size but are smaller than activations
-            gradient_mem = weight_mem * 0.8  # Slightly smaller than weights
-            
-            # Activations are the largest component and scale with batch size
-            activation_mem = peak_memories_mib[i] - weight_mem - gradient_mem
-            
-            # Ensure no negative values
-            activation_mem = max(0, activation_mem)
-            
-            weights_mib.append(weight_mem)
-            gradients_mib.append(gradient_mem)
-            activations_mib.append(activation_mem)
+            try:
+                # Load node stats CSV
+                node_csv = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_node_stats.csv")
+                if not os.path.exists(node_csv):
+                    raise FileNotFoundError(f"CSV file not found: {node_csv}")
+                
+                df = pd.read_csv(node_csv)
+                
+                # Calculate weights memory from parameters
+                weight_mem = df[df.node_type == 'parameter'].median_peak_mem_bytes.sum() / (1024**2)
+                
+                # Calculate gradients memory from gradients
+                grad_mem = df[df.node_type == 'gradient'].median_peak_mem_bytes.sum() / (1024**2)
+                
+                # Activations are the remaining memory
+                activation_mem = peak_memories_mib[i] - weight_mem - grad_mem
+                
+                # Ensure no negative values
+                activation_mem = max(0, activation_mem)
+                
+                weights_mib.append(weight_mem)
+                gradients_mib.append(grad_mem)
+                activations_mib.append(activation_mem)
+            except Exception as e:
+                print(f"Error calculating memory breakdown for batch size {batch_size}: {e}")
+                # Use fallback values if CSV processing fails
+                weight_mem = 230  # ResNet-152 weights ~230 MiB
+                grad_mem = weight_mem * 0.8
+                activation_mem = peak_memories_mib[i] - weight_mem - grad_mem
+                activation_mem = max(0, activation_mem)
+                
+                weights_mib.append(weight_mem)
+                gradients_mib.append(grad_mem)
+                activations_mib.append(activation_mem)
     
     # Create stacked bar chart
     plt.figure(figsize=(12, 8))

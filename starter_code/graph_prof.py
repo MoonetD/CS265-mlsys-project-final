@@ -25,6 +25,7 @@ class NodeType(str, Enum): # Changed back to str Enum for consistency if needed 
     PARAM = "parameter"
     ACT = "activation"
     GRAD = "gradient"
+    OPT_STATE = "optimizer_state"  # Added for optimizer state tensors
     OTHER = "other"
 
 
@@ -46,9 +47,12 @@ class GraphProfiler(fx.Interpreter):
 
         self.param_node_names: Set[str] = set()
         self.grad_node_names: Set[str] = set()
-        # TODO: Add calculation of param_sizes and grad_sizes if needed for peak memory breakdown
-        # self.param_sizes: Dict[str, int] = {}
-        # self.grad_sizes: Dict[str, int] = {}
+        # Store parameter and gradient sizes
+        self.param_sizes: Dict[str, int] = {}
+        self.grad_sizes: Dict[str, int] = {}
+        # Store active memory before each node execution
+        self.active_mem_node: Dict[str, List[int]] = defaultdict(list)
+        self.median_active_mem_node: Dict[str, float] = {}
 
         self.node_ranks: Dict[fx.Node, int] = {}
         self.ranked_nodes: List[fx.Node] = []
@@ -83,10 +87,12 @@ class GraphProfiler(fx.Interpreter):
                 elif node.target == torch.ops.aten._fused_adam.default:
                     _fused_adam_node = node
 
-        # Identify parameter names from module parameters
-        for param_name_dot, _ in self.module.named_parameters():
+        # Identify parameter names from module parameters and compute sizes
+        for param_name_dot, param in self.module.named_parameters():
             fx_node_name = param_name_dot.replace('.', '_') # FX naming convention
             self.param_node_names.add(fx_node_name)
+            # Store parameter size
+            self.param_sizes[fx_node_name] = param.element_size() * param.nelement()
 
         # Identify gradient names from _fused_adam_node (if found and args are ListConstruct)
         if _fused_adam_node and len(_fused_adam_node.args) > 1:
@@ -135,10 +141,21 @@ class GraphProfiler(fx.Interpreter):
                 self.node_gtypes[node_name] = "intermediate/other"
 
 
+            # Check for optimizer state nodes
+            is_opt_state = False
+            if node.op == OP.CALL_FUNCTION and hasattr(node, 'target'):
+                target_str = str(node.target).lower()
+                if "aten._fused_" in target_str or "adam" in target_str or "sgd" in target_str:
+                    self.node_types[node_name] = NodeType.OPT_STATE
+                    is_opt_state = True
+
             if node_name in self.param_node_names:
                 self.node_types[node_name] = NodeType.PARAM
             elif node_name in self.grad_node_names:
                 self.node_types[node_name] = NodeType.GRAD
+            elif is_opt_state:
+                # Already set above, just for clarity
+                pass
             else:
                 is_activation = False
                 if node.op not in [OP.PLACEHOLDER, OP.OUTPUT]: # Activations are not placeholders or outputs
@@ -209,6 +226,10 @@ class GraphProfiler(fx.Interpreter):
         node_name = n.name
         current_rank = self.node_ranks[n]
 
+        # Track active memory before node execution
+        pre_mem = torch.cuda.memory_allocated()
+        self.active_mem_node[node_name].append(pre_mem)
+
         # Timing and Memory Measurement (Around node execution)
         start_event = torch.cuda.Event(enable_timing=True)
         end_event = torch.cuda.Event(enable_timing=True)
@@ -234,15 +255,23 @@ class GraphProfiler(fx.Interpreter):
 
         # Store output tensor memory size if it's an activation
         mem_size = 0
-        if self.node_types.get(node_name) == NodeType.ACT and isinstance(result, torch.Tensor):
-            if result.device.type == 'cuda':
-                 mem_size = result.element_size() * result.nelement()
-            elif result.is_quantized:
-                 mem_size = result.untyped_storage().size()
-        # Append memory size even if 0 (e.g., non-tensor activation or CPU tensor)
-        # This ensures memory_sizes list length matches run count for averaging.
         if self.node_types.get(node_name) == NodeType.ACT:
-             self.memory_sizes[node_name].append(mem_size)
+            # Handle non-tensor / tuple outputs using proper flattening
+            for t in torch.utils._pytree.tree_flatten(result)[0]:
+                if isinstance(t, torch.Tensor) and t.device.type == 'cuda':
+                    mem_size += t.element_size() * t.nelement()
+            
+            # Append memory size even if 0 (e.g., non-tensor activation or CPU tensor)
+            # This ensures memory_sizes list length matches run count for averaging.
+            self.memory_sizes[node_name].append(mem_size)
+        
+        # Capture gradient sizes during backward pass
+        if self.node_gtypes.get(node_name) == "backward" and node_name in self.grad_node_names:
+            # Find the corresponding parameter node
+            for param_name in self.param_node_names:
+                if param_name in self.env and self.env[param_name].grad is not None:
+                    grad_size = self.env[param_name].grad.element_size() * self.env[param_name].grad.nelement()
+                    self.grad_sizes[param_name] = grad_size
 
 
         return result
@@ -271,6 +300,7 @@ class GraphProfiler(fx.Interpreter):
         self.median_run_times.clear()
         self.median_peak_mem_node.clear()
         self.median_memory_sizes.clear()
+        self.median_active_mem_node.clear()
 
         for name, times in self.run_times.items():
             try:
@@ -289,6 +319,12 @@ class GraphProfiler(fx.Interpreter):
                 self.median_memory_sizes[name] = statistics.median(sizes) if sizes else 0.0
             except statistics.StatisticsError:
                 self.median_memory_sizes[name] = 0.0
+                
+        for name, active_mems in self.active_mem_node.items():
+            try:
+                self.median_active_mem_node[name] = statistics.median(active_mems) if active_mems else 0.0
+            except statistics.StatisticsError:
+                self.median_active_mem_node[name] = 0.0
 
 
         # 2. Calculate MuTWO Metrics using Averaged Stats
@@ -361,10 +397,12 @@ class GraphProfiler(fx.Interpreter):
         self.run_times.clear()
         self.peak_mem_node.clear()
         self.memory_sizes.clear()
+        self.active_mem_node.clear()
         # Averaged data dictionaries
         self.median_run_times.clear()
         self.median_peak_mem_node.clear()
         self.median_memory_sizes.clear()
+        self.median_active_mem_node.clear()
         # MuTWO metrics dictionaries
         self.inactive_times.clear()
         self.recomp_times.clear()
@@ -430,10 +468,10 @@ class GraphProfiler(fx.Interpreter):
         # --- Peak Memory Breakdown ---
         print("\n[Peak Memory Breakdown (Estimate)]")
 
-        # TODO: Calculate these accurately if possible by storing param/grad sizes in __init__
-        total_param_mem = 0 # sum(self.param_sizes.values())
-        total_grad_mem = 0 # sum(self.grad_sizes.values()) # Or estimate based on params
-        total_optimizer_mem = 0 # Needs specific optimizer info
+        # Calculate these accurately using stored param/grad sizes
+        total_param_mem = sum(self.param_sizes.values())
+        total_grad_mem = sum(self.grad_sizes.values())
+        total_optimizer_mem = 0 # Still needs specific optimizer info
 
         # Calculate peak activation memory based on liveness and avg sizes
         peak_activation_mem = 0
@@ -494,7 +532,7 @@ class GraphProfiler(fx.Interpreter):
         node_csv_filename = f"{filename_prefix}_node_stats.csv"
         try:
             with open(node_csv_filename, 'w', newline='') as csvfile:
-                fieldnames = ['rank', 'node_name', 'node_type', 'gtype', 'median_run_time_s', 'median_peak_mem_bytes'] # Added gtype
+                fieldnames = ['rank', 'node_name', 'node_type', 'gtype', 'median_run_time_s', 'median_peak_mem_bytes', 'median_active_mem_bytes', 'device'] # Added active_mem and device
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 writer.writeheader()
@@ -510,13 +548,20 @@ class GraphProfiler(fx.Interpreter):
                     avg_time = self.median_run_times.get(node_name, 0.0)
                     avg_mem = self.median_peak_mem_node.get(node_name, 0.0)
 
+                    # Get device information
+                    device = "unknown"
+                    if node in self.env and isinstance(self.env[node], torch.Tensor):
+                        device = str(self.env[node].device)
+                    
                     writer.writerow({
                         'rank': rank,
                         'node_name': node_name,
                         'node_type': node_type.value,
                         'gtype': gtype, # Added gtype
                         'median_run_time_s': avg_time,
-                        'median_peak_mem_bytes': int(avg_mem)
+                        'median_peak_mem_bytes': int(avg_mem),
+                        'median_active_mem_bytes': int(self.median_active_mem_node.get(node_name, 0)),
+                        'device': device
                     })
             print(f"Node statistics saved to {node_csv_filename}")
         except IOError as e:
