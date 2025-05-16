@@ -44,11 +44,10 @@ from graph_rewriter import (
 
 def ensure_reports_directory():
     """Ensure the reports directory exists."""
-    reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'reports')
-    if not os.path.exists(reports_dir):
-        os.makedirs(reports_dir)
-        print(f"Created reports directory: {reports_dir}")
-    return reports_dir
+    # TODO: Implement directory creation
+    # - Create reports directory if it doesn't exist
+    # - Return the path to the reports directory
+    pass
 
 def checkpoint_wrapper(function):
     """
@@ -61,50 +60,18 @@ def checkpoint_wrapper(function):
     
     This trades increased computation time for reduced memory usage.
     
-    The PyTorch checkpoint function works by:
-    1. During forward pass: Run the function but detach all intermediate tensors from the graph
-    2. During backward pass: Rerun the function to recompute the intermediate tensors
-    
-    This significantly reduces memory usage at the cost of extra computation.
+    Args:
+        function: The function to wrap with checkpointing
+        
+    Returns:
+        A wrapped function that uses checkpointing
     """
-    @wraps(function)
-    def wrapped(*args, **kwargs):
-        # Custom implementation of checkpointing to ensure proper memory reduction
-        # During forward pass, we run the function with no_grad to avoid storing activations
-        # During backward pass, we recompute the activations
-        
-        # Save input tensors that require gradients
-        input_tensors = []
-        for arg in args:
-            if isinstance(arg, torch.Tensor) and arg.requires_grad:
-                input_tensors.append(arg)
-        
-        # Run forward pass without storing intermediate activations
-        with torch.no_grad():
-            output = function(*args, **kwargs)
-        
-        # Create a function to recompute the output during backward pass
-        def recompute(*inputs):
-            # Reconstruct args with the saved tensors
-            new_args = list(args)
-            input_idx = 0
-            for i, arg in enumerate(args):
-                if isinstance(arg, torch.Tensor) and arg.requires_grad:
-                    new_args[i] = inputs[input_idx]
-                    input_idx += 1
-            
-            # Recompute the output with gradients enabled
-            recomputed = function(*new_args, **kwargs)
-            return recomputed
-        
-        # Use PyTorch's checkpoint mechanism with our custom recompute function
-        return torch.utils.checkpoint.checkpoint(
-            recompute,
-            *input_tensors,
-            use_reentrant=False,
-            preserve_rng_state=True
-        )
-    return wrapped
+    # TODO: Implement checkpoint wrapper
+    # - Create a wrapped function that applies torch.utils.checkpoint
+    # - During forward pass, run the function with no_grad to avoid storing activations
+    # - During backward pass, recompute the activations
+    # - Use PyTorch's checkpoint mechanism with a custom recompute function
+    pass
 
 def measure_memory_and_time(model, input_batch, num_runs=3, debug=False):
     """
@@ -127,72 +94,13 @@ def measure_memory_and_time(model, input_batch, num_runs=3, debug=False):
         peak_memory: Peak memory usage in bytes
         avg_time: Average execution time in seconds
     """
-    # Multiple warm-up runs to ensure stable measurements
-    if debug:
-        print(f"[DEBUG] Starting warm-up runs")
-    
-    # Do 3 warm-up runs to stabilize GPU caches and JIT compilation
-    for i in range(3):
-        with torch.no_grad():
-            model(input_batch)
-        torch.cuda.synchronize()
-        if debug:
-            print(f"[DEBUG] Warm-up run {i+1} complete")
-    
-    # Clear cache to get accurate memory measurements
-    torch.cuda.empty_cache()
-    
-    # Reset memory stats
-    torch.cuda.reset_peak_memory_stats()
-    if debug:
-        print(f"[DEBUG] Reset peak memory stats")
-        print(f"[DEBUG] Current memory allocated: {torch.cuda.memory_allocated() / (1024**2):.2f} MiB")
-    
-    # Measure time over multiple runs
-    total_time = 0
-    peak_memory = 0
-    
-    for i in range(num_runs):
-        if debug:
-            print(f"[DEBUG] Starting measurement run {i+1}/{num_runs}")
-        
-        # Reset peak memory stats for this run
-        torch.cuda.reset_peak_memory_stats()
-        
-        # Ensure all previous operations are complete
-        torch.cuda.synchronize()
-        start_time = time.time()
-        
-        # Forward pass
-        output = model(input_batch)
-        
-        # Create a dummy loss and run backward pass to properly measure activation checkpointing
-        # This is crucial because activation checkpointing saves memory during backward pass
-        if input_batch.requires_grad:
-            loss = output.mean()
-            loss.backward(retain_graph=True)  # Use retain_graph=True to avoid the error
-        
-        # Ensure all operations are complete before stopping the timer
-        torch.cuda.synchronize()
-        end_time = time.time()
-        run_time = end_time - start_time
-        total_time += run_time
-        
-        # Get peak memory for this run
-        run_peak_memory = torch.cuda.max_memory_allocated()
-        peak_memory = max(peak_memory, run_peak_memory)
-        
-        if debug:
-            print(f"[DEBUG] Run {i+1} time: {run_time:.4f} s")
-            print(f"[DEBUG] Run {i+1} peak memory: {run_peak_memory / (1024**2):.2f} MiB")
-    
-    avg_time = total_time / num_runs
-    
-    if debug:
-        print(f"[DEBUG] Final peak memory: {peak_memory / (1024**2):.2f} MiB")
-        print(f"[DEBUG] Average time: {avg_time:.4f} s")
-    
-    return peak_memory, avg_time
+    # TODO: Implement memory and time measurement
+    # - Perform warm-up runs to stabilize GPU caches
+    # - Clear cache and reset memory stats
+    # - Measure time and memory over multiple runs
+    # - Include backward pass to properly measure activation checkpointing
+    # - Return peak memory and average time
+    pass
 
 def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, activation_liveness=None, debug=False):
     """
@@ -208,241 +116,17 @@ def apply_activation_checkpointing(model, ac_decisions=None, percentage=0.5, act
     Returns:
         model_with_ac: The model with activation checkpointing applied
     """
-    # Create a deep copy of the model to avoid modifying the original
-    model_with_ac = copy.deepcopy(model)
-    
-    if debug:
-        print(f"[DEBUG] Creating deep copy of model")
-        print(f"[DEBUG] Original model id: {id(model)}, Copy id: {id(model_with_ac)}")
-    
-    # Count how many activations are marked for RECOMPUTE
-    recompute_target = 0
-    checkpoint_target = 0
-    if ac_decisions:
-        recompute_target = sum(1 for v in ac_decisions.values() if v == 'RECOMPUTE')
-        checkpoint_target = sum(1 for v in ac_decisions.values() if v == 'RETAINED')
-        print(f"AC decisions: {recompute_target} RECOMPUTE, {checkpoint_target} RETAINED")
-        
-        if debug:
-            print(f"[DEBUG] AC decisions details:")
-            for i, (k, v) in enumerate(ac_decisions.items()):
-                if i < 10:  # Print first 10 for brevity
-                    print(f"[DEBUG]   {k}: {v}")
-            if len(ac_decisions) > 10:
-                print(f"[DEBUG]   ... and {len(ac_decisions) - 10} more")
-    
-    # Try to use the graph rewriter approach if we have AC decisions and activation liveness info
-    if ac_decisions and activation_liveness and recompute_target > 0:
-        try:
-            print(f"Using graph rewriter approach with {recompute_target} activations marked for recomputation")
-            
-            # Create a sample input for tracing
-            sample_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
-            
-            if debug:
-                print(f"[DEBUG] Created sample input for tracing: {sample_input.shape}")
-            
-            # Trace the model to get an FX graph
-            traced_model = trace_model_for_ac(model, sample_input, activation_liveness)
-            
-            if debug and traced_model:
-                print(f"[DEBUG] Successfully traced model")
-                print(f"[DEBUG] Graph has {len(list(traced_model.graph.nodes))} nodes")
-                print(f"[DEBUG] First few nodes: {[n.name for n in list(traced_model.graph.nodes)[:5]]}")
-            
-            if traced_model:
-                # Extract subgraphs for recomputation
-                if debug:
-                    print(f"[DEBUG] Extracting subgraphs for recomputation")
-                
-                subgraphs = extract_recomputation_subgraphs(
-                    traced_model.graph,
-                    ac_decisions,
-                    activation_liveness
-                )
-                
-                # Check if we have any valid subgraphs
-                valid_subgraphs = {k: v for k, v in subgraphs.items() if v[0]}  # Filter out empty node lists
-                print(f"Extracted {len(valid_subgraphs)} valid subgraphs out of {len(subgraphs)} total")
-                
-                if debug:
-                    print(f"[DEBUG] Valid subgraphs: {len(valid_subgraphs)}/{len(subgraphs)}")
-                
-                if valid_subgraphs:
-                    # Print some details about the subgraphs for debugging
-                    for act_name, (nodes, inputs) in list(valid_subgraphs.items())[:3]:  # Show first 3 for brevity
-                        print(f"  Subgraph for {act_name}: {len(nodes)} nodes, {len(inputs)} inputs")
-                        print(f"    First few nodes: {[n.name for n in nodes[:3]]}")
-                        print(f"    First few inputs: {[n.name for n in list(inputs)[:3]]}")
-                    
-                    try:
-                        # Rewrite the graph with recomputation
-                        if debug:
-                            print(f"[DEBUG] Rewriting graph with recomputation")
-                        
-                        rewritten_graph = rewrite_graph_with_recomputation(
-                            traced_model.graph,
-                            valid_subgraphs,
-                            activation_liveness
-                        )
-                        
-                        if debug:
-                            print(f"[DEBUG] Successfully rewrote graph")
-                            print(f"[DEBUG] Rewritten graph has {len(list(rewritten_graph.nodes))} nodes")
-                        
-                        # Apply the rewritten graph to the model
-                        if debug:
-                            print(f"[DEBUG] Applying rewritten graph to model")
-                        
-                        rewritten_model = apply_rewritten_graph(
-                            model_with_ac,
-                            traced_model.graph,
-                            rewritten_graph
-                        )
-                        
-                        if rewritten_model:
-                            print(f"Successfully applied graph rewriting for activation checkpointing")
-                            
-                            # Verify the rewritten model works
-                            try:
-                                test_input = torch.randn(1, 3, 224, 224).to(next(model.parameters()).device)
-                                if debug:
-                                    print(f"[DEBUG] Testing rewritten model with input shape: {test_input.shape}")
-                                    
-                                    # Print the model's forward method to debug issues
-                                    print(f"[DEBUG] Rewritten model forward method:")
-                                    import inspect
-                                    print(inspect.getsource(rewritten_model.forward))
-                                
-                                with torch.no_grad():
-                                    # Trace the execution to identify where the error occurs
-                                    if debug:
-                                        print(f"[DEBUG] Tracing execution of rewritten model")
-                                        # Get all module names for debugging
-                                        module_names = {id(m): name for name, m in rewritten_model.named_modules()}
-                                        for name, module in rewritten_model.named_modules():
-                                            if 'avgpool' in name or 'fc' in name:
-                                                print(f"[DEBUG] Found module: {name}, type: {type(module)}")
-                                    
-                                    output = rewritten_model(test_input)
-                                
-                                if debug:
-                                    print(f"[DEBUG] Rewritten model output shape: {output.shape}")
-                                
-                                print("Rewritten model successfully executed a forward pass")
-                                return rewritten_model
-                            except Exception as e:
-                                print(f"Error executing rewritten model: {e}")
-                                if debug:
-                                    print(f"[DEBUG] Exception details: {str(e)}")
-                                    import traceback
-                                    print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-                                    
-                                    # Try to identify the specific issue with flatten
-                                    if "flatten" in str(e):
-                                        print(f"[DEBUG] This appears to be an issue with the 'flatten' operation.")
-                                        print(f"[DEBUG] Checking graph structure for flatten and related operations...")
-                                        
-                                        # Check if flatten exists in the graph
-                                        flatten_nodes = [n for n in rewritten_model.graph.nodes if 'flatten' in n.name]
-                                        if flatten_nodes:
-                                            print(f"[DEBUG] Found {len(flatten_nodes)} flatten nodes in the graph")
-                                            for n in flatten_nodes:
-                                                print(f"[DEBUG]   Node: {n.name}, Op: {n.op}, Target: {n.target}")
-                                                print(f"[DEBUG]   Args: {n.args}")
-                                                print(f"[DEBUG]   Users: {[u.name for u in n.users]}")
-                                        else:
-                                            print(f"[DEBUG] No flatten nodes found in the graph")
-                                            
-                                        # Check for avgpool and fc nodes
-                                        avgpool_nodes = [n for n in rewritten_model.graph.nodes if 'avgpool' in n.name]
-                                        fc_nodes = [n for n in rewritten_model.graph.nodes if 'fc' in n.name]
-                                        print(f"[DEBUG] Found {len(avgpool_nodes)} avgpool nodes and {len(fc_nodes)} fc nodes")
-                                
-                                print("Falling back to bottleneck checkpointing")
-                        else:
-                            print("Failed to apply rewritten graph, falling back to bottleneck checkpointing")
-                            if debug:
-                                print(f"[DEBUG] apply_rewritten_graph returned None")
-                    except Exception as e:
-                        print(f"Error in graph rewriting: {e}")
-                        if debug:
-                            print(f"[DEBUG] Exception details: {str(e)}")
-                            import traceback
-                            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-                        print("Falling back to bottleneck checkpointing")
-                else:
-                    print(f"No valid subgraphs extracted, falling back to bottleneck checkpointing")
-            else:
-                print(f"Failed to trace model, falling back to bottleneck checkpointing")
-                if debug:
-                    print(f"[DEBUG] trace_model_for_ac returned None")
-        except Exception as e:
-            print(f"Error in graph rewriter approach: {str(e)}")
-            if debug:
-                print(f"[DEBUG] Exception details: {str(e)}")
-                import traceback
-                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-            print(f"Falling back to bottleneck checkpointing")
-    else:
-        print(f"Using bottleneck checkpointing approach")
-        if debug:
-            if not ac_decisions:
-                print(f"[DEBUG] No AC decisions provided")
-            if not activation_liveness:
-                print(f"[DEBUG] No activation liveness information provided")
-            if recompute_target == 0:
-                print(f"[DEBUG] No activations marked for RECOMPUTE")
-    
-    # Fall back to the bottleneck checkpointing approach
-    if recompute_target == 0:
-        print(f"No specific AC decisions provided. Applying checkpointing to {percentage:.0%} of bottleneck blocks")
-        bottleneck_modules = [m for n, m in model_with_ac.named_modules() if isinstance(m, models.resnet.Bottleneck)]
-        # Use a higher percentage to ensure we get actual memory reduction
-        effective_percentage = 1.0  # Apply to 100% of bottleneck blocks for maximum memory reduction
-        recompute_target = max(1, int(len(bottleneck_modules) * effective_percentage))
-        
-        if debug:
-            print(f"[DEBUG] Found {len(bottleneck_modules)} bottleneck modules")
-            print(f"[DEBUG] Will checkpoint {recompute_target} modules ({effective_percentage:.0%})")
-    
-    print(f"Applying checkpointing to {recompute_target} bottleneck blocks")
-    
-    # Apply checkpointing to bottleneck blocks
-    recompute_count = 0
-    # Sort modules by memory impact (apply to largest modules first)
-    # This ensures we target the modules that will give the most memory savings
-    bottleneck_modules = [(n, m) for n, m in model_with_ac.named_modules() if isinstance(m, models.resnet.Bottleneck)]
-    
-    # Prioritize deeper layers (layer3, layer4) which typically have larger activations
-    # This is a heuristic based on the ResNet architecture
-    def get_layer_priority(name):
-        if 'layer4' in name:
-            return 3
-        elif 'layer3' in name:
-            return 2
-        elif 'layer2' in name:
-            return 1
-        else:
-            return 0
-    
-    # Sort bottleneck modules by layer priority (deeper layers first)
-    bottleneck_modules.sort(key=lambda x: get_layer_priority(x[0]), reverse=True)
-    
-    # Apply checkpointing to the selected bottleneck blocks
-    for name, module in bottleneck_modules:
-        if recompute_count < recompute_target:
-            # Store the original forward method
-            original_forward = module.forward
-            # Apply checkpointing to this bottleneck block - DISCARD activations during forward pass
-            module.forward = checkpoint_wrapper(original_forward)
-            recompute_count += 1
-            
-            if debug and recompute_count <= 5:
-                print(f"[DEBUG] Applied checkpointing to bottleneck block: {name}")
-    
-    print(f"Applied checkpointing to {recompute_count} bottleneck blocks")
-    return model_with_ac
+    # TODO: Implement activation checkpointing application
+    # - Create a deep copy of the model
+    # - Try to use the graph rewriter approach if we have AC decisions and activation liveness info
+    #   - Trace the model to get an FX graph
+    #   - Extract subgraphs for recomputation
+    #   - Rewrite the graph with recomputation
+    #   - Apply the rewritten graph to the model
+    # - Fall back to bottleneck checkpointing approach if graph rewriter fails
+    #   - Apply checkpointing to bottleneck blocks
+    # - Return the model with activation checkpointing applied
+    pass
 
 def validate_correctness(model, model_with_ac, input_batch, rtol=1e-2, atol=1e-2, debug=False):
     """
@@ -460,46 +144,14 @@ def validate_correctness(model, model_with_ac, input_batch, rtol=1e-2, atol=1e-2
         is_valid: Whether the model is correct within tolerance
         rel_diff: Relative difference between outputs
     """
-    # Set both models to eval mode to disable dropout, etc.
-    model.eval()
-    model_with_ac.eval()
-    
-    if debug:
-        print(f"[DEBUG] Validating model correctness")
-        print(f"[DEBUG] Input batch shape: {input_batch.shape}")
-    
-    # Forward pass without AC
-    with torch.no_grad():
-        output = model(input_batch)
-    
-    if debug:
-        print(f"[DEBUG] Original model output shape: {output.shape}")
-        print(f"[DEBUG] Original model output stats: min={output.min().item():.4f}, max={output.max().item():.4f}, mean={output.mean().item():.4f}")
-    
-    # Forward pass with AC
-    with torch.no_grad():
-        output_with_ac = model_with_ac(input_batch)
-    
-    if debug:
-        print(f"[DEBUG] AC model output shape: {output_with_ac.shape}")
-        print(f"[DEBUG] AC model output stats: min={output_with_ac.min().item():.4f}, max={output_with_ac.max().item():.4f}, mean={output_with_ac.mean().item():.4f}")
-    
-    # Compare outputs
-    abs_diff = torch.abs(output - output_with_ac)
-    output_norm = torch.abs(output)
-    rel_diff = torch.max(abs_diff / (output_norm + 1e-10)).item()
-    
-    if debug:
-        print(f"[DEBUG] Absolute difference stats: min={abs_diff.min().item():.4e}, max={abs_diff.max().item():.4e}, mean={abs_diff.mean().item():.4e}")
-        print(f"[DEBUG] Relative difference: {rel_diff:.6e}")
-    
-    # Check if outputs are close
-    is_valid = torch.allclose(output, output_with_ac, rtol=rtol, atol=atol)
-    
-    print(f"Output validation: {'Passed' if is_valid else 'Failed'}")
-    print(f"Maximum relative difference: {rel_diff:.6f}")
-    
-    return is_valid, rel_diff
+    # TODO: Implement correctness validation
+    # - Set both models to eval mode
+    # - Perform forward pass without AC
+    # - Perform forward pass with AC
+    # - Compare outputs using torch.allclose
+    # - Calculate relative difference
+    # - Return validation result and relative difference
+    pass
 
 def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, debug=False, timeout=120):
     """
@@ -514,264 +166,19 @@ def profile_batch_size(batch_size, device_str='cuda:0', memory_budget_gb=None, d
     Returns:
         results: Dictionary containing profiling results
     """
-    print(f"\n--- Profiling ResNet-152 with batch size {batch_size} ---")
-    
-    # Create ResNet-152 model
-    model = models.resnet152(weights=models.ResNet152_Weights.IMAGENET1K_V1).to(device_str)
-    model.eval()  # Set to eval mode to disable dropout, etc.
-    
-    if debug:
-        print(f"[DEBUG] Created ResNet-152 model")
-        print(f"[DEBUG] Model has {sum(p.numel() for p in model.parameters())} parameters")
-        print(f"[DEBUG] Model is on device: {next(model.parameters()).device}")
-    
-    # Create a random batch of data
-    batch = torch.randn(batch_size, 3, 224, 224).to(device_str)
-    
-    if debug:
-        print(f"[DEBUG] Created input batch with shape: {batch.shape}")
-        print(f"[DEBUG] Input batch is on device: {batch.device}")
-    
-    # 1. Measure memory and time without activation checkpointing
-    print("Measuring without activation checkpointing...")
-    peak_memory_without_ac, time_without_ac = measure_memory_and_time(model, batch, debug=debug)
-    print(f"Without AC - Peak memory: {peak_memory_without_ac / (1024**2):.2f} MiB, Iteration time: {time_without_ac:.4f} s")
-    
-    # 2. Get activation checkpointing decisions
-    if memory_budget_gb is None:
-        # Set a realistic memory budget based on the paper's approach
-        # Use 70% of peak memory as the budget
-        memory_budget_gb = peak_memory_without_ac / (1024**3) * 0.7
-        print(f"Setting memory budget to 70% of peak memory: {memory_budget_gb:.2f} GB")
-    
-    if debug:
-        print(f"[DEBUG] Memory budget set to: {memory_budget_gb:.2f} GB")
-    
-    # Use batch-specific CSV files if available, otherwise use default
-    # First check in the main directory
-    node_stats_file = f"profiler_stats_bs{batch_size}_node_stats.csv"
-    activation_stats_file = f"profiler_stats_bs{batch_size}_activation_stats.csv"
-    
-    # Also check in the reports directory
-    reports_dir = ensure_reports_directory()
-    reports_node_stats_file = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_node_stats.csv")
-    reports_activation_stats_file = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_activation_stats.csv")
-    
-    # Check if files exist in either location
-    if os.path.exists(node_stats_file) and os.path.exists(activation_stats_file):
-        print(f"Found batch-specific CSV files in main directory: {node_stats_file} and {activation_stats_file}")
-    elif os.path.exists(reports_node_stats_file) and os.path.exists(reports_activation_stats_file):
-        print(f"Found batch-specific CSV files in reports directory")
-        node_stats_file = reports_node_stats_file
-        activation_stats_file = reports_activation_stats_file
-    else:
-        print(f"Batch-specific CSV files not found, using default CSV files")
-        node_stats_file = "profiler_stats_node_stats.csv"
-        activation_stats_file = "profiler_stats_activation_stats.csv"
-        
-        # If default files don't exist, check reports directory
-        if not os.path.exists(node_stats_file) or not os.path.exists(activation_stats_file):
-            reports_default_node = os.path.join(reports_dir, "profiler_stats_node_stats.csv")
-            reports_default_act = os.path.join(reports_dir, "profiler_stats_activation_stats.csv")
-            
-            if os.path.exists(reports_default_node) and os.path.exists(reports_default_act):
-                print(f"Using default CSV files from reports directory")
-                node_stats_file = reports_default_node
-                activation_stats_file = reports_default_act
-    
-    print(f"READING CSV FILES: {node_stats_file} and {activation_stats_file}")
-    
-    if debug:
-        print(f"[DEBUG] Using node stats file: {node_stats_file}")
-        print(f"[DEBUG] Using activation stats file: {activation_stats_file}")
-        if not os.path.exists(node_stats_file):
-            print(f"[DEBUG] Warning: Node stats file does not exist")
-        if not os.path.exists(activation_stats_file):
-            print(f"[DEBUG] Warning: Activation stats file does not exist")
-    
-    # Run the activation checkpointing algorithm
-    print(f"Running activation checkpointing algorithm with memory budget {memory_budget_gb:.2f} GB...")
-    try:
-        ac_algo = ActivationCheckpointingAlgorithm(
-            node_stats_path=node_stats_file,
-            activation_stats_path=activation_stats_file,
-            memory_budget_gb=memory_budget_gb
-        )
-        
-        if debug:
-            print(f"[DEBUG] Created ActivationCheckpointingAlgorithm instance")
-            print(f"[DEBUG] Node stats shape: {ac_algo.node_stats_df.shape}")
-            print(f"[DEBUG] Activation stats shape: {ac_algo.activation_stats_df.shape}")
-        
-        ac_decisions = ac_algo.decide_checkpoints(fixed_overhead_gb=0.5, timeout_seconds=timeout)
-        
-        # Count decisions
-        recompute_count = sum(1 for decision in ac_decisions.values() if decision == 'RECOMPUTE')
-        checkpoint_count = sum(1 for decision in ac_decisions.values() if decision == 'RETAINED')
-        print(f"AC decisions: {recompute_count} RECOMPUTE, {checkpoint_count} RETAINED")
-        
-        if debug:
-            print(f"[DEBUG] Algorithm made {len(ac_decisions)} decisions")
-            print(f"[DEBUG] RECOMPUTE: {recompute_count}, RETAINED: {checkpoint_count}")
-            
-        # Save AC decisions to a CSV file
-        reports_dir = ensure_reports_directory()
-        ac_decisions_file = os.path.join(reports_dir, f"ac_decisions_bs{batch_size}.csv")
-        print(f"\n--- Saving AC decisions to {ac_decisions_file} ---")
-        
-        try:
-            # Create a DataFrame from the decisions
-            decisions_df = pd.DataFrame({
-                'activation_name': list(ac_decisions.keys()),
-                'decision': list(ac_decisions.values()),
-                'memory_size_bytes': [ac_algo.activation_stats_df.loc[act, 'median_mem_size_bytes']
-                                     if act in ac_algo.activation_stats_df.index else 0
-                                     for act in ac_decisions.keys()],
-                'recomp_time_s': [ac_algo.activation_stats_df.loc[act, 'recomp_time_s']
-                                 if act in ac_algo.activation_stats_df.index else 0
-                                 for act in ac_decisions.keys()],
-                'creation_rank': [ac_algo.activation_stats_df.loc[act, 'creation_rank']
-                                 if act in ac_algo.activation_stats_df.index else 0
-                                 for act in ac_decisions.keys()],
-                'first_bw_use_rank': [ac_algo.activation_stats_df.loc[act, 'first_bw_use_rank']
-                                     if act in ac_algo.activation_stats_df.index else 0
-                                     for act in ac_decisions.keys()]
-            })
-            
-            # Save to CSV
-            decisions_df.to_csv(ac_decisions_file, index=False)
-            print(f"Successfully saved {len(decisions_df)} AC decisions to CSV")
-            
-            # Print detailed summary of decisions
-            print("\n--- Detailed Summary of AC Decisions ---")
-            print(f"Total activations: {len(ac_decisions)}")
-            print(f"RECOMPUTE: {recompute_count} ({recompute_count/len(ac_decisions)*100:.1f}%)")
-            print(f"RETAINED: {checkpoint_count} ({checkpoint_count/len(ac_decisions)*100:.1f}%)")
-            
-            # Calculate total memory savings and recomputation overhead
-            total_memory_bytes = sum(decisions_df['memory_size_bytes'])
-            recompute_memory_bytes = sum(decisions_df[decisions_df['decision'] == 'RECOMPUTE']['memory_size_bytes'])
-            memory_savings_bytes = recompute_memory_bytes  # Memory saved by recomputing instead of checkpointing
-            
-            total_recomp_time = sum(decisions_df[decisions_df['decision'] == 'RECOMPUTE']['recomp_time_s'])
-            
-            print(f"\nEstimated memory savings: {memory_savings_bytes / (1024**2):.2f} MiB")
-            print(f"Estimated recomputation overhead: {total_recomp_time:.4f} seconds")
-            
-            # Show top activations chosen for recomputation
-            print("\n--- Top Activations Chosen for Recomputation ---")
-            # Sort by memory size (largest first)
-            top_recompute = decisions_df[decisions_df['decision'] == 'RECOMPUTE'].sort_values(
-                by='memory_size_bytes', ascending=False
-            ).head(20)  # Show top 20
-            
-            if len(top_recompute) > 0:
-                print(f"{'Activation Name':<30} {'Memory Size (MiB)':<20} {'Recomp Time (ms)':<20}")
-                print("-" * 70)
-                for _, row in top_recompute.iterrows():
-                    print(f"{row['activation_name']:<30} {row['memory_size_bytes'] / (1024**2):<20.2f} {row['recomp_time_s'] * 1000:<20.4f}")
-            else:
-                print("No activations marked for recomputation")
-                
-            # Run memory simulation to get more accurate estimates
-            print("\n--- Memory Simulation Results ---")
-            peak_memory, total_exec_time = ac_algo._simulate_memory_usage(
-                ac_decisions,
-                fixed_overhead_bytes=0.5 * (1024**3),  # 0.5 GB fixed overhead
-                debug=False
-            )
-            print(f"Simulated peak memory: {peak_memory / (1024**3):.2f} GB")
-            print(f"Simulated execution time: {total_exec_time:.4f} seconds")
-            
-        except Exception as e:
-            print(f"Error saving AC decisions or generating summary: {e}")
-            if debug:
-                print(f"[DEBUG] Exception details: {str(e)}")
-                import traceback
-                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-    except Exception as e:
-        print(f"Error running activation checkpointing algorithm: {e}")
-        if debug:
-            print(f"[DEBUG] Exception details: {str(e)}")
-            import traceback
-            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-        ac_decisions = None
-    
-    # 3. Apply activation checkpointing and measure memory and time
-    print("Measuring with activation checkpointing...")
-    
-    # Extract activation liveness information from the algorithm
-    activation_liveness = None
-    if ac_decisions:
-        try:
-            activation_liveness = {
-                act_name: {
-                    "creation_rank": ac_algo.activation_stats_df.loc[act_name, "creation_rank"],
-                    "last_fw_use_rank": ac_algo.activation_stats_df.loc[act_name, "last_fw_use_rank"],
-                    "first_bw_use_rank": ac_algo.activation_stats_df.loc[act_name, "first_bw_use_rank"],
-                    "last_bw_use_rank": ac_algo.activation_stats_df.loc[act_name, "last_bw_use_rank"]
-                }
-                for act_name in ac_decisions.keys()
-                if act_name in ac_algo.activation_stats_df.index
-            }
-            print(f"Extracted liveness information for {len(activation_liveness)} activations")
-            
-            if debug:
-                print(f"[DEBUG] Extracted liveness info for {len(activation_liveness)}/{len(ac_decisions)} activations")
-                if len(activation_liveness) < len(ac_decisions):
-                    missing = set(ac_decisions.keys()) - set(activation_liveness.keys())
-                    print(f"[DEBUG] Missing liveness info for {len(missing)} activations")
-                    print(f"[DEBUG] First few missing: {list(missing)[:5]}")
-        except Exception as e:
-            print(f"Error extracting activation liveness: {e}")
-            if debug:
-                print(f"[DEBUG] Exception details: {str(e)}")
-                import traceback
-                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
-            activation_liveness = None
-    
-    # Apply activation checkpointing with a higher percentage to ensure memory reduction
-    model_with_ac = apply_activation_checkpointing(
-        model,
-        ac_decisions,
-        percentage=1.0,  # Use 100% to ensure maximum memory reduction
-        activation_liveness=activation_liveness,
-        debug=debug
-    )
-    
-    # Create a dummy input for backward pass to measure memory with gradients
-    dummy_input = torch.randn_like(batch, requires_grad=True)
-    
-    # Measure memory and time with activation checkpointing
-    # Run multiple times to ensure stable measurements
-    peak_memory_with_ac, time_with_ac = measure_memory_and_time(model_with_ac, dummy_input, num_runs=5, debug=debug)
-    print(f"With AC - Peak memory: {peak_memory_with_ac / (1024**2):.2f} MiB, Iteration time: {time_with_ac:.4f} s")
-    
-    # 4. Validate correctness
-    print("Validating correctness...")
-    is_valid, rel_diff = validate_correctness(model, model_with_ac, batch, debug=debug)
-    
-    # Calculate memory reduction and time overhead
-    memory_reduction = 1.0 - (peak_memory_with_ac / peak_memory_without_ac)
-    time_overhead = (time_with_ac / time_without_ac) - 1.0
-    
-    print(f"Memory reduction: {memory_reduction:.2%}")
-    print(f"Time overhead: {time_overhead:.2%}")
-    
-    # Return results
-    results = {
-        'batch_size': batch_size,
-        'peak_memory_without_ac': peak_memory_without_ac,
-        'peak_memory_with_ac': peak_memory_with_ac,
-        'time_without_ac': time_without_ac,
-        'time_with_ac': time_with_ac,
-        'memory_reduction': memory_reduction,
-        'time_overhead': time_overhead,
-        'is_valid': is_valid,
-        'rel_diff': rel_diff
-    }
-    
-    return results
+    # TODO: Implement batch size profiling
+    # - Create ResNet-152 model
+    # - Create a random batch of data
+    # - Measure memory and time without activation checkpointing
+    # - Set memory budget based on peak memory without AC
+    # - Find and load appropriate CSV files with profiling data
+    # - Run the activation checkpointing algorithm
+    # - Apply activation checkpointing to the model
+    # - Measure memory and time with activation checkpointing
+    # - Validate correctness
+    # - Calculate memory reduction and time overhead
+    # - Return results
+    pass
 
 def create_comparison_charts(results, reports_dir, debug=False):
     """
@@ -782,166 +189,26 @@ def create_comparison_charts(results, reports_dir, debug=False):
         reports_dir: Directory to save the charts
         debug: Whether to print debug information
     """
-    if debug:
-        print(f"[DEBUG] Creating comparison charts")
-        print(f"[DEBUG] Results: {results}")
-    
-    # Extract data
-    batch_sizes = [r['batch_size'] for r in results]
-    peak_memory_without_ac = [r['peak_memory_without_ac'] / (1024**2) for r in results]  # Convert to MiB
-    peak_memory_with_ac = [r['peak_memory_with_ac'] / (1024**2) for r in results]  # Convert to MiB
-    time_without_ac = [r['time_without_ac'] * 1000 for r in results]  # Convert to ms
-    time_with_ac = [r['time_with_ac'] * 1000 for r in results]  # Convert to ms
-    
-    if debug:
-        print(f"[DEBUG] Batch sizes: {batch_sizes}")
-        print(f"[DEBUG] Peak memory without AC (MiB): {peak_memory_without_ac}")
-        print(f"[DEBUG] Peak memory with AC (MiB): {peak_memory_with_ac}")
-        print(f"[DEBUG] Time without AC (ms): {time_without_ac}")
-        print(f"[DEBUG] Time with AC (ms): {time_with_ac}")
-    
-    # 1. Bar chart: Peak memory vs. batch size
-    plt.figure(figsize=(12, 6))
-    x = np.arange(len(batch_sizes))
-    width = 0.35
-    
-    if debug:
-        print(f"[DEBUG] Creating memory bar chart")
-    
-    bars1 = plt.bar(x - width/2, peak_memory_without_ac, width, label='Without AC')
-    bars2 = plt.bar(x + width/2, peak_memory_with_ac, width, label='With AC')
-    
-    plt.xlabel('Batch Size')
-    plt.ylabel('Peak Memory (MiB)')
-    plt.title('Peak Memory Usage vs. Batch Size')
-    plt.xticks(x, batch_sizes)
-    plt.legend()
-    
-    # Add value labels on top of bars
-    for i, bar in enumerate(bars1):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
-                f'{peak_memory_without_ac[i]:.0f}',
-                ha='center', va='bottom', rotation=0)
-    
-    for i, bar in enumerate(bars2):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 50,
-                f'{peak_memory_with_ac[i]:.0f}',
-                ha='center', va='bottom', rotation=0)
-    
-    # Add reduction percentage
-    for i in range(len(batch_sizes)):
-        reduction = results[i]['memory_reduction']
-        plt.text(x[i], min(peak_memory_without_ac[i], peak_memory_with_ac[i]) / 2,
-                f'{reduction:.1%}',
-                ha='center', va='center', rotation=0,
-                bbox=dict(facecolor='white', alpha=0.8))
-    
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
-    plt.tight_layout()
-    
-    # Save the chart
-    memory_chart_path = os.path.join(reports_dir, 'resnet152_memory_comparison.png')
-    plt.savefig(memory_chart_path)
-    plt.close()
-    print(f"Memory comparison chart saved to: {memory_chart_path}")
-    
-    # 2. Line chart: Iteration latency vs. batch size
-    plt.figure(figsize=(12, 6))
-    
-    if debug:
-        print(f"[DEBUG] Creating latency line chart")
-    
-    plt.plot(batch_sizes, time_without_ac, 'o-', label='Without AC')
-    plt.plot(batch_sizes, time_with_ac, 's-', label='With AC')
-    
-    plt.xlabel('Batch Size')
-    plt.ylabel('Iteration Latency (ms)')
-    plt.title('Iteration Latency vs. Batch Size')
-    plt.legend()
-    plt.grid(True)
-    
-    # Add value labels
-    for i in range(len(batch_sizes)):
-        plt.text(batch_sizes[i], time_without_ac[i] + 5,
-                f'{time_without_ac[i]:.1f} ms',
-                ha='center', va='bottom')
-        plt.text(batch_sizes[i], time_with_ac[i] + 5,
-                f'{time_with_ac[i]:.1f} ms',
-                ha='center', va='bottom')
-    
-    # Add overhead percentage
-    for i in range(len(batch_sizes)):
-        overhead = results[i]['time_overhead']
-        plt.text(batch_sizes[i], (time_without_ac[i] + time_with_ac[i]) / 2,
-                f'{overhead:.1%}',
-                ha='center', va='center',
-                bbox=dict(facecolor='white', alpha=0.8))
-    
-    plt.tight_layout()
-    
-    # Save the chart
-    latency_chart_path = os.path.join(reports_dir, 'resnet152_latency_comparison.png')
-    plt.savefig(latency_chart_path)
-    plt.close()
-    print(f"Latency comparison chart saved to: {latency_chart_path}")
+    # TODO: Implement chart creation
+    # - Extract data from results
+    # - Create bar chart for peak memory vs. batch size
+    # - Add value labels and reduction percentages
+    # - Create line chart for iteration latency vs. batch size
+    # - Add value labels and overhead percentages
+    # - Save charts to reports directory
+    pass
 
 def main():
     """Main function to run the activation checkpointing comparison."""
-    parser = argparse.ArgumentParser(description='Activation Checkpointing Comparison')
-    parser.add_argument('--batch-sizes', type=int, nargs='+', default=[4, 8, 16, 32],
-                        help='Batch sizes to profile')
-    parser.add_argument('--memory-budget', type=float, default=4.0,
-                        help='Memory budget for activation checkpointing in GB (default: 4.0 GB)')
-    parser.add_argument('--ac-percentage', type=float, default=0.5,
-                        help='Percentage of bottleneck blocks to apply checkpointing to')
-    parser.add_argument('--timeout', type=int, default=120,
-                        help='Timeout in seconds for the activation checkpointing algorithm (default: 120)')
-    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
-    args = parser.parse_args()
-    
-    print("=== Activation Checkpointing Comparison for ResNet-152 ===")
-    
-    # Set random seed for reproducibility
-    torch.manual_seed(42)
-    
-    # Use CUDA if available
-    device_str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-    print(f"Using device: {device_str}")
-    
-    # Ensure reports directory exists
-    reports_dir = ensure_reports_directory()
-    
-    # Profile each batch size
-    results = []
-    for batch_size in args.batch_sizes:
-        try:
-            result = profile_batch_size(batch_size, device_str, args.memory_budget, args.debug, args.timeout)
-            results.append(result)
-        except Exception as e:
-            print(f"Error profiling batch size {batch_size}: {e}")
-    
-    # Create comparison charts
-    if results:
-        create_comparison_charts(results, reports_dir)
-        
-        # Print summary table
-        print("\n=== Comparison Summary ===")
-        print(f"{'Batch Size':<10} {'Memory w/o AC (MiB)':<20} {'Memory w/ AC (MiB)':<20} {'Reduction':<10} {'Time w/o AC (ms)':<20} {'Time w/ AC (ms)':<20} {'Overhead':<10} {'Valid':<10}")
-        print("-" * 120)
-        
-        for r in results:
-            print(f"{r['batch_size']:<10} "
-                  f"{r['peak_memory_without_ac'] / (1024**2):<20.1f} "
-                  f"{r['peak_memory_with_ac'] / (1024**2):<20.1f} "
-                  f"{r['memory_reduction']:<10.1%} "
-                  f"{r['time_without_ac'] * 1000:<20.1f} "
-                  f"{r['time_with_ac'] * 1000:<20.1f} "
-                  f"{r['time_overhead']:<10.1%} "
-                  f"{r['is_valid']:<10}")
-    else:
-        print("No successful profiling results to report.")
-    
-    print("\n=== Comparison completed ===")
+    # TODO: Implement main function
+    # - Parse command line arguments
+    # - Set random seed for reproducibility
+    # - Use CUDA if available
+    # - Ensure reports directory exists
+    # - Profile each batch size
+    # - Create comparison charts
+    # - Print summary table
+    pass
 
 if __name__ == "__main__":
     main()
