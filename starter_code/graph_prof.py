@@ -887,3 +887,98 @@ class GraphProfiler(fx.Interpreter):
                 print("Not enough data to generate Memory vs. Rank plot (ranked_nodes or median_peak_mem_node is empty).")
         except Exception as e:
             print(f"Error generating Memory vs. Rank plot: {e}")
+
+    def save_all_nodes_to_csv(self, filename_prefix: str = "profiler_stats") -> None:
+        """
+        Saves all node statistics to a single CSV file for comprehensive analysis.
+        This includes all nodes regardless of type (parameters, activations, gradients, etc.)
+        """
+        if not self.median_run_times:
+            print("Warning: No aggregated stats found to save to CSV.")
+            return
+
+        # Create lookup dictionary for node names
+        name_to_node = {node.name: node for node in self.ranked_nodes}
+
+        # --- Save All Node Statistics to CSV ---
+        all_nodes_csv_filename = f"{filename_prefix}_allNode_stats.csv"
+        try:
+            with open(all_nodes_csv_filename, 'w', newline='') as csvfile:
+                # Define CSV columns - include all relevant node information
+                fieldnames = [
+                    'rank', 'node_name', 'op_type', 'node_type', 'gtype', 
+                    'median_run_time_s', 'median_peak_mem_bytes', 'median_active_mem_bytes', 
+                    'creation_rank', 'last_fw_use_rank', 'first_bw_use_rank', 'last_bw_use_rank',
+                    'memory_size_bytes', 'inactive_time_s', 'recomp_time_s', 'recomp_memory_bytes',
+                    'device'
+                ]
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                
+                # Sort nodes by execution rank
+                sorted_node_names = sorted(
+                    [node.name for node in self.ranked_nodes], 
+                    key=lambda name: self.node_ranks.get(name_to_node.get(name), float('inf'))
+                )
+
+                # Write each node's data to CSV
+                for node_name in sorted_node_names:
+                    node = name_to_node.get(node_name)
+                    if not node: continue  # Skip if node not found
+
+                    # Gather basic node information
+                    rank = self.node_ranks.get(node, -1)
+                    node_type = self.node_types.get(node_name, NodeType.OTHER)
+                    gtype = self.node_gtypes.get(node_name, "unknown")
+                    
+                    # Get node operation type
+                    op_type = node.op if hasattr(node, 'op') else "unknown"
+                    
+                    # Get device information for the node
+                    device = "unknown"
+                    if node in self.env and isinstance(self.env[node], torch.Tensor):
+                        device = str(self.env[node].device)
+                    
+                    # Get timing and memory information
+                    avg_time = self.median_run_times.get(node_name, 0.0)
+                    avg_peak_mem = self.median_peak_mem_node.get(node_name, 0.0)
+                    avg_active_mem = self.median_active_mem_node.get(node_name, 0.0)
+                    
+                    # Get activation-specific information if this is an activation
+                    liveness = self.activation_liveness.get(node_name, {})
+                    creation_rank = liveness.get('creation_rank', -1) if liveness else -1
+                    last_fw_use_rank = liveness.get('last_fw_use_rank', -1) if liveness else -1
+                    first_bw_use_rank = liveness.get('first_bw_use_rank', -1) if liveness else -1
+                    last_bw_use_rank = liveness.get('last_bw_use_rank', -1) if liveness else -1
+                    
+                    # Get memory size for this node (especially for activations)
+                    memory_size = self.median_memory_sizes.get(node_name, 0.0)
+                    
+                    # Get recomputation metrics if available
+                    inactive_time = self.inactive_times.get(node_name, 0.0)
+                    recomp_time = self.recomp_times.get(node_name, 0.0)
+                    recomp_memory = self.recomp_memory.get(node_name, 0)
+                    
+                    # Write row to CSV with all available information
+                    writer.writerow({
+                        'rank': rank,
+                        'node_name': node_name,
+                        'op_type': op_type,
+                        'node_type': node_type.value,
+                        'gtype': gtype,
+                        'median_run_time_s': avg_time,
+                        'median_peak_mem_bytes': int(avg_peak_mem),
+                        'median_active_mem_bytes': int(avg_active_mem),
+                        'creation_rank': creation_rank,
+                        'last_fw_use_rank': last_fw_use_rank,
+                        'first_bw_use_rank': first_bw_use_rank,
+                        'last_bw_use_rank': last_bw_use_rank,
+                        'memory_size_bytes': int(memory_size),
+                        'inactive_time_s': inactive_time,
+                        'recomp_time_s': recomp_time,
+                        'recomp_memory_bytes': recomp_memory,
+                        'device': device
+                    })
+            print(f"All node statistics saved to {all_nodes_csv_filename}")
+        except IOError as e:
+            print(f"Error saving all node statistics to {all_nodes_csv_filename}: {e}")

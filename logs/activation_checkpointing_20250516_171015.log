@@ -1,0 +1,13 @@
+2025-05-16 17:10:15,938 - INFO - ================================================================================
+2025-05-16 17:10:15,938 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-16 17:10:15,938 - INFO - Log file: logs\activation_checkpointing_20250516_171015.log
+2025-05-16 17:10:15,957 - INFO - Loaded node stats with 18493 rows
+2025-05-16 17:10:15,957 - INFO - Loaded activation stats with 775 rows
+2025-05-16 17:10:15,957 - INFO - Memory budget set to 8.0 GB (8589934592.0 bytes)
+2025-05-16 17:10:15,959 - INFO - Algorithm initialization time: 0.02s
+2025-05-16 17:10:15,959 - INFO - Starting checkpoint decision algorithm...
+2025-05-16 17:10:15,959 - INFO - Fixed overhead: 0.3 GB, Memory budget: 8.00 GB
+2025-05-16 17:10:15,959 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-16 17:10:15,967 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-16 17:10:16,533 - INFO - Built activation mappings with 775 activations
+2025-05-16 17:10:16,533 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes

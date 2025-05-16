@@ -1,0 +1,47 @@
+2025-05-16 16:54:36,567 - INFO - ================================================================================
+2025-05-16 16:54:36,567 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-16 16:54:36,567 - INFO - Log file: logs\activation_checkpointing_20250516_165436.log
+2025-05-16 16:54:36,586 - INFO - Loaded node stats with 18493 rows
+2025-05-16 16:54:36,586 - INFO - Loaded activation stats with 775 rows
+2025-05-16 16:54:36,586 - INFO - Memory budget set to 8.0 GB (8589934592.0 bytes)
+2025-05-16 16:54:36,587 - INFO - Algorithm initialization time: 0.02s
+2025-05-16 16:54:36,588 - INFO - Starting checkpoint decision algorithm...
+2025-05-16 16:54:36,588 - INFO - Fixed overhead: 0.3 GB, Memory budget: 8.00 GB
+2025-05-16 16:54:36,588 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-16 16:54:36,597 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-16 16:54:37,142 - INFO - Built activation mappings with 775 activations
+2025-05-16 16:54:37,143 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-16 16:55:41,631 - INFO - Initial peak memory: 11.77 GB
+2025-05-16 16:55:41,631 - INFO - Initial execution time: 1.30s
+2025-05-16 16:55:42,188 - INFO - Incompressible memory: 11.69 GB
+2025-05-16 16:55:42,188 - INFO - Active memory - FW: 11.36 GB, BW: 11.39 GB
+2025-05-16 16:55:42,188 - INFO - Fixed overhead: 0.30 GB
+2025-05-16 16:55:42,188 - WARNING - Memory budget of 8.00 GB is not achievable!
+2025-05-16 16:55:42,188 - WARNING - Estimated minimum possible memory is 11.69 GB due to incompressible components
+2025-05-16 16:55:42,188 - WARNING - Will try to get as close as possible to the budget
+2025-05-16 16:55:42,188 - WARNING - Setting effective target budget to incompressible memory: 11.69 GB
+2025-05-16 16:55:42,188 - INFO - Filtering valid activations...
+2025-05-16 16:55:42,188 - INFO - Found 775 valid activations for consideration
+2025-05-16 16:55:42,188 - INFO - 
+Iteration 1/1000 (Elapsed time: 0.0s)
+2025-05-16 16:56:46,801 - INFO - Simulated peak memory: 11.77 GB. Budget: 8.00 GB. Exec time: 1.30s
+2025-05-16 16:56:46,801 - INFO - Current checkpoint count: 620
+2025-05-16 16:56:46,801 - INFO - Current recompute count: 0
+2025-05-16 16:56:46,919 - INFO - Considering activation: relu__147, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 68
+2025-05-16 16:56:46,919 - INFO - Choosing to RECOMPUTE relu__147 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:56:46,919 - INFO - 
+Iteration 2/1000 (Elapsed time: 64.7s)
+2025-05-16 16:57:53,636 - INFO - Simulated peak memory: 11.77 GB. Budget: 8.00 GB. Exec time: 1.33s
+2025-05-16 16:57:53,637 - INFO - Current checkpoint count: 619
+2025-05-16 16:57:53,637 - INFO - Current recompute count: 1
+2025-05-16 16:57:53,644 - INFO - Considering activation: relu__6, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2460
+2025-05-16 16:57:53,644 - INFO - Choosing to RECOMPUTE relu__6 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:57:53,644 - INFO - 
+Iteration 3/1000 (Elapsed time: 131.5s)
+2025-05-16 16:59:05,246 - INFO - Simulated peak memory: 11.77 GB. Budget: 8.00 GB. Exec time: 1.53s
+2025-05-16 16:59:05,246 - INFO - Current checkpoint count: 618
+2025-05-16 16:59:05,246 - INFO - Current recompute count: 2
+2025-05-16 16:59:05,254 - INFO - Considering activation: convolution_7, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2473
+2025-05-16 16:59:05,254 - INFO - Choosing to RECOMPUTE convolution_7 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:59:05,254 - INFO - 
+Iteration 4/1000 (Elapsed time: 203.1s)

@@ -1,0 +1,1583 @@
+2025-05-16 16:37:26,225 - INFO - ================================================================================
+2025-05-16 16:37:26,225 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-16 16:37:26,225 - INFO - Log file: logs\activation_checkpointing_20250516_163726.log
+2025-05-16 16:37:26,245 - INFO - Loaded node stats with 18493 rows
+2025-05-16 16:37:26,245 - INFO - Loaded activation stats with 775 rows
+2025-05-16 16:37:26,245 - INFO - Memory budget set to 8.0 GB (8589934592.0 bytes)
+2025-05-16 16:37:26,246 - INFO - Algorithm initialization time: 0.02s
+2025-05-16 16:37:26,255 - INFO - Starting checkpoint decision algorithm...
+2025-05-16 16:37:26,255 - INFO - Fixed overhead: 0.3 GB, Memory budget: 8.00 GB
+2025-05-16 16:37:26,255 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-16 16:37:26,263 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-16 16:37:26,812 - INFO - Built activation mappings with 775 activations
+2025-05-16 16:37:26,812 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-16 16:37:27,175 - INFO - Initial peak memory: 11.77 GB
+2025-05-16 16:37:27,175 - INFO - Initial execution time: 1.30s
+2025-05-16 16:37:27,856 - INFO - Incompressible memory: 3.72 GB
+2025-05-16 16:37:27,857 - INFO - Original active memory - FW: 11.36 GB, BW: 11.39 GB
+2025-05-16 16:37:27,857 - INFO - Applied reduction factor of 0.3 to active memory (assuming 70% can be recomputed)
+2025-05-16 16:37:27,857 - INFO - Fixed overhead: 0.30 GB
+2025-05-16 16:37:27,857 - INFO - Setting effective target budget to 7.84 GB (2% below requested)
+2025-05-16 16:37:27,857 - INFO - Filtering valid activations...
+2025-05-16 16:37:27,857 - INFO - Found 775 valid activations for consideration
+2025-05-16 16:37:27,857 - INFO - 
+Iteration 1/1000 (Elapsed time: 0.0s)
+2025-05-16 16:37:28,226 - INFO - Simulated peak memory: 11.77 GB. Budget: 8.00 GB. Exec time: 1.30s
+2025-05-16 16:37:28,227 - INFO - Current checkpoint count: 620
+2025-05-16 16:37:28,227 - INFO - Current recompute count: 0
+2025-05-16 16:37:28,667 - INFO - Considering activation: relu__147, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 68
+2025-05-16 16:37:28,668 - INFO - Choosing to RECOMPUTE relu__147 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:37:28,668 - INFO - 
+Iteration 2/1000 (Elapsed time: 0.8s)
+2025-05-16 16:37:29,059 - INFO - Simulated peak memory: 11.76 GB. Budget: 8.00 GB. Exec time: 1.33s
+2025-05-16 16:37:29,059 - INFO - Current checkpoint count: 619
+2025-05-16 16:37:29,059 - INFO - Current recompute count: 1
+2025-05-16 16:37:29,059 - INFO - New best schedule found with peak memory: 11.76 GB
+2025-05-16 16:37:29,068 - INFO - Considering activation: convolution_3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2537
+2025-05-16 16:37:29,068 - INFO - Choosing to RECOMPUTE convolution_3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:29,068 - INFO - 
+Iteration 3/1000 (Elapsed time: 1.2s)
+2025-05-16 16:37:29,427 - INFO - Simulated peak memory: 11.75 GB. Budget: 8.00 GB. Exec time: 1.53s
+2025-05-16 16:37:29,427 - INFO - Current checkpoint count: 618
+2025-05-16 16:37:29,427 - INFO - Current recompute count: 2
+2025-05-16 16:37:29,427 - INFO - New best schedule found with peak memory: 11.75 GB
+2025-05-16 16:37:29,436 - INFO - Considering activation: convolution_10, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2423
+2025-05-16 16:37:29,436 - INFO - Choosing to RECOMPUTE convolution_10 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:29,436 - INFO - 
+Iteration 4/1000 (Elapsed time: 1.6s)
+2025-05-16 16:37:29,789 - INFO - Simulated peak memory: 11.74 GB. Budget: 8.00 GB. Exec time: 1.73s
+2025-05-16 16:37:29,789 - INFO - Current checkpoint count: 617
+2025-05-16 16:37:29,789 - INFO - Current recompute count: 3
+2025-05-16 16:37:29,789 - INFO - New best schedule found with peak memory: 11.74 GB
+2025-05-16 16:37:29,797 - INFO - Considering activation: convolution_7, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2473
+2025-05-16 16:37:29,797 - INFO - Choosing to RECOMPUTE convolution_7 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:29,797 - INFO - 
+Iteration 5/1000 (Elapsed time: 1.9s)
+2025-05-16 16:37:30,141 - INFO - Simulated peak memory: 11.73 GB. Budget: 8.00 GB. Exec time: 1.93s
+2025-05-16 16:37:30,141 - INFO - Current checkpoint count: 616
+2025-05-16 16:37:30,141 - INFO - Current recompute count: 4
+2025-05-16 16:37:30,142 - INFO - New best schedule found with peak memory: 11.73 GB
+2025-05-16 16:37:30,151 - INFO - Considering activation: relu_, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2581
+2025-05-16 16:37:30,151 - INFO - Choosing to RECOMPUTE relu_ (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:30,151 - INFO - 
+Iteration 6/1000 (Elapsed time: 2.3s)
+2025-05-16 16:37:30,499 - INFO - Simulated peak memory: 11.71 GB. Budget: 8.00 GB. Exec time: 2.13s
+2025-05-16 16:37:30,499 - INFO - Current checkpoint count: 615
+2025-05-16 16:37:30,499 - INFO - Current recompute count: 5
+2025-05-16 16:37:30,499 - INFO - New best schedule found with peak memory: 11.71 GB
+2025-05-16 16:37:30,506 - INFO - Considering activation: relu__6, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2460
+2025-05-16 16:37:30,506 - INFO - Choosing to RECOMPUTE relu__6 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:30,506 - INFO - 
+Iteration 7/1000 (Elapsed time: 2.6s)
+2025-05-16 16:37:30,846 - INFO - Simulated peak memory: 11.70 GB. Budget: 8.00 GB. Exec time: 2.33s
+2025-05-16 16:37:30,846 - INFO - Current checkpoint count: 614
+2025-05-16 16:37:30,846 - INFO - Current recompute count: 6
+2025-05-16 16:37:30,846 - INFO - New best schedule found with peak memory: 11.70 GB
+2025-05-16 16:37:30,854 - INFO - Considering activation: convolution_4, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2523
+2025-05-16 16:37:30,854 - INFO - Choosing to RECOMPUTE convolution_4 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:30,854 - INFO - 
+Iteration 8/1000 (Elapsed time: 3.0s)
+2025-05-16 16:37:31,193 - INFO - Simulated peak memory: 11.69 GB. Budget: 8.00 GB. Exec time: 2.53s
+2025-05-16 16:37:31,193 - INFO - Current checkpoint count: 613
+2025-05-16 16:37:31,193 - INFO - Current recompute count: 7
+2025-05-16 16:37:31,193 - INFO - New best schedule found with peak memory: 11.69 GB
+2025-05-16 16:37:31,201 - INFO - Considering activation: relu__9, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2387
+2025-05-16 16:37:31,201 - INFO - Choosing to RECOMPUTE relu__9 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:31,201 - INFO - 
+Iteration 9/1000 (Elapsed time: 3.3s)
+2025-05-16 16:37:31,542 - INFO - Simulated peak memory: 11.68 GB. Budget: 8.00 GB. Exec time: 2.73s
+2025-05-16 16:37:31,542 - INFO - Current checkpoint count: 612
+2025-05-16 16:37:31,542 - INFO - Current recompute count: 8
+2025-05-16 16:37:31,542 - INFO - New best schedule found with peak memory: 11.68 GB
+2025-05-16 16:37:31,549 - INFO - Considering activation: relu__3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2510
+2025-05-16 16:37:31,549 - INFO - Choosing to RECOMPUTE relu__3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:31,549 - INFO - 
+Iteration 10/1000 (Elapsed time: 3.7s)
+2025-05-16 16:37:31,891 - INFO - Simulated peak memory: 11.67 GB. Budget: 8.00 GB. Exec time: 2.93s
+2025-05-16 16:37:31,891 - INFO - Current checkpoint count: 611
+2025-05-16 16:37:31,891 - INFO - Current recompute count: 9
+2025-05-16 16:37:31,891 - INFO - New best schedule found with peak memory: 11.67 GB
+2025-05-16 16:37:31,899 - INFO - Considering activation: convolution, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2590
+2025-05-16 16:37:31,899 - INFO - Choosing to RECOMPUTE convolution (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 16:37:31,899 - INFO - 
+Iteration 11/1000 (Elapsed time: 4.0s)
+2025-05-16 16:37:32,234 - INFO - Simulated peak memory: 11.66 GB. Budget: 8.00 GB. Exec time: 3.13s
+2025-05-16 16:37:32,234 - INFO - Current checkpoint count: 610
+2025-05-16 16:37:32,234 - INFO - Current recompute count: 10
+2025-05-16 16:37:32,234 - INFO - New best schedule found with peak memory: 11.66 GB
+2025-05-16 16:37:32,241 - INFO - Considering activation: convolution_13, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2373
+2025-05-16 16:37:32,241 - INFO - Choosing to RECOMPUTE convolution_13 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:32,241 - INFO - 
+Iteration 12/1000 (Elapsed time: 4.4s)
+2025-05-16 16:37:32,577 - INFO - Simulated peak memory: 11.64 GB. Budget: 8.00 GB. Exec time: 3.23s
+2025-05-16 16:37:32,577 - INFO - Current checkpoint count: 609
+2025-05-16 16:37:32,577 - INFO - Current recompute count: 11
+2025-05-16 16:37:32,577 - INFO - New best schedule found with peak memory: 11.64 GB
+2025-05-16 16:37:32,585 - INFO - Considering activation: convolution_26, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2159
+2025-05-16 16:37:32,585 - INFO - Choosing to RECOMPUTE convolution_26 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:32,585 - INFO - 
+Iteration 13/1000 (Elapsed time: 4.7s)
+2025-05-16 16:37:32,940 - INFO - Simulated peak memory: 11.63 GB. Budget: 8.00 GB. Exec time: 3.33s
+2025-05-16 16:37:32,940 - INFO - Current checkpoint count: 608
+2025-05-16 16:37:32,940 - INFO - Current recompute count: 12
+2025-05-16 16:37:32,940 - INFO - New best schedule found with peak memory: 11.63 GB
+2025-05-16 16:37:32,948 - INFO - Considering activation: convolution_20, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2259
+2025-05-16 16:37:32,948 - INFO - Choosing to RECOMPUTE convolution_20 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:32,948 - INFO - 
+Iteration 14/1000 (Elapsed time: 5.1s)
+2025-05-16 16:37:33,306 - INFO - Simulated peak memory: 11.62 GB. Budget: 8.00 GB. Exec time: 3.44s
+2025-05-16 16:37:33,306 - INFO - Current checkpoint count: 607
+2025-05-16 16:37:33,306 - INFO - Current recompute count: 13
+2025-05-16 16:37:33,306 - INFO - New best schedule found with peak memory: 11.62 GB
+2025-05-16 16:37:33,314 - INFO - Considering activation: relu__10, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2394
+2025-05-16 16:37:33,314 - INFO - Choosing to RECOMPUTE relu__10 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:33,314 - INFO - 
+Iteration 15/1000 (Elapsed time: 5.5s)
+2025-05-16 16:37:33,660 - INFO - Simulated peak memory: 11.61 GB. Budget: 8.00 GB. Exec time: 3.54s
+2025-05-16 16:37:33,662 - INFO - Current checkpoint count: 606
+2025-05-16 16:37:33,662 - INFO - Current recompute count: 14
+2025-05-16 16:37:33,662 - INFO - New best schedule found with peak memory: 11.61 GB
+2025-05-16 16:37:33,668 - INFO - Considering activation: getitem_5, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2578
+2025-05-16 16:37:33,668 - INFO - Choosing to RECOMPUTE getitem_5 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:33,668 - INFO - 
+Iteration 16/1000 (Elapsed time: 5.8s)
+2025-05-16 16:37:34,007 - INFO - Simulated peak memory: 11.50 GB. Budget: 8.00 GB. Exec time: 3.64s
+2025-05-16 16:37:34,007 - INFO - Current checkpoint count: 605
+2025-05-16 16:37:34,008 - INFO - Current recompute count: 15
+2025-05-16 16:37:34,008 - INFO - New best schedule found with peak memory: 11.50 GB
+2025-05-16 16:37:34,016 - INFO - Considering activation: convolution_11, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2405
+2025-05-16 16:37:34,016 - INFO - Choosing to RECOMPUTE convolution_11 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:34,016 - INFO - 
+Iteration 17/1000 (Elapsed time: 6.2s)
+2025-05-16 16:37:34,348 - INFO - Simulated peak memory: 11.49 GB. Budget: 8.00 GB. Exec time: 3.74s
+2025-05-16 16:37:34,348 - INFO - Current checkpoint count: 604
+2025-05-16 16:37:34,348 - INFO - Current recompute count: 16
+2025-05-16 16:37:34,348 - INFO - New best schedule found with peak memory: 11.49 GB
+2025-05-16 16:37:34,355 - INFO - Considering activation: relu__21, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2196
+2025-05-16 16:37:34,355 - INFO - Choosing to RECOMPUTE relu__21 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:34,355 - INFO - 
+Iteration 18/1000 (Elapsed time: 6.5s)
+2025-05-16 16:37:34,691 - INFO - Simulated peak memory: 11.48 GB. Budget: 8.00 GB. Exec time: 3.84s
+2025-05-16 16:37:34,691 - INFO - Current checkpoint count: 603
+2025-05-16 16:37:34,691 - INFO - Current recompute count: 17
+2025-05-16 16:37:34,691 - INFO - New best schedule found with peak memory: 11.48 GB
+2025-05-16 16:37:34,700 - INFO - Considering activation: convolution_35, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2009
+2025-05-16 16:37:34,700 - INFO - Choosing to RECOMPUTE convolution_35 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:34,700 - INFO - 
+Iteration 19/1000 (Elapsed time: 6.8s)
+2025-05-16 16:37:35,048 - INFO - Simulated peak memory: 11.47 GB. Budget: 8.00 GB. Exec time: 3.94s
+2025-05-16 16:37:35,049 - INFO - Current checkpoint count: 602
+2025-05-16 16:37:35,049 - INFO - Current recompute count: 18
+2025-05-16 16:37:35,049 - INFO - New best schedule found with peak memory: 11.47 GB
+2025-05-16 16:37:35,056 - INFO - Considering activation: relu__30, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2046
+2025-05-16 16:37:35,057 - INFO - Choosing to RECOMPUTE relu__30 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:35,057 - INFO - 
+Iteration 20/1000 (Elapsed time: 7.2s)
+2025-05-16 16:37:35,403 - INFO - Simulated peak memory: 11.45 GB. Budget: 8.00 GB. Exec time: 4.04s
+2025-05-16 16:37:35,403 - INFO - Current checkpoint count: 601
+2025-05-16 16:37:35,403 - INFO - Current recompute count: 19
+2025-05-16 16:37:35,403 - INFO - New best schedule found with peak memory: 11.45 GB
+2025-05-16 16:37:35,411 - INFO - Considering activation: relu__18, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2246
+2025-05-16 16:37:35,411 - INFO - Choosing to RECOMPUTE relu__18 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:35,411 - INFO - 
+Iteration 21/1000 (Elapsed time: 7.6s)
+2025-05-16 16:37:35,746 - INFO - Simulated peak memory: 11.44 GB. Budget: 8.00 GB. Exec time: 4.14s
+2025-05-16 16:37:35,746 - INFO - Current checkpoint count: 600
+2025-05-16 16:37:35,746 - INFO - Current recompute count: 20
+2025-05-16 16:37:35,746 - INFO - New best schedule found with peak memory: 11.44 GB
+2025-05-16 16:37:35,753 - INFO - Considering activation: relu__27, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2096
+2025-05-16 16:37:35,753 - INFO - Choosing to RECOMPUTE relu__27 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:35,753 - INFO - 
+Iteration 22/1000 (Elapsed time: 7.9s)
+2025-05-16 16:37:36,102 - INFO - Simulated peak memory: 11.43 GB. Budget: 8.00 GB. Exec time: 4.24s
+2025-05-16 16:37:36,102 - INFO - Current checkpoint count: 599
+2025-05-16 16:37:36,102 - INFO - Current recompute count: 21
+2025-05-16 16:37:36,102 - INFO - New best schedule found with peak memory: 11.43 GB
+2025-05-16 16:37:36,110 - INFO - Considering activation: relu__15, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2296
+2025-05-16 16:37:36,110 - INFO - Choosing to RECOMPUTE relu__15 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:36,110 - INFO - 
+Iteration 23/1000 (Elapsed time: 8.3s)
+2025-05-16 16:37:36,459 - INFO - Simulated peak memory: 11.42 GB. Budget: 8.00 GB. Exec time: 4.34s
+2025-05-16 16:37:36,459 - INFO - Current checkpoint count: 598
+2025-05-16 16:37:36,459 - INFO - Current recompute count: 22
+2025-05-16 16:37:36,459 - INFO - New best schedule found with peak memory: 11.42 GB
+2025-05-16 16:37:36,467 - INFO - Considering activation: convolution_17, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2309
+2025-05-16 16:37:36,467 - INFO - Choosing to RECOMPUTE convolution_17 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:36,467 - INFO - 
+Iteration 24/1000 (Elapsed time: 8.6s)
+2025-05-16 16:37:36,820 - INFO - Simulated peak memory: 11.41 GB. Budget: 8.00 GB. Exec time: 4.44s
+2025-05-16 16:37:36,820 - INFO - Current checkpoint count: 597
+2025-05-16 16:37:36,821 - INFO - Current recompute count: 23
+2025-05-16 16:37:36,821 - INFO - New best schedule found with peak memory: 11.41 GB
+2025-05-16 16:37:36,829 - INFO - Considering activation: relu__12, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2346
+2025-05-16 16:37:36,829 - INFO - Choosing to RECOMPUTE relu__12 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:36,829 - INFO - 
+Iteration 25/1000 (Elapsed time: 9.0s)
+2025-05-16 16:37:37,180 - INFO - Simulated peak memory: 11.39 GB. Budget: 8.00 GB. Exec time: 4.54s
+2025-05-16 16:37:37,180 - INFO - Current checkpoint count: 596
+2025-05-16 16:37:37,180 - INFO - Current recompute count: 24
+2025-05-16 16:37:37,180 - INFO - New best schedule found with peak memory: 11.39 GB
+2025-05-16 16:37:37,188 - INFO - Considering activation: convolution_14, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2359
+2025-05-16 16:37:37,188 - INFO - Choosing to RECOMPUTE convolution_14 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:37,188 - INFO - 
+Iteration 26/1000 (Elapsed time: 9.3s)
+2025-05-16 16:37:37,540 - INFO - Simulated peak memory: 11.38 GB. Budget: 8.00 GB. Exec time: 4.64s
+2025-05-16 16:37:37,540 - INFO - Current checkpoint count: 595
+2025-05-16 16:37:37,540 - INFO - Current recompute count: 25
+2025-05-16 16:37:37,540 - INFO - New best schedule found with peak memory: 11.38 GB
+2025-05-16 16:37:37,548 - INFO - Considering activation: convolution_29, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2109
+2025-05-16 16:37:37,548 - INFO - Choosing to RECOMPUTE convolution_29 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:37,548 - INFO - 
+Iteration 27/1000 (Elapsed time: 9.7s)
+2025-05-16 16:37:37,902 - INFO - Simulated peak memory: 11.37 GB. Budget: 8.00 GB. Exec time: 4.74s
+2025-05-16 16:37:37,902 - INFO - Current checkpoint count: 594
+2025-05-16 16:37:37,902 - INFO - Current recompute count: 26
+2025-05-16 16:37:37,902 - INFO - New best schedule found with peak memory: 11.37 GB
+2025-05-16 16:37:37,909 - INFO - Considering activation: relu__24, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2146
+2025-05-16 16:37:37,909 - INFO - Choosing to RECOMPUTE relu__24 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:37,909 - INFO - 
+Iteration 28/1000 (Elapsed time: 10.1s)
+2025-05-16 16:37:38,277 - INFO - Simulated peak memory: 11.36 GB. Budget: 8.00 GB. Exec time: 4.84s
+2025-05-16 16:37:38,277 - INFO - Current checkpoint count: 593
+2025-05-16 16:37:38,277 - INFO - Current recompute count: 27
+2025-05-16 16:37:38,277 - INFO - New best schedule found with peak memory: 11.36 GB
+2025-05-16 16:37:38,285 - INFO - Considering activation: convolution_32, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2059
+2025-05-16 16:37:38,285 - INFO - Choosing to RECOMPUTE convolution_32 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:38,285 - INFO - 
+Iteration 29/1000 (Elapsed time: 10.4s)
+2025-05-16 16:37:38,640 - INFO - Simulated peak memory: 11.35 GB. Budget: 8.00 GB. Exec time: 4.94s
+2025-05-16 16:37:38,640 - INFO - Current checkpoint count: 592
+2025-05-16 16:37:38,640 - INFO - Current recompute count: 28
+2025-05-16 16:37:38,640 - INFO - New best schedule found with peak memory: 11.35 GB
+2025-05-16 16:37:38,648 - INFO - Considering activation: convolution_23, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2209
+2025-05-16 16:37:38,648 - INFO - Choosing to RECOMPUTE convolution_23 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:38,648 - INFO - 
+Iteration 30/1000 (Elapsed time: 10.8s)
+2025-05-16 16:37:38,992 - INFO - Simulated peak memory: 11.33 GB. Budget: 8.00 GB. Exec time: 5.04s
+2025-05-16 16:37:38,992 - INFO - Current checkpoint count: 591
+2025-05-16 16:37:38,992 - INFO - Current recompute count: 29
+2025-05-16 16:37:38,992 - INFO - New best schedule found with peak memory: 11.33 GB
+2025-05-16 16:37:38,999 - INFO - Considering activation: relu__33, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 1973
+2025-05-16 16:37:38,999 - INFO - Choosing to RECOMPUTE relu__33 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 16:37:39,000 - INFO - 
+Iteration 31/1000 (Elapsed time: 11.1s)
+2025-05-16 16:37:39,343 - INFO - Simulated peak memory: 11.32 GB. Budget: 8.00 GB. Exec time: 5.14s
+2025-05-16 16:37:39,344 - INFO - Current checkpoint count: 590
+2025-05-16 16:37:39,344 - INFO - Current recompute count: 30
+2025-05-16 16:37:39,344 - INFO - New best schedule found with peak memory: 11.32 GB
+2025-05-16 16:37:39,352 - INFO - Considering activation: convolution_141, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 245
+2025-05-16 16:37:39,352 - INFO - Choosing to RECOMPUTE convolution_141 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:39,352 - INFO - 
+Iteration 32/1000 (Elapsed time: 11.5s)
+2025-05-16 16:37:39,692 - INFO - Simulated peak memory: 11.31 GB. Budget: 8.00 GB. Exec time: 5.19s
+2025-05-16 16:37:39,692 - INFO - Current checkpoint count: 589
+2025-05-16 16:37:39,692 - INFO - Current recompute count: 31
+2025-05-16 16:37:39,693 - INFO - New best schedule found with peak memory: 11.31 GB
+2025-05-16 16:37:39,700 - INFO - Considering activation: relu__141, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 159
+2025-05-16 16:37:39,700 - INFO - Choosing to RECOMPUTE relu__141 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:39,700 - INFO - 
+Iteration 33/1000 (Elapsed time: 11.8s)
+2025-05-16 16:37:40,044 - INFO - Simulated peak memory: 11.30 GB. Budget: 8.00 GB. Exec time: 5.24s
+2025-05-16 16:37:40,044 - INFO - Current checkpoint count: 588
+2025-05-16 16:37:40,044 - INFO - Current recompute count: 32
+2025-05-16 16:37:40,044 - INFO - New best schedule found with peak memory: 11.30 GB
+2025-05-16 16:37:40,051 - INFO - Considering activation: convolution_1, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2569
+2025-05-16 16:37:40,051 - INFO - Choosing to RECOMPUTE convolution_1 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:40,051 - INFO - 
+Iteration 34/1000 (Elapsed time: 12.2s)
+2025-05-16 16:37:40,394 - INFO - Simulated peak memory: 11.29 GB. Budget: 8.00 GB. Exec time: 5.29s
+2025-05-16 16:37:40,394 - INFO - Current checkpoint count: 587
+2025-05-16 16:37:40,394 - INFO - Current recompute count: 33
+2025-05-16 16:37:40,394 - INFO - New best schedule found with peak memory: 11.29 GB
+2025-05-16 16:37:40,402 - INFO - Considering activation: relu__7, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2444
+2025-05-16 16:37:40,402 - INFO - Choosing to RECOMPUTE relu__7 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:40,402 - INFO - 
+Iteration 35/1000 (Elapsed time: 12.5s)
+2025-05-16 16:37:40,741 - INFO - Simulated peak memory: 11.27 GB. Budget: 8.00 GB. Exec time: 5.34s
+2025-05-16 16:37:40,742 - INFO - Current checkpoint count: 586
+2025-05-16 16:37:40,742 - INFO - Current recompute count: 34
+2025-05-16 16:37:40,742 - INFO - New best schedule found with peak memory: 11.27 GB
+2025-05-16 16:37:40,748 - INFO - Considering activation: relu__48, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1732
+2025-05-16 16:37:40,748 - INFO - Choosing to RECOMPUTE relu__48 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:40,748 - INFO - 
+Iteration 36/1000 (Elapsed time: 12.9s)
+2025-05-16 16:37:41,105 - INFO - Simulated peak memory: 11.26 GB. Budget: 8.00 GB. Exec time: 5.39s
+2025-05-16 16:37:41,106 - INFO - Current checkpoint count: 585
+2025-05-16 16:37:41,106 - INFO - Current recompute count: 35
+2025-05-16 16:37:41,106 - INFO - New best schedule found with peak memory: 11.26 GB
+2025-05-16 16:37:41,114 - INFO - Considering activation: relu__69, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1382
+2025-05-16 16:37:41,114 - INFO - Choosing to RECOMPUTE relu__69 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:41,114 - INFO - 
+Iteration 37/1000 (Elapsed time: 13.3s)
+2025-05-16 16:37:41,469 - INFO - Simulated peak memory: 11.25 GB. Budget: 8.00 GB. Exec time: 5.44s
+2025-05-16 16:37:41,469 - INFO - Current checkpoint count: 584
+2025-05-16 16:37:41,469 - INFO - Current recompute count: 36
+2025-05-16 16:37:41,469 - INFO - New best schedule found with peak memory: 11.25 GB
+2025-05-16 16:37:41,478 - INFO - Considering activation: convolution_90, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1095
+2025-05-16 16:37:41,478 - INFO - Choosing to RECOMPUTE convolution_90 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:41,478 - INFO - 
+Iteration 38/1000 (Elapsed time: 13.6s)
+2025-05-16 16:37:41,831 - INFO - Simulated peak memory: 11.24 GB. Budget: 8.00 GB. Exec time: 5.49s
+2025-05-16 16:37:41,831 - INFO - Current checkpoint count: 583
+2025-05-16 16:37:41,831 - INFO - Current recompute count: 37
+2025-05-16 16:37:41,831 - INFO - New best schedule found with peak memory: 11.24 GB
+2025-05-16 16:37:41,838 - INFO - Considering activation: relu__123, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 482
+2025-05-16 16:37:41,838 - INFO - Choosing to RECOMPUTE relu__123 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:41,838 - INFO - 
+Iteration 39/1000 (Elapsed time: 14.0s)
+2025-05-16 16:37:42,192 - INFO - Simulated peak memory: 11.22 GB. Budget: 8.00 GB. Exec time: 5.54s
+2025-05-16 16:37:42,192 - INFO - Current checkpoint count: 582
+2025-05-16 16:37:42,192 - INFO - Current recompute count: 38
+2025-05-16 16:37:42,192 - INFO - New best schedule found with peak memory: 11.22 GB
+2025-05-16 16:37:42,200 - INFO - Considering activation: convolution_54, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1695
+2025-05-16 16:37:42,200 - INFO - Choosing to RECOMPUTE convolution_54 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:42,200 - INFO - 
+Iteration 40/1000 (Elapsed time: 14.3s)
+2025-05-16 16:37:42,548 - INFO - Simulated peak memory: 11.21 GB. Budget: 8.00 GB. Exec time: 5.59s
+2025-05-16 16:37:42,549 - INFO - Current checkpoint count: 581
+2025-05-16 16:37:42,549 - INFO - Current recompute count: 39
+2025-05-16 16:37:42,549 - INFO - New best schedule found with peak memory: 11.21 GB
+2025-05-16 16:37:42,555 - INFO - Considering activation: relu__39, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1882
+2025-05-16 16:37:42,555 - INFO - Choosing to RECOMPUTE relu__39 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:42,555 - INFO - 
+Iteration 41/1000 (Elapsed time: 14.7s)
+2025-05-16 16:37:42,909 - INFO - Simulated peak memory: 11.20 GB. Budget: 8.00 GB. Exec time: 5.64s
+2025-05-16 16:37:42,909 - INFO - Current checkpoint count: 580
+2025-05-16 16:37:42,909 - INFO - Current recompute count: 40
+2025-05-16 16:37:42,909 - INFO - New best schedule found with peak memory: 11.20 GB
+2025-05-16 16:37:42,917 - INFO - Considering activation: convolution_126, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 495
+2025-05-16 16:37:42,917 - INFO - Choosing to RECOMPUTE convolution_126 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:42,917 - INFO - 
+Iteration 42/1000 (Elapsed time: 15.1s)
+2025-05-16 16:37:43,271 - INFO - Simulated peak memory: 11.19 GB. Budget: 8.00 GB. Exec time: 5.69s
+2025-05-16 16:37:43,271 - INFO - Current checkpoint count: 579
+2025-05-16 16:37:43,271 - INFO - Current recompute count: 41
+2025-05-16 16:37:43,271 - INFO - New best schedule found with peak memory: 11.19 GB
+2025-05-16 16:37:43,279 - INFO - Considering activation: convolution_60, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1595
+2025-05-16 16:37:43,279 - INFO - Choosing to RECOMPUTE convolution_60 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:43,279 - INFO - 
+Iteration 43/1000 (Elapsed time: 15.4s)
+2025-05-16 16:37:43,627 - INFO - Simulated peak memory: 11.17 GB. Budget: 8.00 GB. Exec time: 5.74s
+2025-05-16 16:37:43,627 - INFO - Current checkpoint count: 578
+2025-05-16 16:37:43,627 - INFO - Current recompute count: 42
+2025-05-16 16:37:43,627 - INFO - New best schedule found with peak memory: 11.17 GB
+2025-05-16 16:37:43,634 - INFO - Considering activation: convolution_5, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2505
+2025-05-16 16:37:43,634 - INFO - Choosing to RECOMPUTE convolution_5 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:43,634 - INFO - 
+Iteration 44/1000 (Elapsed time: 15.8s)
+2025-05-16 16:37:43,989 - INFO - Simulated peak memory: 11.16 GB. Budget: 8.00 GB. Exec time: 5.79s
+2025-05-16 16:37:43,989 - INFO - Current checkpoint count: 577
+2025-05-16 16:37:43,989 - INFO - Current recompute count: 43
+2025-05-16 16:37:43,989 - INFO - New best schedule found with peak memory: 11.16 GB
+2025-05-16 16:37:43,997 - INFO - Considering activation: relu__78, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1232
+2025-05-16 16:37:43,997 - INFO - Choosing to RECOMPUTE relu__78 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:43,997 - INFO - 
+Iteration 45/1000 (Elapsed time: 16.1s)
+2025-05-16 16:37:44,351 - INFO - Simulated peak memory: 11.15 GB. Budget: 8.00 GB. Exec time: 5.84s
+2025-05-16 16:37:44,352 - INFO - Current checkpoint count: 576
+2025-05-16 16:37:44,352 - INFO - Current recompute count: 44
+2025-05-16 16:37:44,352 - INFO - New best schedule found with peak memory: 11.15 GB
+2025-05-16 16:37:44,359 - INFO - Considering activation: relu__90, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1032
+2025-05-16 16:37:44,359 - INFO - Choosing to RECOMPUTE relu__90 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:44,359 - INFO - 
+Iteration 46/1000 (Elapsed time: 16.5s)
+2025-05-16 16:37:44,706 - INFO - Simulated peak memory: 11.14 GB. Budget: 8.00 GB. Exec time: 5.89s
+2025-05-16 16:37:44,706 - INFO - Current checkpoint count: 575
+2025-05-16 16:37:44,706 - INFO - Current recompute count: 45
+2025-05-16 16:37:44,706 - INFO - New best schedule found with peak memory: 11.14 GB
+2025-05-16 16:37:44,714 - INFO - Considering activation: relu__72, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1332
+2025-05-16 16:37:44,714 - INFO - Choosing to RECOMPUTE relu__72 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:44,714 - INFO - 
+Iteration 47/1000 (Elapsed time: 16.9s)
+2025-05-16 16:37:45,080 - INFO - Simulated peak memory: 11.13 GB. Budget: 8.00 GB. Exec time: 5.94s
+2025-05-16 16:37:45,080 - INFO - Current checkpoint count: 574
+2025-05-16 16:37:45,081 - INFO - Current recompute count: 46
+2025-05-16 16:37:45,081 - INFO - New best schedule found with peak memory: 11.13 GB
+2025-05-16 16:37:45,088 - INFO - Considering activation: relu__117, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 582
+2025-05-16 16:37:45,088 - INFO - Choosing to RECOMPUTE relu__117 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:45,088 - INFO - 
+Iteration 48/1000 (Elapsed time: 17.2s)
+2025-05-16 16:37:45,458 - INFO - Simulated peak memory: 11.11 GB. Budget: 8.00 GB. Exec time: 5.99s
+2025-05-16 16:37:45,458 - INFO - Current checkpoint count: 573
+2025-05-16 16:37:45,458 - INFO - Current recompute count: 47
+2025-05-16 16:37:45,458 - INFO - New best schedule found with peak memory: 11.11 GB
+2025-05-16 16:37:45,466 - INFO - Considering activation: convolution_63, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1545
+2025-05-16 16:37:45,466 - INFO - Choosing to RECOMPUTE convolution_63 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:45,466 - INFO - 
+Iteration 49/1000 (Elapsed time: 17.6s)
+2025-05-16 16:37:45,832 - INFO - Simulated peak memory: 11.10 GB. Budget: 8.00 GB. Exec time: 6.04s
+2025-05-16 16:37:45,832 - INFO - Current checkpoint count: 572
+2025-05-16 16:37:45,832 - INFO - Current recompute count: 48
+2025-05-16 16:37:45,832 - INFO - New best schedule found with peak memory: 11.10 GB
+2025-05-16 16:37:45,841 - INFO - Considering activation: convolution_81, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1245
+2025-05-16 16:37:45,841 - INFO - Choosing to RECOMPUTE convolution_81 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:45,841 - INFO - 
+Iteration 50/1000 (Elapsed time: 18.0s)
+2025-05-16 16:37:46,210 - INFO - Simulated peak memory: 11.09 GB. Budget: 8.00 GB. Exec time: 6.09s
+2025-05-16 16:37:46,210 - INFO - Current checkpoint count: 571
+2025-05-16 16:37:46,210 - INFO - Current recompute count: 49
+2025-05-16 16:37:46,210 - INFO - New best schedule found with peak memory: 11.09 GB
+2025-05-16 16:37:46,219 - INFO - Considering activation: convolution_78, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1295
+2025-05-16 16:37:46,219 - INFO - Choosing to RECOMPUTE convolution_78 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:46,219 - INFO - 
+Iteration 51/1000 (Elapsed time: 18.4s)
+2025-05-16 16:37:46,590 - INFO - Simulated peak memory: 11.08 GB. Budget: 8.00 GB. Exec time: 6.14s
+2025-05-16 16:37:46,590 - INFO - Current checkpoint count: 570
+2025-05-16 16:37:46,590 - INFO - Current recompute count: 50
+2025-05-16 16:37:46,590 - INFO - New best schedule found with peak memory: 11.08 GB
+2025-05-16 16:37:46,598 - INFO - Considering activation: relu__129, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 382
+2025-05-16 16:37:46,598 - INFO - Choosing to RECOMPUTE relu__129 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:46,598 - INFO - 
+Iteration 52/1000 (Elapsed time: 18.7s)
+2025-05-16 16:37:46,957 - INFO - Simulated peak memory: 11.06 GB. Budget: 8.00 GB. Exec time: 6.19s
+2025-05-16 16:37:46,957 - INFO - Current checkpoint count: 569
+2025-05-16 16:37:46,957 - INFO - Current recompute count: 51
+2025-05-16 16:37:46,957 - INFO - New best schedule found with peak memory: 11.06 GB
+2025-05-16 16:37:46,965 - INFO - Considering activation: relu__5, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2478
+2025-05-16 16:37:46,965 - INFO - Choosing to RECOMPUTE relu__5 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:46,965 - INFO - 
+Iteration 53/1000 (Elapsed time: 19.1s)
+2025-05-16 16:37:47,329 - INFO - Simulated peak memory: 11.05 GB. Budget: 8.00 GB. Exec time: 6.25s
+2025-05-16 16:37:47,330 - INFO - Current checkpoint count: 568
+2025-05-16 16:37:47,330 - INFO - Current recompute count: 52
+2025-05-16 16:37:47,330 - INFO - New best schedule found with peak memory: 11.05 GB
+2025-05-16 16:37:47,337 - INFO - Considering activation: getitem_4, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2552
+2025-05-16 16:37:47,337 - INFO - Choosing to RECOMPUTE getitem_4 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:47,337 - INFO - 
+Iteration 54/1000 (Elapsed time: 19.5s)
+2025-05-16 16:37:47,704 - INFO - Simulated peak memory: 11.04 GB. Budget: 8.00 GB. Exec time: 6.30s
+2025-05-16 16:37:47,704 - INFO - Current checkpoint count: 567
+2025-05-16 16:37:47,704 - INFO - Current recompute count: 53
+2025-05-16 16:37:47,704 - INFO - New best schedule found with peak memory: 11.04 GB
+2025-05-16 16:37:47,711 - INFO - Considering activation: relu__2, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2542
+2025-05-16 16:37:47,711 - INFO - Choosing to RECOMPUTE relu__2 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:47,711 - INFO - 
+Iteration 55/1000 (Elapsed time: 19.9s)
+2025-05-16 16:37:48,082 - INFO - Simulated peak memory: 11.03 GB. Budget: 8.00 GB. Exec time: 6.35s
+2025-05-16 16:37:48,082 - INFO - Current checkpoint count: 566
+2025-05-16 16:37:48,082 - INFO - Current recompute count: 54
+2025-05-16 16:37:48,082 - INFO - New best schedule found with peak memory: 11.03 GB
+2025-05-16 16:37:48,090 - INFO - Considering activation: convolution_129, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 445
+2025-05-16 16:37:48,090 - INFO - Choosing to RECOMPUTE convolution_129 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:48,090 - INFO - 
+Iteration 56/1000 (Elapsed time: 20.2s)
+2025-05-16 16:37:48,442 - INFO - Simulated peak memory: 11.01 GB. Budget: 8.00 GB. Exec time: 6.40s
+2025-05-16 16:37:48,442 - INFO - Current checkpoint count: 565
+2025-05-16 16:37:48,442 - INFO - Current recompute count: 55
+2025-05-16 16:37:48,443 - INFO - New best schedule found with peak memory: 11.01 GB
+2025-05-16 16:37:48,451 - INFO - Considering activation: convolution_135, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 345
+2025-05-16 16:37:48,451 - INFO - Choosing to RECOMPUTE convolution_135 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:48,451 - INFO - 
+Iteration 57/1000 (Elapsed time: 20.6s)
+2025-05-16 16:37:48,802 - INFO - Simulated peak memory: 11.00 GB. Budget: 8.00 GB. Exec time: 6.45s
+2025-05-16 16:37:48,802 - INFO - Current checkpoint count: 564
+2025-05-16 16:37:48,802 - INFO - Current recompute count: 56
+2025-05-16 16:37:48,802 - INFO - New best schedule found with peak memory: 11.00 GB
+2025-05-16 16:37:48,809 - INFO - Considering activation: relu__126, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 432
+2025-05-16 16:37:48,809 - INFO - Choosing to RECOMPUTE relu__126 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:48,809 - INFO - 
+Iteration 58/1000 (Elapsed time: 21.0s)
+2025-05-16 16:37:49,165 - INFO - Simulated peak memory: 10.99 GB. Budget: 8.00 GB. Exec time: 6.50s
+2025-05-16 16:37:49,165 - INFO - Current checkpoint count: 563
+2025-05-16 16:37:49,165 - INFO - Current recompute count: 57
+2025-05-16 16:37:49,165 - INFO - New best schedule found with peak memory: 10.99 GB
+2025-05-16 16:37:49,173 - INFO - Considering activation: relu__54, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1632
+2025-05-16 16:37:49,173 - INFO - Choosing to RECOMPUTE relu__54 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:49,173 - INFO - 
+Iteration 59/1000 (Elapsed time: 21.3s)
+2025-05-16 16:37:49,526 - INFO - Simulated peak memory: 10.98 GB. Budget: 8.00 GB. Exec time: 6.55s
+2025-05-16 16:37:49,526 - INFO - Current checkpoint count: 562
+2025-05-16 16:37:49,526 - INFO - Current recompute count: 58
+2025-05-16 16:37:49,526 - INFO - New best schedule found with peak memory: 10.98 GB
+2025-05-16 16:37:49,533 - INFO - Considering activation: relu__114, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 632
+2025-05-16 16:37:49,533 - INFO - Choosing to RECOMPUTE relu__114 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:49,533 - INFO - 
+Iteration 60/1000 (Elapsed time: 21.7s)
+2025-05-16 16:37:49,887 - INFO - Simulated peak memory: 10.96 GB. Budget: 8.00 GB. Exec time: 6.60s
+2025-05-16 16:37:49,887 - INFO - Current checkpoint count: 561
+2025-05-16 16:37:49,887 - INFO - Current recompute count: 59
+2025-05-16 16:37:49,887 - INFO - New best schedule found with peak memory: 10.96 GB
+2025-05-16 16:37:49,894 - INFO - Considering activation: convolution_120, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 595
+2025-05-16 16:37:49,894 - INFO - Choosing to RECOMPUTE convolution_120 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:49,894 - INFO - 
+Iteration 61/1000 (Elapsed time: 22.0s)
+2025-05-16 16:37:50,248 - INFO - Simulated peak memory: 10.95 GB. Budget: 8.00 GB. Exec time: 6.65s
+2025-05-16 16:37:50,248 - INFO - Current checkpoint count: 560
+2025-05-16 16:37:50,248 - INFO - Current recompute count: 60
+2025-05-16 16:37:50,248 - INFO - New best schedule found with peak memory: 10.95 GB
+2025-05-16 16:37:50,256 - INFO - Considering activation: convolution_93, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1045
+2025-05-16 16:37:50,256 - INFO - Choosing to RECOMPUTE convolution_93 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:50,256 - INFO - 
+Iteration 62/1000 (Elapsed time: 22.4s)
+2025-05-16 16:37:50,608 - INFO - Simulated peak memory: 10.94 GB. Budget: 8.00 GB. Exec time: 6.70s
+2025-05-16 16:37:50,608 - INFO - Current checkpoint count: 559
+2025-05-16 16:37:50,608 - INFO - Current recompute count: 61
+2025-05-16 16:37:50,608 - INFO - New best schedule found with peak memory: 10.94 GB
+2025-05-16 16:37:50,615 - INFO - Considering activation: convolution_45, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1845
+2025-05-16 16:37:50,615 - INFO - Choosing to RECOMPUTE convolution_45 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:50,615 - INFO - 
+Iteration 63/1000 (Elapsed time: 22.8s)
+2025-05-16 16:37:50,977 - INFO - Simulated peak memory: 10.93 GB. Budget: 8.00 GB. Exec time: 6.75s
+2025-05-16 16:37:50,977 - INFO - Current checkpoint count: 558
+2025-05-16 16:37:50,977 - INFO - Current recompute count: 62
+2025-05-16 16:37:50,977 - INFO - New best schedule found with peak memory: 10.93 GB
+2025-05-16 16:37:50,984 - INFO - Considering activation: convolution_38, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1959
+2025-05-16 16:37:50,984 - INFO - Choosing to RECOMPUTE convolution_38 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:50,984 - INFO - 
+Iteration 64/1000 (Elapsed time: 23.1s)
+2025-05-16 16:37:51,351 - INFO - Simulated peak memory: 10.92 GB. Budget: 8.00 GB. Exec time: 6.80s
+2025-05-16 16:37:51,351 - INFO - Current checkpoint count: 557
+2025-05-16 16:37:51,351 - INFO - Current recompute count: 63
+2025-05-16 16:37:51,351 - INFO - New best schedule found with peak memory: 10.92 GB
+2025-05-16 16:37:51,358 - INFO - Considering activation: convolution_72, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1395
+2025-05-16 16:37:51,358 - INFO - Choosing to RECOMPUTE convolution_72 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:51,358 - INFO - 
+Iteration 65/1000 (Elapsed time: 23.5s)
+2025-05-16 16:37:51,729 - INFO - Simulated peak memory: 10.90 GB. Budget: 8.00 GB. Exec time: 6.85s
+2025-05-16 16:37:51,729 - INFO - Current checkpoint count: 556
+2025-05-16 16:37:51,729 - INFO - Current recompute count: 64
+2025-05-16 16:37:51,729 - INFO - New best schedule found with peak memory: 10.90 GB
+2025-05-16 16:37:51,736 - INFO - Considering activation: convolution_57, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1645
+2025-05-16 16:37:51,736 - INFO - Choosing to RECOMPUTE convolution_57 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:51,736 - INFO - 
+Iteration 66/1000 (Elapsed time: 23.9s)
+2025-05-16 16:37:52,098 - INFO - Simulated peak memory: 10.89 GB. Budget: 8.00 GB. Exec time: 6.90s
+2025-05-16 16:37:52,098 - INFO - Current checkpoint count: 555
+2025-05-16 16:37:52,099 - INFO - Current recompute count: 65
+2025-05-16 16:37:52,099 - INFO - New best schedule found with peak memory: 10.89 GB
+2025-05-16 16:37:52,106 - INFO - Considering activation: relu__34, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1980
+2025-05-16 16:37:52,106 - INFO - Choosing to RECOMPUTE relu__34 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:52,106 - INFO - 
+Iteration 67/1000 (Elapsed time: 24.2s)
+2025-05-16 16:37:52,466 - INFO - Simulated peak memory: 10.88 GB. Budget: 8.00 GB. Exec time: 6.95s
+2025-05-16 16:37:52,466 - INFO - Current checkpoint count: 554
+2025-05-16 16:37:52,466 - INFO - Current recompute count: 66
+2025-05-16 16:37:52,467 - INFO - New best schedule found with peak memory: 10.88 GB
+2025-05-16 16:37:52,473 - INFO - Considering activation: convolution_132, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 395
+2025-05-16 16:37:52,473 - INFO - Choosing to RECOMPUTE convolution_132 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:52,473 - INFO - 
+Iteration 68/1000 (Elapsed time: 24.6s)
+2025-05-16 16:37:52,834 - INFO - Simulated peak memory: 10.87 GB. Budget: 8.00 GB. Exec time: 7.00s
+2025-05-16 16:37:52,835 - INFO - Current checkpoint count: 553
+2025-05-16 16:37:52,835 - INFO - Current recompute count: 67
+2025-05-16 16:37:52,835 - INFO - New best schedule found with peak memory: 10.87 GB
+2025-05-16 16:37:52,842 - INFO - Considering activation: convolution_114, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 695
+2025-05-16 16:37:52,842 - INFO - Choosing to RECOMPUTE convolution_114 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:52,842 - INFO - 
+Iteration 69/1000 (Elapsed time: 25.0s)
+2025-05-16 16:37:53,205 - INFO - Simulated peak memory: 10.85 GB. Budget: 8.00 GB. Exec time: 7.05s
+2025-05-16 16:37:53,205 - INFO - Current checkpoint count: 552
+2025-05-16 16:37:53,205 - INFO - Current recompute count: 68
+2025-05-16 16:37:53,205 - INFO - New best schedule found with peak memory: 10.85 GB
+2025-05-16 16:37:53,212 - INFO - Considering activation: relu__60, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1532
+2025-05-16 16:37:53,212 - INFO - Choosing to RECOMPUTE relu__60 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:53,212 - INFO - 
+Iteration 70/1000 (Elapsed time: 25.4s)
+2025-05-16 16:37:53,598 - INFO - Simulated peak memory: 10.84 GB. Budget: 8.00 GB. Exec time: 7.10s
+2025-05-16 16:37:53,598 - INFO - Current checkpoint count: 551
+2025-05-16 16:37:53,598 - INFO - Current recompute count: 69
+2025-05-16 16:37:53,598 - INFO - New best schedule found with peak memory: 10.84 GB
+2025-05-16 16:37:53,606 - INFO - Considering activation: convolution_87, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1145
+2025-05-16 16:37:53,606 - INFO - Choosing to RECOMPUTE convolution_87 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:53,606 - INFO - 
+Iteration 71/1000 (Elapsed time: 25.7s)
+2025-05-16 16:37:53,970 - INFO - Simulated peak memory: 10.83 GB. Budget: 8.00 GB. Exec time: 7.15s
+2025-05-16 16:37:53,971 - INFO - Current checkpoint count: 550
+2025-05-16 16:37:53,971 - INFO - Current recompute count: 70
+2025-05-16 16:37:53,971 - INFO - New best schedule found with peak memory: 10.83 GB
+2025-05-16 16:37:53,978 - INFO - Considering activation: convolution_123, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 545
+2025-05-16 16:37:53,978 - INFO - Choosing to RECOMPUTE convolution_123 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:53,978 - INFO - 
+Iteration 72/1000 (Elapsed time: 26.1s)
+2025-05-16 16:37:54,339 - INFO - Simulated peak memory: 10.82 GB. Budget: 8.00 GB. Exec time: 7.20s
+2025-05-16 16:37:54,339 - INFO - Current checkpoint count: 549
+2025-05-16 16:37:54,339 - INFO - Current recompute count: 71
+2025-05-16 16:37:54,339 - INFO - New best schedule found with peak memory: 10.82 GB
+2025-05-16 16:37:54,346 - INFO - Considering activation: convolution_8, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2455
+2025-05-16 16:37:54,346 - INFO - Choosing to RECOMPUTE convolution_8 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:54,346 - INFO - 
+Iteration 73/1000 (Elapsed time: 26.5s)
+2025-05-16 16:37:54,707 - INFO - Simulated peak memory: 10.80 GB. Budget: 8.00 GB. Exec time: 7.25s
+2025-05-16 16:37:54,707 - INFO - Current checkpoint count: 548
+2025-05-16 16:37:54,707 - INFO - Current recompute count: 72
+2025-05-16 16:37:54,707 - INFO - New best schedule found with peak memory: 10.80 GB
+2025-05-16 16:37:54,714 - INFO - Considering activation: relu__4, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2494
+2025-05-16 16:37:54,714 - INFO - Choosing to RECOMPUTE relu__4 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:54,714 - INFO - 
+Iteration 74/1000 (Elapsed time: 26.9s)
+2025-05-16 16:37:55,080 - INFO - Simulated peak memory: 10.79 GB. Budget: 8.00 GB. Exec time: 7.30s
+2025-05-16 16:37:55,081 - INFO - Current checkpoint count: 547
+2025-05-16 16:37:55,081 - INFO - Current recompute count: 73
+2025-05-16 16:37:55,081 - INFO - New best schedule found with peak memory: 10.79 GB
+2025-05-16 16:37:55,087 - INFO - Considering activation: convolution_9, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2439
+2025-05-16 16:37:55,087 - INFO - Choosing to RECOMPUTE convolution_9 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:55,087 - INFO - 
+Iteration 75/1000 (Elapsed time: 27.2s)
+2025-05-16 16:37:55,449 - INFO - Simulated peak memory: 10.78 GB. Budget: 8.00 GB. Exec time: 7.35s
+2025-05-16 16:37:55,449 - INFO - Current checkpoint count: 546
+2025-05-16 16:37:55,449 - INFO - Current recompute count: 74
+2025-05-16 16:37:55,449 - INFO - New best schedule found with peak memory: 10.78 GB
+2025-05-16 16:37:55,456 - INFO - Considering activation: relu__45, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1782
+2025-05-16 16:37:55,456 - INFO - Choosing to RECOMPUTE relu__45 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:55,456 - INFO - 
+Iteration 76/1000 (Elapsed time: 27.6s)
+2025-05-16 16:37:55,816 - INFO - Simulated peak memory: 10.77 GB. Budget: 8.00 GB. Exec time: 7.40s
+2025-05-16 16:37:55,817 - INFO - Current checkpoint count: 545
+2025-05-16 16:37:55,817 - INFO - Current recompute count: 75
+2025-05-16 16:37:55,817 - INFO - New best schedule found with peak memory: 10.77 GB
+2025-05-16 16:37:55,824 - INFO - Considering activation: relu__66, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1432
+2025-05-16 16:37:55,824 - INFO - Choosing to RECOMPUTE relu__66 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:55,824 - INFO - 
+Iteration 77/1000 (Elapsed time: 28.0s)
+2025-05-16 16:37:56,189 - INFO - Simulated peak memory: 10.76 GB. Budget: 8.00 GB. Exec time: 7.45s
+2025-05-16 16:37:56,190 - INFO - Current checkpoint count: 544
+2025-05-16 16:37:56,190 - INFO - Current recompute count: 76
+2025-05-16 16:37:56,190 - INFO - New best schedule found with peak memory: 10.76 GB
+2025-05-16 16:37:56,196 - INFO - Considering activation: convolution_111, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 745
+2025-05-16 16:37:56,196 - INFO - Choosing to RECOMPUTE convolution_111 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:56,196 - INFO - 
+Iteration 78/1000 (Elapsed time: 28.3s)
+2025-05-16 16:37:56,561 - INFO - Simulated peak memory: 10.74 GB. Budget: 8.00 GB. Exec time: 7.50s
+2025-05-16 16:37:56,561 - INFO - Current checkpoint count: 543
+2025-05-16 16:37:56,561 - INFO - Current recompute count: 77
+2025-05-16 16:37:56,562 - INFO - New best schedule found with peak memory: 10.74 GB
+2025-05-16 16:37:56,568 - INFO - Considering activation: relu__1, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2558
+2025-05-16 16:37:56,568 - INFO - Choosing to RECOMPUTE relu__1 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:56,568 - INFO - 
+Iteration 79/1000 (Elapsed time: 28.7s)
+2025-05-16 16:37:56,934 - INFO - Simulated peak memory: 10.73 GB. Budget: 8.00 GB. Exec time: 7.55s
+2025-05-16 16:37:56,934 - INFO - Current checkpoint count: 542
+2025-05-16 16:37:56,934 - INFO - Current recompute count: 78
+2025-05-16 16:37:56,934 - INFO - New best schedule found with peak memory: 10.73 GB
+2025-05-16 16:37:56,941 - INFO - Considering activation: convolution_117, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 645
+2025-05-16 16:37:56,941 - INFO - Choosing to RECOMPUTE convolution_117 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:56,941 - INFO - 
+Iteration 80/1000 (Elapsed time: 29.1s)
+2025-05-16 16:37:57,309 - INFO - Simulated peak memory: 10.72 GB. Budget: 8.00 GB. Exec time: 7.60s
+2025-05-16 16:37:57,309 - INFO - Current checkpoint count: 541
+2025-05-16 16:37:57,309 - INFO - Current recompute count: 79
+2025-05-16 16:37:57,309 - INFO - New best schedule found with peak memory: 10.72 GB
+2025-05-16 16:37:57,316 - INFO - Considering activation: relu__51, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1682
+2025-05-16 16:37:57,316 - INFO - Choosing to RECOMPUTE relu__51 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:57,316 - INFO - 
+Iteration 81/1000 (Elapsed time: 29.5s)
+2025-05-16 16:37:57,686 - INFO - Simulated peak memory: 10.71 GB. Budget: 8.00 GB. Exec time: 7.65s
+2025-05-16 16:37:57,686 - INFO - Current checkpoint count: 540
+2025-05-16 16:37:57,687 - INFO - Current recompute count: 80
+2025-05-16 16:37:57,687 - INFO - New best schedule found with peak memory: 10.71 GB
+2025-05-16 16:37:57,693 - INFO - Considering activation: convolution_105, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 845
+2025-05-16 16:37:57,693 - INFO - Choosing to RECOMPUTE convolution_105 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:57,693 - INFO - 
+Iteration 82/1000 (Elapsed time: 29.8s)
+2025-05-16 16:37:58,060 - INFO - Simulated peak memory: 10.69 GB. Budget: 8.00 GB. Exec time: 7.70s
+2025-05-16 16:37:58,060 - INFO - Current checkpoint count: 539
+2025-05-16 16:37:58,060 - INFO - Current recompute count: 81
+2025-05-16 16:37:58,060 - INFO - New best schedule found with peak memory: 10.69 GB
+2025-05-16 16:37:58,067 - INFO - Considering activation: relu__102, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 832
+2025-05-16 16:37:58,067 - INFO - Choosing to RECOMPUTE relu__102 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:58,067 - INFO - 
+Iteration 83/1000 (Elapsed time: 30.2s)
+2025-05-16 16:37:58,433 - INFO - Simulated peak memory: 10.68 GB. Budget: 8.00 GB. Exec time: 7.75s
+2025-05-16 16:37:58,433 - INFO - Current checkpoint count: 538
+2025-05-16 16:37:58,433 - INFO - Current recompute count: 82
+2025-05-16 16:37:58,433 - INFO - New best schedule found with peak memory: 10.68 GB
+2025-05-16 16:37:58,440 - INFO - Considering activation: relu__138, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 232
+2025-05-16 16:37:58,440 - INFO - Choosing to RECOMPUTE relu__138 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:58,440 - INFO - 
+Iteration 84/1000 (Elapsed time: 30.6s)
+2025-05-16 16:37:58,802 - INFO - Simulated peak memory: 10.67 GB. Budget: 8.00 GB. Exec time: 7.80s
+2025-05-16 16:37:58,802 - INFO - Current checkpoint count: 537
+2025-05-16 16:37:58,802 - INFO - Current recompute count: 83
+2025-05-16 16:37:58,802 - INFO - New best schedule found with peak memory: 10.67 GB
+2025-05-16 16:37:58,810 - INFO - Considering activation: convolution_48, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1795
+2025-05-16 16:37:58,810 - INFO - Choosing to RECOMPUTE convolution_48 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:58,810 - INFO - 
+Iteration 85/1000 (Elapsed time: 31.0s)
+2025-05-16 16:37:59,175 - INFO - Simulated peak memory: 10.66 GB. Budget: 8.00 GB. Exec time: 7.85s
+2025-05-16 16:37:59,175 - INFO - Current checkpoint count: 536
+2025-05-16 16:37:59,175 - INFO - Current recompute count: 84
+2025-05-16 16:37:59,175 - INFO - New best schedule found with peak memory: 10.66 GB
+2025-05-16 16:37:59,182 - INFO - Considering activation: relu__75, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1282
+2025-05-16 16:37:59,182 - INFO - Choosing to RECOMPUTE relu__75 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:59,182 - INFO - 
+Iteration 86/1000 (Elapsed time: 31.3s)
+2025-05-16 16:37:59,546 - INFO - Simulated peak memory: 10.64 GB. Budget: 8.00 GB. Exec time: 7.90s
+2025-05-16 16:37:59,546 - INFO - Current checkpoint count: 535
+2025-05-16 16:37:59,546 - INFO - Current recompute count: 85
+2025-05-16 16:37:59,546 - INFO - New best schedule found with peak memory: 10.64 GB
+2025-05-16 16:37:59,553 - INFO - Considering activation: convolution_36, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1991
+2025-05-16 16:37:59,553 - INFO - Choosing to RECOMPUTE convolution_36 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:59,553 - INFO - 
+Iteration 87/1000 (Elapsed time: 31.7s)
+2025-05-16 16:37:59,924 - INFO - Simulated peak memory: 10.63 GB. Budget: 8.00 GB. Exec time: 7.95s
+2025-05-16 16:37:59,924 - INFO - Current checkpoint count: 534
+2025-05-16 16:37:59,924 - INFO - Current recompute count: 86
+2025-05-16 16:37:59,924 - INFO - New best schedule found with peak memory: 10.63 GB
+2025-05-16 16:37:59,932 - INFO - Considering activation: convolution_2, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2553
+2025-05-16 16:37:59,932 - INFO - Choosing to RECOMPUTE convolution_2 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:37:59,932 - INFO - 
+Iteration 88/1000 (Elapsed time: 32.1s)
+2025-05-16 16:38:00,300 - INFO - Simulated peak memory: 10.62 GB. Budget: 8.00 GB. Exec time: 8.00s
+2025-05-16 16:38:00,300 - INFO - Current checkpoint count: 533
+2025-05-16 16:38:00,300 - INFO - Current recompute count: 87
+2025-05-16 16:38:00,300 - INFO - New best schedule found with peak memory: 10.62 GB
+2025-05-16 16:38:00,307 - INFO - Considering activation: convolution_102, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 895
+2025-05-16 16:38:00,307 - INFO - Choosing to RECOMPUTE convolution_102 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:00,307 - INFO - 
+Iteration 89/1000 (Elapsed time: 32.5s)
+2025-05-16 16:38:00,675 - INFO - Simulated peak memory: 10.61 GB. Budget: 8.00 GB. Exec time: 8.05s
+2025-05-16 16:38:00,675 - INFO - Current checkpoint count: 532
+2025-05-16 16:38:00,675 - INFO - Current recompute count: 88
+2025-05-16 16:38:00,675 - INFO - New best schedule found with peak memory: 10.61 GB
+2025-05-16 16:38:00,681 - INFO - Considering activation: relu__87, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1082
+2025-05-16 16:38:00,681 - INFO - Choosing to RECOMPUTE relu__87 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:00,681 - INFO - 
+Iteration 90/1000 (Elapsed time: 32.8s)
+2025-05-16 16:38:01,049 - INFO - Simulated peak memory: 10.59 GB. Budget: 8.00 GB. Exec time: 8.10s
+2025-05-16 16:38:01,049 - INFO - Current checkpoint count: 531
+2025-05-16 16:38:01,049 - INFO - Current recompute count: 89
+2025-05-16 16:38:01,049 - INFO - New best schedule found with peak memory: 10.59 GB
+2025-05-16 16:38:01,055 - INFO - Considering activation: convolution_39, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1945
+2025-05-16 16:38:01,057 - INFO - Choosing to RECOMPUTE convolution_39 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:01,057 - INFO - 
+Iteration 91/1000 (Elapsed time: 33.2s)
+2025-05-16 16:38:01,421 - INFO - Simulated peak memory: 10.58 GB. Budget: 8.00 GB. Exec time: 8.15s
+2025-05-16 16:38:01,421 - INFO - Current checkpoint count: 530
+2025-05-16 16:38:01,421 - INFO - Current recompute count: 90
+2025-05-16 16:38:01,421 - INFO - New best schedule found with peak memory: 10.58 GB
+2025-05-16 16:38:01,427 - INFO - Considering activation: convolution_75, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1345
+2025-05-16 16:38:01,427 - INFO - Choosing to RECOMPUTE convolution_75 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:01,427 - INFO - 
+Iteration 92/1000 (Elapsed time: 33.6s)
+2025-05-16 16:38:01,792 - INFO - Simulated peak memory: 10.57 GB. Budget: 8.00 GB. Exec time: 8.20s
+2025-05-16 16:38:01,793 - INFO - Current checkpoint count: 529
+2025-05-16 16:38:01,793 - INFO - Current recompute count: 91
+2025-05-16 16:38:01,793 - INFO - New best schedule found with peak memory: 10.57 GB
+2025-05-16 16:38:01,799 - INFO - Considering activation: relu__93, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 982
+2025-05-16 16:38:01,799 - INFO - Choosing to RECOMPUTE relu__93 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:01,799 - INFO - 
+Iteration 93/1000 (Elapsed time: 33.9s)
+2025-05-16 16:38:02,167 - INFO - Simulated peak memory: 10.56 GB. Budget: 8.00 GB. Exec time: 8.25s
+2025-05-16 16:38:02,167 - INFO - Current checkpoint count: 528
+2025-05-16 16:38:02,167 - INFO - Current recompute count: 92
+2025-05-16 16:38:02,167 - INFO - New best schedule found with peak memory: 10.56 GB
+2025-05-16 16:38:02,174 - INFO - Considering activation: relu__8, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2428
+2025-05-16 16:38:02,174 - INFO - Choosing to RECOMPUTE relu__8 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:02,174 - INFO - 
+Iteration 94/1000 (Elapsed time: 34.3s)
+2025-05-16 16:38:02,541 - INFO - Simulated peak memory: 10.55 GB. Budget: 8.00 GB. Exec time: 8.30s
+2025-05-16 16:38:02,541 - INFO - Current checkpoint count: 527
+2025-05-16 16:38:02,541 - INFO - Current recompute count: 93
+2025-05-16 16:38:02,541 - INFO - New best schedule found with peak memory: 10.55 GB
+2025-05-16 16:38:02,548 - INFO - Considering activation: convolution_96, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 995
+2025-05-16 16:38:02,548 - INFO - Choosing to RECOMPUTE convolution_96 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:02,548 - INFO - 
+Iteration 95/1000 (Elapsed time: 34.7s)
+2025-05-16 16:38:02,920 - INFO - Simulated peak memory: 10.53 GB. Budget: 8.00 GB. Exec time: 8.35s
+2025-05-16 16:38:02,920 - INFO - Current checkpoint count: 526
+2025-05-16 16:38:02,920 - INFO - Current recompute count: 94
+2025-05-16 16:38:02,920 - INFO - New best schedule found with peak memory: 10.53 GB
+2025-05-16 16:38:02,926 - INFO - Considering activation: relu__120, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 532
+2025-05-16 16:38:02,926 - INFO - Choosing to RECOMPUTE relu__120 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:02,926 - INFO - 
+Iteration 96/1000 (Elapsed time: 35.1s)
+2025-05-16 16:38:03,293 - INFO - Simulated peak memory: 10.52 GB. Budget: 8.00 GB. Exec time: 8.40s
+2025-05-16 16:38:03,293 - INFO - Current checkpoint count: 525
+2025-05-16 16:38:03,293 - INFO - Current recompute count: 95
+2025-05-16 16:38:03,293 - INFO - New best schedule found with peak memory: 10.52 GB
+2025-05-16 16:38:03,301 - INFO - Considering activation: convolution_6, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2489
+2025-05-16 16:38:03,301 - INFO - Choosing to RECOMPUTE convolution_6 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:03,301 - INFO - 
+Iteration 97/1000 (Elapsed time: 35.4s)
+2025-05-16 16:38:03,670 - INFO - Simulated peak memory: 10.51 GB. Budget: 8.00 GB. Exec time: 8.45s
+2025-05-16 16:38:03,670 - INFO - Current checkpoint count: 524
+2025-05-16 16:38:03,670 - INFO - Current recompute count: 96
+2025-05-16 16:38:03,670 - INFO - New best schedule found with peak memory: 10.51 GB
+2025-05-16 16:38:03,677 - INFO - Considering activation: relu__111, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 682
+2025-05-16 16:38:03,677 - INFO - Choosing to RECOMPUTE relu__111 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:03,677 - INFO - 
+Iteration 98/1000 (Elapsed time: 35.8s)
+2025-05-16 16:38:04,048 - INFO - Simulated peak memory: 10.50 GB. Budget: 8.00 GB. Exec time: 8.50s
+2025-05-16 16:38:04,048 - INFO - Current checkpoint count: 523
+2025-05-16 16:38:04,048 - INFO - Current recompute count: 97
+2025-05-16 16:38:04,048 - INFO - New best schedule found with peak memory: 10.50 GB
+2025-05-16 16:38:04,055 - INFO - Considering activation: relu__132, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 332
+2025-05-16 16:38:04,055 - INFO - Choosing to RECOMPUTE relu__132 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:04,055 - INFO - 
+Iteration 99/1000 (Elapsed time: 36.2s)
+2025-05-16 16:38:04,428 - INFO - Simulated peak memory: 10.48 GB. Budget: 8.00 GB. Exec time: 8.55s
+2025-05-16 16:38:04,428 - INFO - Current checkpoint count: 522
+2025-05-16 16:38:04,428 - INFO - Current recompute count: 98
+2025-05-16 16:38:04,428 - INFO - New best schedule found with peak memory: 10.48 GB
+2025-05-16 16:38:04,435 - INFO - Considering activation: relu__36, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1932
+2025-05-16 16:38:04,435 - INFO - Choosing to RECOMPUTE relu__36 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:04,435 - INFO - 
+Iteration 100/1000 (Elapsed time: 36.6s)
+2025-05-16 16:38:04,805 - INFO - Simulated peak memory: 10.47 GB. Budget: 8.00 GB. Exec time: 8.60s
+2025-05-16 16:38:04,805 - INFO - Current checkpoint count: 521
+2025-05-16 16:38:04,805 - INFO - Current recompute count: 99
+2025-05-16 16:38:04,805 - INFO - New best schedule found with peak memory: 10.47 GB
+2025-05-16 16:38:04,812 - INFO - Considering activation: convolution_99, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 945
+2025-05-16 16:38:04,812 - INFO - Choosing to RECOMPUTE convolution_99 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:04,812 - INFO - 
+Iteration 101/1000 (Elapsed time: 37.0s)
+2025-05-16 16:38:05,197 - INFO - Simulated peak memory: 10.46 GB. Budget: 8.00 GB. Exec time: 8.65s
+2025-05-16 16:38:05,197 - INFO - Current checkpoint count: 520
+2025-05-16 16:38:05,197 - INFO - Current recompute count: 100
+2025-05-16 16:38:05,197 - INFO - New best schedule found with peak memory: 10.46 GB
+2025-05-16 16:38:05,204 - INFO - Considering activation: relu__99, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 882
+2025-05-16 16:38:05,204 - INFO - Choosing to RECOMPUTE relu__99 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:05,204 - INFO - 
+Iteration 102/1000 (Elapsed time: 37.3s)
+2025-05-16 16:38:05,573 - INFO - Simulated peak memory: 10.45 GB. Budget: 8.00 GB. Exec time: 8.70s
+2025-05-16 16:38:05,574 - INFO - Current checkpoint count: 519
+2025-05-16 16:38:05,574 - INFO - Current recompute count: 101
+2025-05-16 16:38:05,574 - INFO - New best schedule found with peak memory: 10.45 GB
+2025-05-16 16:38:05,581 - INFO - Considering activation: convolution_51, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1745
+2025-05-16 16:38:05,581 - INFO - Choosing to RECOMPUTE convolution_51 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:05,581 - INFO - 
+Iteration 103/1000 (Elapsed time: 37.7s)
+2025-05-16 16:38:05,962 - INFO - Simulated peak memory: 10.43 GB. Budget: 8.00 GB. Exec time: 8.75s
+2025-05-16 16:38:05,962 - INFO - Current checkpoint count: 518
+2025-05-16 16:38:05,963 - INFO - Current recompute count: 102
+2025-05-16 16:38:05,963 - INFO - New best schedule found with peak memory: 10.43 GB
+2025-05-16 16:38:05,970 - INFO - Considering activation: relu__63, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1482
+2025-05-16 16:38:05,970 - INFO - Choosing to RECOMPUTE relu__63 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:05,970 - INFO - 
+Iteration 104/1000 (Elapsed time: 38.1s)
+2025-05-16 16:38:06,346 - INFO - Simulated peak memory: 10.42 GB. Budget: 8.00 GB. Exec time: 8.80s
+2025-05-16 16:38:06,347 - INFO - Current checkpoint count: 517
+2025-05-16 16:38:06,347 - INFO - Current recompute count: 103
+2025-05-16 16:38:06,347 - INFO - New best schedule found with peak memory: 10.42 GB
+2025-05-16 16:38:06,354 - INFO - Considering activation: convolution_42, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1895
+2025-05-16 16:38:06,354 - INFO - Choosing to RECOMPUTE convolution_42 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:06,354 - INFO - 
+Iteration 105/1000 (Elapsed time: 38.5s)
+2025-05-16 16:38:06,728 - INFO - Simulated peak memory: 10.41 GB. Budget: 8.00 GB. Exec time: 8.85s
+2025-05-16 16:38:06,728 - INFO - Current checkpoint count: 516
+2025-05-16 16:38:06,728 - INFO - Current recompute count: 104
+2025-05-16 16:38:06,728 - INFO - New best schedule found with peak memory: 10.41 GB
+2025-05-16 16:38:06,734 - INFO - Considering activation: convolution_138, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 295
+2025-05-16 16:38:06,734 - INFO - Choosing to RECOMPUTE convolution_138 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:06,734 - INFO - 
+Iteration 106/1000 (Elapsed time: 38.9s)
+2025-05-16 16:38:07,116 - INFO - Simulated peak memory: 10.40 GB. Budget: 8.00 GB. Exec time: 8.90s
+2025-05-16 16:38:07,116 - INFO - Current checkpoint count: 515
+2025-05-16 16:38:07,116 - INFO - Current recompute count: 105
+2025-05-16 16:38:07,116 - INFO - New best schedule found with peak memory: 10.40 GB
+2025-05-16 16:38:07,122 - INFO - Considering activation: relu__84, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1132
+2025-05-16 16:38:07,122 - INFO - Choosing to RECOMPUTE relu__84 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:07,122 - INFO - 
+Iteration 107/1000 (Elapsed time: 39.3s)
+2025-05-16 16:38:07,498 - INFO - Simulated peak memory: 10.38 GB. Budget: 8.00 GB. Exec time: 8.95s
+2025-05-16 16:38:07,498 - INFO - Current checkpoint count: 514
+2025-05-16 16:38:07,498 - INFO - Current recompute count: 106
+2025-05-16 16:38:07,498 - INFO - New best schedule found with peak memory: 10.38 GB
+2025-05-16 16:38:07,504 - INFO - Considering activation: relu__42, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1832
+2025-05-16 16:38:07,504 - INFO - Choosing to RECOMPUTE relu__42 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:07,504 - INFO - 
+Iteration 108/1000 (Elapsed time: 39.6s)
+2025-05-16 16:38:07,884 - INFO - Simulated peak memory: 10.37 GB. Budget: 8.00 GB. Exec time: 9.00s
+2025-05-16 16:38:07,885 - INFO - Current checkpoint count: 513
+2025-05-16 16:38:07,885 - INFO - Current recompute count: 107
+2025-05-16 16:38:07,885 - INFO - New best schedule found with peak memory: 10.37 GB
+2025-05-16 16:38:07,891 - INFO - Considering activation: relu__135, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 282
+2025-05-16 16:38:07,891 - INFO - Choosing to RECOMPUTE relu__135 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:07,891 - INFO - 
+Iteration 109/1000 (Elapsed time: 40.0s)
+2025-05-16 16:38:08,268 - INFO - Simulated peak memory: 10.36 GB. Budget: 8.00 GB. Exec time: 9.05s
+2025-05-16 16:38:08,268 - INFO - Current checkpoint count: 512
+2025-05-16 16:38:08,268 - INFO - Current recompute count: 108
+2025-05-16 16:38:08,268 - INFO - New best schedule found with peak memory: 10.36 GB
+2025-05-16 16:38:08,274 - INFO - Considering activation: convolution_84, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1195
+2025-05-16 16:38:08,274 - INFO - Choosing to RECOMPUTE convolution_84 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:08,274 - INFO - 
+Iteration 110/1000 (Elapsed time: 40.4s)
+2025-05-16 16:38:08,649 - INFO - Simulated peak memory: 10.35 GB. Budget: 8.00 GB. Exec time: 9.11s
+2025-05-16 16:38:08,649 - INFO - Current checkpoint count: 511
+2025-05-16 16:38:08,649 - INFO - Current recompute count: 109
+2025-05-16 16:38:08,649 - INFO - New best schedule found with peak memory: 10.35 GB
+2025-05-16 16:38:08,656 - INFO - Considering activation: relu__81, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1182
+2025-05-16 16:38:08,656 - INFO - Choosing to RECOMPUTE relu__81 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:08,656 - INFO - 
+Iteration 111/1000 (Elapsed time: 40.8s)
+2025-05-16 16:38:09,033 - INFO - Simulated peak memory: 10.34 GB. Budget: 8.00 GB. Exec time: 9.16s
+2025-05-16 16:38:09,033 - INFO - Current checkpoint count: 510
+2025-05-16 16:38:09,034 - INFO - Current recompute count: 110
+2025-05-16 16:38:09,034 - INFO - New best schedule found with peak memory: 10.34 GB
+2025-05-16 16:38:09,040 - INFO - Considering activation: relu__105, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 782
+2025-05-16 16:38:09,041 - INFO - Choosing to RECOMPUTE relu__105 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:09,041 - INFO - 
+Iteration 112/1000 (Elapsed time: 41.2s)
+2025-05-16 16:38:09,415 - INFO - Simulated peak memory: 10.32 GB. Budget: 8.00 GB. Exec time: 9.21s
+2025-05-16 16:38:09,415 - INFO - Current checkpoint count: 509
+2025-05-16 16:38:09,415 - INFO - Current recompute count: 111
+2025-05-16 16:38:09,415 - INFO - New best schedule found with peak memory: 10.32 GB
+2025-05-16 16:38:09,422 - INFO - Considering activation: relu__108, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 732
+2025-05-16 16:38:09,422 - INFO - Choosing to RECOMPUTE relu__108 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:09,422 - INFO - 
+Iteration 113/1000 (Elapsed time: 41.6s)
+2025-05-16 16:38:09,800 - INFO - Simulated peak memory: 10.31 GB. Budget: 8.00 GB. Exec time: 9.26s
+2025-05-16 16:38:09,800 - INFO - Current checkpoint count: 508
+2025-05-16 16:38:09,800 - INFO - Current recompute count: 112
+2025-05-16 16:38:09,800 - INFO - New best schedule found with peak memory: 10.31 GB
+2025-05-16 16:38:09,807 - INFO - Considering activation: relu__57, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1582
+2025-05-16 16:38:09,807 - INFO - Choosing to RECOMPUTE relu__57 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:09,807 - INFO - 
+Iteration 114/1000 (Elapsed time: 41.9s)
+2025-05-16 16:38:10,188 - INFO - Simulated peak memory: 10.30 GB. Budget: 8.00 GB. Exec time: 9.31s
+2025-05-16 16:38:10,188 - INFO - Current checkpoint count: 507
+2025-05-16 16:38:10,188 - INFO - Current recompute count: 113
+2025-05-16 16:38:10,188 - INFO - New best schedule found with peak memory: 10.30 GB
+2025-05-16 16:38:10,194 - INFO - Considering activation: convolution_108, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 795
+2025-05-16 16:38:10,194 - INFO - Choosing to RECOMPUTE convolution_108 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:10,195 - INFO - 
+Iteration 115/1000 (Elapsed time: 42.3s)
+2025-05-16 16:38:10,573 - INFO - Simulated peak memory: 10.29 GB. Budget: 8.00 GB. Exec time: 9.36s
+2025-05-16 16:38:10,573 - INFO - Current checkpoint count: 506
+2025-05-16 16:38:10,573 - INFO - Current recompute count: 114
+2025-05-16 16:38:10,573 - INFO - New best schedule found with peak memory: 10.29 GB
+2025-05-16 16:38:10,580 - INFO - Considering activation: convolution_144, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 195
+2025-05-16 16:38:10,580 - INFO - Choosing to RECOMPUTE convolution_144 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:10,580 - INFO - 
+Iteration 116/1000 (Elapsed time: 42.7s)
+2025-05-16 16:38:10,967 - INFO - Simulated peak memory: 10.27 GB. Budget: 8.00 GB. Exec time: 9.41s
+2025-05-16 16:38:10,967 - INFO - Current checkpoint count: 505
+2025-05-16 16:38:10,967 - INFO - Current recompute count: 115
+2025-05-16 16:38:10,968 - INFO - New best schedule found with peak memory: 10.27 GB
+2025-05-16 16:38:10,975 - INFO - Considering activation: convolution_66, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1495
+2025-05-16 16:38:10,975 - INFO - Choosing to RECOMPUTE convolution_66 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:10,975 - INFO - 
+Iteration 117/1000 (Elapsed time: 43.1s)
+2025-05-16 16:38:11,367 - INFO - Simulated peak memory: 10.26 GB. Budget: 8.00 GB. Exec time: 9.46s
+2025-05-16 16:38:11,367 - INFO - Current checkpoint count: 504
+2025-05-16 16:38:11,367 - INFO - Current recompute count: 116
+2025-05-16 16:38:11,367 - INFO - New best schedule found with peak memory: 10.26 GB
+2025-05-16 16:38:11,374 - INFO - Considering activation: convolution_69, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1445
+2025-05-16 16:38:11,374 - INFO - Choosing to RECOMPUTE convolution_69 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:11,374 - INFO - 
+Iteration 118/1000 (Elapsed time: 43.5s)
+2025-05-16 16:38:11,768 - INFO - Simulated peak memory: 10.25 GB. Budget: 8.00 GB. Exec time: 9.51s
+2025-05-16 16:38:11,768 - INFO - Current checkpoint count: 503
+2025-05-16 16:38:11,768 - INFO - Current recompute count: 117
+2025-05-16 16:38:11,768 - INFO - New best schedule found with peak memory: 10.25 GB
+2025-05-16 16:38:11,775 - INFO - Considering activation: relu__96, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 932
+2025-05-16 16:38:11,775 - INFO - Choosing to RECOMPUTE relu__96 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 16:38:11,775 - INFO - 
+Iteration 119/1000 (Elapsed time: 43.9s)
+2025-05-16 16:38:12,164 - INFO - Simulated peak memory: 10.24 GB. Budget: 8.00 GB. Exec time: 9.56s
+2025-05-16 16:38:12,164 - INFO - Current checkpoint count: 502
+2025-05-16 16:38:12,164 - INFO - Current recompute count: 118
+2025-05-16 16:38:12,164 - INFO - New best schedule found with peak memory: 10.24 GB
+2025-05-16 16:38:12,171 - INFO - Considering activation: relu__31, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2030
+2025-05-16 16:38:12,171 - INFO - Choosing to RECOMPUTE relu__31 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:12,171 - INFO - 
+Iteration 120/1000 (Elapsed time: 44.3s)
+2025-05-16 16:38:12,564 - INFO - Simulated peak memory: 10.22 GB. Budget: 8.00 GB. Exec time: 9.58s
+2025-05-16 16:38:12,564 - INFO - Current checkpoint count: 501
+2025-05-16 16:38:12,564 - INFO - Current recompute count: 119
+2025-05-16 16:38:12,564 - INFO - New best schedule found with peak memory: 10.22 GB
+2025-05-16 16:38:12,571 - INFO - Considering activation: convolution_25, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2175
+2025-05-16 16:38:12,571 - INFO - Choosing to RECOMPUTE convolution_25 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:12,571 - INFO - 
+Iteration 121/1000 (Elapsed time: 44.7s)
+2025-05-16 16:38:12,964 - INFO - Simulated peak memory: 10.21 GB. Budget: 8.00 GB. Exec time: 9.61s
+2025-05-16 16:38:12,964 - INFO - Current checkpoint count: 500
+2025-05-16 16:38:12,964 - INFO - Current recompute count: 120
+2025-05-16 16:38:12,964 - INFO - New best schedule found with peak memory: 10.21 GB
+2025-05-16 16:38:12,971 - INFO - Considering activation: relu__20, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2214
+2025-05-16 16:38:12,971 - INFO - Choosing to RECOMPUTE relu__20 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:12,971 - INFO - 
+Iteration 122/1000 (Elapsed time: 45.1s)
+2025-05-16 16:38:13,359 - INFO - Simulated peak memory: 10.20 GB. Budget: 8.00 GB. Exec time: 9.63s
+2025-05-16 16:38:13,359 - INFO - Current checkpoint count: 499
+2025-05-16 16:38:13,359 - INFO - Current recompute count: 121
+2025-05-16 16:38:13,359 - INFO - New best schedule found with peak memory: 10.20 GB
+2025-05-16 16:38:13,365 - INFO - Considering activation: convolution_27, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2141
+2025-05-16 16:38:13,365 - INFO - Choosing to RECOMPUTE convolution_27 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:13,365 - INFO - 
+Iteration 123/1000 (Elapsed time: 45.5s)
+2025-05-16 16:38:13,757 - INFO - Simulated peak memory: 10.19 GB. Budget: 8.00 GB. Exec time: 9.66s
+2025-05-16 16:38:13,757 - INFO - Current checkpoint count: 498
+2025-05-16 16:38:13,757 - INFO - Current recompute count: 122
+2025-05-16 16:38:13,757 - INFO - New best schedule found with peak memory: 10.19 GB
+2025-05-16 16:38:13,763 - INFO - Considering activation: relu__32, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2014
+2025-05-16 16:38:13,763 - INFO - Choosing to RECOMPUTE relu__32 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:13,763 - INFO - 
+Iteration 124/1000 (Elapsed time: 45.9s)
+2025-05-16 16:38:14,156 - INFO - Simulated peak memory: 10.17 GB. Budget: 8.00 GB. Exec time: 9.68s
+2025-05-16 16:38:14,156 - INFO - Current checkpoint count: 497
+2025-05-16 16:38:14,156 - INFO - Current recompute count: 123
+2025-05-16 16:38:14,156 - INFO - New best schedule found with peak memory: 10.17 GB
+2025-05-16 16:38:14,162 - INFO - Considering activation: relu__17, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2264
+2025-05-16 16:38:14,163 - INFO - Choosing to RECOMPUTE relu__17 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:14,163 - INFO - 
+Iteration 125/1000 (Elapsed time: 46.3s)
+2025-05-16 16:38:14,552 - INFO - Simulated peak memory: 10.16 GB. Budget: 8.00 GB. Exec time: 9.71s
+2025-05-16 16:38:14,552 - INFO - Current checkpoint count: 496
+2025-05-16 16:38:14,552 - INFO - Current recompute count: 124
+2025-05-16 16:38:14,552 - INFO - New best schedule found with peak memory: 10.16 GB
+2025-05-16 16:38:14,559 - INFO - Considering activation: relu__144, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 118
+2025-05-16 16:38:14,559 - INFO - Choosing to RECOMPUTE relu__144 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:14,559 - INFO - 
+Iteration 126/1000 (Elapsed time: 46.7s)
+2025-05-16 16:38:14,951 - INFO - Simulated peak memory: 10.15 GB. Budget: 8.00 GB. Exec time: 9.73s
+2025-05-16 16:38:14,951 - INFO - Current checkpoint count: 495
+2025-05-16 16:38:14,951 - INFO - Current recompute count: 125
+2025-05-16 16:38:14,951 - INFO - New best schedule found with peak memory: 10.15 GB
+2025-05-16 16:38:14,958 - INFO - Considering activation: convolution_30, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2091
+2025-05-16 16:38:14,958 - INFO - Choosing to RECOMPUTE convolution_30 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:14,958 - INFO - 
+Iteration 127/1000 (Elapsed time: 47.1s)
+2025-05-16 16:38:15,356 - INFO - Simulated peak memory: 10.14 GB. Budget: 8.00 GB. Exec time: 9.76s
+2025-05-16 16:38:15,357 - INFO - Current checkpoint count: 494
+2025-05-16 16:38:15,357 - INFO - Current recompute count: 126
+2025-05-16 16:38:15,357 - INFO - New best schedule found with peak memory: 10.14 GB
+2025-05-16 16:38:15,364 - INFO - Considering activation: relu__19, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2230
+2025-05-16 16:38:15,364 - INFO - Choosing to RECOMPUTE relu__19 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:15,364 - INFO - 
+Iteration 128/1000 (Elapsed time: 47.5s)
+2025-05-16 16:38:15,759 - INFO - Simulated peak memory: 10.12 GB. Budget: 8.00 GB. Exec time: 9.78s
+2025-05-16 16:38:15,760 - INFO - Current checkpoint count: 493
+2025-05-16 16:38:15,760 - INFO - Current recompute count: 127
+2025-05-16 16:38:15,760 - INFO - New best schedule found with peak memory: 10.12 GB
+2025-05-16 16:38:15,766 - INFO - Considering activation: relu__25, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2130
+2025-05-16 16:38:15,766 - INFO - Choosing to RECOMPUTE relu__25 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:15,766 - INFO - 
+Iteration 129/1000 (Elapsed time: 47.9s)
+2025-05-16 16:38:16,168 - INFO - Simulated peak memory: 10.11 GB. Budget: 8.00 GB. Exec time: 9.81s
+2025-05-16 16:38:16,168 - INFO - Current checkpoint count: 492
+2025-05-16 16:38:16,168 - INFO - Current recompute count: 128
+2025-05-16 16:38:16,168 - INFO - New best schedule found with peak memory: 10.11 GB
+2025-05-16 16:38:16,175 - INFO - Considering activation: convolution_15, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2341
+2025-05-16 16:38:16,175 - INFO - Choosing to RECOMPUTE convolution_15 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:16,175 - INFO - 
+Iteration 130/1000 (Elapsed time: 48.3s)
+2025-05-16 16:38:16,571 - INFO - Simulated peak memory: 10.10 GB. Budget: 8.00 GB. Exec time: 9.83s
+2025-05-16 16:38:16,571 - INFO - Current checkpoint count: 491
+2025-05-16 16:38:16,571 - INFO - Current recompute count: 129
+2025-05-16 16:38:16,571 - INFO - New best schedule found with peak memory: 10.10 GB
+2025-05-16 16:38:16,579 - INFO - Considering activation: relu__11, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2378
+2025-05-16 16:38:16,579 - INFO - Choosing to RECOMPUTE relu__11 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:16,579 - INFO - 
+Iteration 131/1000 (Elapsed time: 48.7s)
+2025-05-16 16:38:16,974 - INFO - Simulated peak memory: 10.09 GB. Budget: 8.00 GB. Exec time: 9.86s
+2025-05-16 16:38:16,974 - INFO - Current checkpoint count: 490
+2025-05-16 16:38:16,974 - INFO - Current recompute count: 130
+2025-05-16 16:38:16,974 - INFO - New best schedule found with peak memory: 10.09 GB
+2025-05-16 16:38:16,980 - INFO - Considering activation: convolution_31, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2075
+2025-05-16 16:38:16,980 - INFO - Choosing to RECOMPUTE convolution_31 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:16,980 - INFO - 
+Iteration 132/1000 (Elapsed time: 49.1s)
+2025-05-16 16:38:17,375 - INFO - Simulated peak memory: 10.07 GB. Budget: 8.00 GB. Exec time: 9.88s
+2025-05-16 16:38:17,375 - INFO - Current checkpoint count: 489
+2025-05-16 16:38:17,375 - INFO - Current recompute count: 131
+2025-05-16 16:38:17,375 - INFO - New best schedule found with peak memory: 10.07 GB
+2025-05-16 16:38:17,382 - INFO - Considering activation: convolution_145, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 177
+2025-05-16 16:38:17,382 - INFO - Choosing to RECOMPUTE convolution_145 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:17,382 - INFO - 
+Iteration 133/1000 (Elapsed time: 49.5s)
+2025-05-16 16:38:17,777 - INFO - Simulated peak memory: 10.06 GB. Budget: 8.00 GB. Exec time: 9.91s
+2025-05-16 16:38:17,777 - INFO - Current checkpoint count: 488
+2025-05-16 16:38:17,778 - INFO - Current recompute count: 132
+2025-05-16 16:38:17,778 - INFO - New best schedule found with peak memory: 10.06 GB
+2025-05-16 16:38:17,785 - INFO - Considering activation: convolution_34, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2025
+2025-05-16 16:38:17,785 - INFO - Choosing to RECOMPUTE convolution_34 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:17,785 - INFO - 
+Iteration 134/1000 (Elapsed time: 49.9s)
+2025-05-16 16:38:18,182 - INFO - Simulated peak memory: 10.05 GB. Budget: 8.00 GB. Exec time: 9.93s
+2025-05-16 16:38:18,183 - INFO - Current checkpoint count: 487
+2025-05-16 16:38:18,183 - INFO - Current recompute count: 133
+2025-05-16 16:38:18,183 - INFO - New best schedule found with peak memory: 10.05 GB
+2025-05-16 16:38:18,189 - INFO - Considering activation: convolution_148, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 131
+2025-05-16 16:38:18,190 - INFO - Choosing to RECOMPUTE convolution_148 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:18,190 - INFO - 
+Iteration 135/1000 (Elapsed time: 50.3s)
+2025-05-16 16:38:18,584 - INFO - Simulated peak memory: 10.04 GB. Budget: 8.00 GB. Exec time: 9.96s
+2025-05-16 16:38:18,584 - INFO - Current checkpoint count: 486
+2025-05-16 16:38:18,584 - INFO - Current recompute count: 134
+2025-05-16 16:38:18,584 - INFO - New best schedule found with peak memory: 10.04 GB
+2025-05-16 16:38:18,590 - INFO - Considering activation: relu__28, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2080
+2025-05-16 16:38:18,590 - INFO - Choosing to RECOMPUTE relu__28 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:18,590 - INFO - 
+Iteration 136/1000 (Elapsed time: 50.7s)
+2025-05-16 16:38:18,989 - INFO - Simulated peak memory: 10.02 GB. Budget: 8.00 GB. Exec time: 9.98s
+2025-05-16 16:38:18,989 - INFO - Current checkpoint count: 485
+2025-05-16 16:38:18,989 - INFO - Current recompute count: 135
+2025-05-16 16:38:18,989 - INFO - New best schedule found with peak memory: 10.02 GB
+2025-05-16 16:38:18,996 - INFO - Considering activation: relu__22, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2180
+2025-05-16 16:38:18,996 - INFO - Choosing to RECOMPUTE relu__22 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:18,996 - INFO - 
+Iteration 137/1000 (Elapsed time: 51.1s)
+2025-05-16 16:38:19,385 - INFO - Simulated peak memory: 10.01 GB. Budget: 8.00 GB. Exec time: 10.01s
+2025-05-16 16:38:19,385 - INFO - Current checkpoint count: 484
+2025-05-16 16:38:19,385 - INFO - Current recompute count: 136
+2025-05-16 16:38:19,385 - INFO - New best schedule found with peak memory: 10.01 GB
+2025-05-16 16:38:19,391 - INFO - Considering activation: relu__14, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2314
+2025-05-16 16:38:19,391 - INFO - Choosing to RECOMPUTE relu__14 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:19,391 - INFO - 
+Iteration 138/1000 (Elapsed time: 51.5s)
+2025-05-16 16:38:19,795 - INFO - Simulated peak memory: 10.00 GB. Budget: 8.00 GB. Exec time: 10.03s
+2025-05-16 16:38:19,795 - INFO - Current checkpoint count: 483
+2025-05-16 16:38:19,795 - INFO - Current recompute count: 137
+2025-05-16 16:38:19,795 - INFO - New best schedule found with peak memory: 10.00 GB
+2025-05-16 16:38:19,801 - INFO - Considering activation: relu__29, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2064
+2025-05-16 16:38:19,801 - INFO - Choosing to RECOMPUTE relu__29 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:19,801 - INFO - 
+Iteration 139/1000 (Elapsed time: 51.9s)
+2025-05-16 16:38:20,201 - INFO - Simulated peak memory: 9.99 GB. Budget: 8.00 GB. Exec time: 10.06s
+2025-05-16 16:38:20,201 - INFO - Current checkpoint count: 482
+2025-05-16 16:38:20,201 - INFO - Current recompute count: 138
+2025-05-16 16:38:20,201 - INFO - New best schedule found with peak memory: 9.99 GB
+2025-05-16 16:38:20,208 - INFO - Considering activation: relu__142, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 166
+2025-05-16 16:38:20,208 - INFO - Choosing to RECOMPUTE relu__142 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:20,208 - INFO - 
+Iteration 140/1000 (Elapsed time: 52.4s)
+2025-05-16 16:38:20,593 - INFO - Simulated peak memory: 9.97 GB. Budget: 8.00 GB. Exec time: 10.08s
+2025-05-16 16:38:20,593 - INFO - Current checkpoint count: 481
+2025-05-16 16:38:20,593 - INFO - Current recompute count: 139
+2025-05-16 16:38:20,593 - INFO - New best schedule found with peak memory: 9.97 GB
+2025-05-16 16:38:20,600 - INFO - Considering activation: convolution_22, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2225
+2025-05-16 16:38:20,600 - INFO - Choosing to RECOMPUTE convolution_22 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:20,600 - INFO - 
+Iteration 141/1000 (Elapsed time: 52.7s)
+2025-05-16 16:38:21,000 - INFO - Simulated peak memory: 9.96 GB. Budget: 8.00 GB. Exec time: 10.11s
+2025-05-16 16:38:21,001 - INFO - Current checkpoint count: 480
+2025-05-16 16:38:21,001 - INFO - Current recompute count: 140
+2025-05-16 16:38:21,001 - INFO - New best schedule found with peak memory: 9.96 GB
+2025-05-16 16:38:21,007 - INFO - Considering activation: convolution_21, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2241
+2025-05-16 16:38:21,007 - INFO - Choosing to RECOMPUTE convolution_21 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:21,007 - INFO - 
+Iteration 142/1000 (Elapsed time: 53.1s)
+2025-05-16 16:38:21,410 - INFO - Simulated peak memory: 9.95 GB. Budget: 8.00 GB. Exec time: 10.13s
+2025-05-16 16:38:21,410 - INFO - Current checkpoint count: 479
+2025-05-16 16:38:21,410 - INFO - Current recompute count: 141
+2025-05-16 16:38:21,410 - INFO - New best schedule found with peak memory: 9.95 GB
+2025-05-16 16:38:21,418 - INFO - Considering activation: convolution_147, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 145
+2025-05-16 16:38:21,418 - INFO - Choosing to RECOMPUTE convolution_147 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:21,418 - INFO - 
+Iteration 143/1000 (Elapsed time: 53.6s)
+2025-05-16 16:38:21,825 - INFO - Simulated peak memory: 9.93 GB. Budget: 8.00 GB. Exec time: 10.16s
+2025-05-16 16:38:21,825 - INFO - Current checkpoint count: 478
+2025-05-16 16:38:21,825 - INFO - Current recompute count: 142
+2025-05-16 16:38:21,825 - INFO - New best schedule found with peak memory: 9.93 GB
+2025-05-16 16:38:21,832 - INFO - Considering activation: convolution_19, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2275
+2025-05-16 16:38:21,832 - INFO - Choosing to RECOMPUTE convolution_19 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:21,832 - INFO - 
+Iteration 144/1000 (Elapsed time: 54.0s)
+2025-05-16 16:38:22,223 - INFO - Simulated peak memory: 9.92 GB. Budget: 8.00 GB. Exec time: 10.18s
+2025-05-16 16:38:22,223 - INFO - Current checkpoint count: 477
+2025-05-16 16:38:22,223 - INFO - Current recompute count: 143
+2025-05-16 16:38:22,223 - INFO - New best schedule found with peak memory: 9.92 GB
+2025-05-16 16:38:22,229 - INFO - Considering activation: convolution_28, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2125
+2025-05-16 16:38:22,229 - INFO - Choosing to RECOMPUTE convolution_28 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:22,229 - INFO - 
+Iteration 145/1000 (Elapsed time: 54.4s)
+2025-05-16 16:38:22,624 - INFO - Simulated peak memory: 9.91 GB. Budget: 8.00 GB. Exec time: 10.21s
+2025-05-16 16:38:22,624 - INFO - Current checkpoint count: 476
+2025-05-16 16:38:22,624 - INFO - Current recompute count: 144
+2025-05-16 16:38:22,624 - INFO - New best schedule found with peak memory: 9.91 GB
+2025-05-16 16:38:22,630 - INFO - Considering activation: relu__16, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2280
+2025-05-16 16:38:22,630 - INFO - Choosing to RECOMPUTE relu__16 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:22,630 - INFO - 
+Iteration 146/1000 (Elapsed time: 54.8s)
+2025-05-16 16:38:23,026 - INFO - Simulated peak memory: 9.90 GB. Budget: 8.00 GB. Exec time: 10.23s
+2025-05-16 16:38:23,026 - INFO - Current checkpoint count: 475
+2025-05-16 16:38:23,026 - INFO - Current recompute count: 145
+2025-05-16 16:38:23,026 - INFO - New best schedule found with peak memory: 9.90 GB
+2025-05-16 16:38:23,033 - INFO - Considering activation: relu__26, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2114
+2025-05-16 16:38:23,033 - INFO - Choosing to RECOMPUTE relu__26 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:23,033 - INFO - 
+Iteration 147/1000 (Elapsed time: 55.2s)
+2025-05-16 16:38:23,435 - INFO - Simulated peak memory: 9.88 GB. Budget: 8.00 GB. Exec time: 10.26s
+2025-05-16 16:38:23,435 - INFO - Current checkpoint count: 474
+2025-05-16 16:38:23,435 - INFO - Current recompute count: 146
+2025-05-16 16:38:23,435 - INFO - New best schedule found with peak memory: 9.88 GB
+2025-05-16 16:38:23,442 - INFO - Considering activation: convolution_18, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2291
+2025-05-16 16:38:23,442 - INFO - Choosing to RECOMPUTE convolution_18 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:23,442 - INFO - 
+Iteration 148/1000 (Elapsed time: 55.6s)
+2025-05-16 16:38:23,846 - INFO - Simulated peak memory: 9.87 GB. Budget: 8.00 GB. Exec time: 10.28s
+2025-05-16 16:38:23,846 - INFO - Current checkpoint count: 473
+2025-05-16 16:38:23,846 - INFO - Current recompute count: 147
+2025-05-16 16:38:23,846 - INFO - New best schedule found with peak memory: 9.87 GB
+2025-05-16 16:38:23,853 - INFO - Considering activation: convolution_12, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2389
+2025-05-16 16:38:23,853 - INFO - Choosing to RECOMPUTE convolution_12 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:23,853 - INFO - 
+Iteration 149/1000 (Elapsed time: 56.0s)
+2025-05-16 16:38:24,251 - INFO - Simulated peak memory: 9.86 GB. Budget: 8.00 GB. Exec time: 10.31s
+2025-05-16 16:38:24,251 - INFO - Current checkpoint count: 472
+2025-05-16 16:38:24,251 - INFO - Current recompute count: 148
+2025-05-16 16:38:24,252 - INFO - New best schedule found with peak memory: 9.86 GB
+2025-05-16 16:38:24,258 - INFO - Considering activation: relu__13, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2330
+2025-05-16 16:38:24,258 - INFO - Choosing to RECOMPUTE relu__13 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:24,258 - INFO - 
+Iteration 150/1000 (Elapsed time: 56.4s)
+2025-05-16 16:38:24,651 - INFO - Simulated peak memory: 9.85 GB. Budget: 8.00 GB. Exec time: 10.33s
+2025-05-16 16:38:24,651 - INFO - Current checkpoint count: 471
+2025-05-16 16:38:24,651 - INFO - Current recompute count: 149
+2025-05-16 16:38:24,651 - INFO - New best schedule found with peak memory: 9.85 GB
+2025-05-16 16:38:24,657 - INFO - Considering activation: convolution_16, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2325
+2025-05-16 16:38:24,657 - INFO - Choosing to RECOMPUTE convolution_16 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:24,657 - INFO - 
+Iteration 151/1000 (Elapsed time: 56.8s)
+2025-05-16 16:38:25,050 - INFO - Simulated peak memory: 9.83 GB. Budget: 8.00 GB. Exec time: 10.36s
+2025-05-16 16:38:25,050 - INFO - Current checkpoint count: 470
+2025-05-16 16:38:25,050 - INFO - Current recompute count: 150
+2025-05-16 16:38:25,050 - INFO - New best schedule found with peak memory: 9.83 GB
+2025-05-16 16:38:25,056 - INFO - Considering activation: convolution_24, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2191
+2025-05-16 16:38:25,056 - INFO - Choosing to RECOMPUTE convolution_24 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:25,056 - INFO - 
+Iteration 152/1000 (Elapsed time: 57.2s)
+2025-05-16 16:38:25,443 - INFO - Simulated peak memory: 9.82 GB. Budget: 8.00 GB. Exec time: 10.38s
+2025-05-16 16:38:25,443 - INFO - Current checkpoint count: 469
+2025-05-16 16:38:25,443 - INFO - Current recompute count: 151
+2025-05-16 16:38:25,444 - INFO - New best schedule found with peak memory: 9.82 GB
+2025-05-16 16:38:25,449 - INFO - Considering activation: convolution_33, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2041
+2025-05-16 16:38:25,449 - INFO - Choosing to RECOMPUTE convolution_33 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:25,449 - INFO - 
+Iteration 153/1000 (Elapsed time: 57.6s)
+2025-05-16 16:38:25,840 - INFO - Simulated peak memory: 9.81 GB. Budget: 8.00 GB. Exec time: 10.41s
+2025-05-16 16:38:25,840 - INFO - Current checkpoint count: 468
+2025-05-16 16:38:25,840 - INFO - Current recompute count: 152
+2025-05-16 16:38:25,840 - INFO - New best schedule found with peak memory: 9.81 GB
+2025-05-16 16:38:25,846 - INFO - Considering activation: relu__23, recompute_benefit_ratio: 1023999995.92, mem_size: 24.50 MB, recomp_time: 0.025088s, lifetime: 2164
+2025-05-16 16:38:25,846 - INFO - Choosing to RECOMPUTE relu__23 (memory saved: 24.50 MB, recompute overhead: 0.025088s)
+2025-05-16 16:38:25,846 - INFO - 
+Iteration 154/1000 (Elapsed time: 58.0s)
+2025-05-16 16:38:26,238 - INFO - Simulated peak memory: 9.80 GB. Budget: 8.00 GB. Exec time: 10.43s
+2025-05-16 16:38:26,238 - INFO - Current checkpoint count: 467
+2025-05-16 16:38:26,238 - INFO - Current recompute count: 153
+2025-05-16 16:38:26,238 - INFO - New best schedule found with peak memory: 9.80 GB
+2025-05-16 16:38:26,244 - INFO - Considering activation: convolution_101, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 911
+2025-05-16 16:38:26,244 - INFO - Choosing to RECOMPUTE convolution_101 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:26,244 - INFO - 
+Iteration 155/1000 (Elapsed time: 58.4s)
+2025-05-16 16:38:26,636 - INFO - Simulated peak memory: 9.78 GB. Budget: 8.00 GB. Exec time: 10.45s
+2025-05-16 16:38:26,636 - INFO - Current checkpoint count: 466
+2025-05-16 16:38:26,636 - INFO - Current recompute count: 154
+2025-05-16 16:38:26,636 - INFO - New best schedule found with peak memory: 9.78 GB
+2025-05-16 16:38:26,642 - INFO - Considering activation: relu__38, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1900
+2025-05-16 16:38:26,643 - INFO - Choosing to RECOMPUTE relu__38 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:26,643 - INFO - 
+Iteration 156/1000 (Elapsed time: 58.8s)
+2025-05-16 16:38:27,035 - INFO - Simulated peak memory: 9.77 GB. Budget: 8.00 GB. Exec time: 10.46s
+2025-05-16 16:38:27,035 - INFO - Current checkpoint count: 465
+2025-05-16 16:38:27,035 - INFO - Current recompute count: 155
+2025-05-16 16:38:27,035 - INFO - New best schedule found with peak memory: 9.77 GB
+2025-05-16 16:38:27,042 - INFO - Considering activation: relu__67, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1416
+2025-05-16 16:38:27,042 - INFO - Choosing to RECOMPUTE relu__67 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:27,042 - INFO - 
+Iteration 157/1000 (Elapsed time: 59.2s)
+2025-05-16 16:38:27,434 - INFO - Simulated peak memory: 9.76 GB. Budget: 8.00 GB. Exec time: 10.47s
+2025-05-16 16:38:27,434 - INFO - Current checkpoint count: 464
+2025-05-16 16:38:27,434 - INFO - Current recompute count: 156
+2025-05-16 16:38:27,435 - INFO - New best schedule found with peak memory: 9.76 GB
+2025-05-16 16:38:27,440 - INFO - Considering activation: convolution_136, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 327
+2025-05-16 16:38:27,440 - INFO - Choosing to RECOMPUTE convolution_136 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:27,440 - INFO - 
+Iteration 158/1000 (Elapsed time: 59.6s)
+2025-05-16 16:38:27,831 - INFO - Simulated peak memory: 9.75 GB. Budget: 8.00 GB. Exec time: 10.48s
+2025-05-16 16:38:27,831 - INFO - Current checkpoint count: 463
+2025-05-16 16:38:27,831 - INFO - Current recompute count: 157
+2025-05-16 16:38:27,831 - INFO - New best schedule found with peak memory: 9.75 GB
+2025-05-16 16:38:27,838 - INFO - Considering activation: convolution_137, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 311
+2025-05-16 16:38:27,838 - INFO - Choosing to RECOMPUTE convolution_137 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:27,838 - INFO - 
+Iteration 159/1000 (Elapsed time: 60.0s)
+2025-05-16 16:38:28,227 - INFO - Simulated peak memory: 9.73 GB. Budget: 8.00 GB. Exec time: 10.50s
+2025-05-16 16:38:28,227 - INFO - Current checkpoint count: 462
+2025-05-16 16:38:28,227 - INFO - Current recompute count: 158
+2025-05-16 16:38:28,227 - INFO - New best schedule found with peak memory: 9.73 GB
+2025-05-16 16:38:28,232 - INFO - Considering activation: convolution_100, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 927
+2025-05-16 16:38:28,233 - INFO - Choosing to RECOMPUTE convolution_100 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:28,233 - INFO - 
+Iteration 160/1000 (Elapsed time: 60.4s)
+2025-05-16 16:38:28,625 - INFO - Simulated peak memory: 9.72 GB. Budget: 8.00 GB. Exec time: 10.51s
+2025-05-16 16:38:28,625 - INFO - Current checkpoint count: 461
+2025-05-16 16:38:28,625 - INFO - Current recompute count: 159
+2025-05-16 16:38:28,625 - INFO - New best schedule found with peak memory: 9.72 GB
+2025-05-16 16:38:28,632 - INFO - Considering activation: convolution_130, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 427
+2025-05-16 16:38:28,632 - INFO - Choosing to RECOMPUTE convolution_130 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:28,632 - INFO - 
+Iteration 161/1000 (Elapsed time: 60.8s)
+2025-05-16 16:38:29,026 - INFO - Simulated peak memory: 9.71 GB. Budget: 8.00 GB. Exec time: 10.52s
+2025-05-16 16:38:29,026 - INFO - Current checkpoint count: 460
+2025-05-16 16:38:29,026 - INFO - Current recompute count: 160
+2025-05-16 16:38:29,026 - INFO - New best schedule found with peak memory: 9.71 GB
+2025-05-16 16:38:29,033 - INFO - Considering activation: relu__74, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1300
+2025-05-16 16:38:29,033 - INFO - Choosing to RECOMPUTE relu__74 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:29,033 - INFO - 
+Iteration 162/1000 (Elapsed time: 61.2s)
+2025-05-16 16:38:29,424 - INFO - Simulated peak memory: 9.69 GB. Budget: 8.00 GB. Exec time: 10.54s
+2025-05-16 16:38:29,424 - INFO - Current checkpoint count: 459
+2025-05-16 16:38:29,424 - INFO - Current recompute count: 161
+2025-05-16 16:38:29,424 - INFO - New best schedule found with peak memory: 9.69 GB
+2025-05-16 16:38:29,431 - INFO - Considering activation: relu__140, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 200
+2025-05-16 16:38:29,431 - INFO - Choosing to RECOMPUTE relu__140 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:29,431 - INFO - 
+Iteration 163/1000 (Elapsed time: 61.6s)
+2025-05-16 16:38:29,824 - INFO - Simulated peak memory: 9.68 GB. Budget: 8.00 GB. Exec time: 10.55s
+2025-05-16 16:38:29,824 - INFO - Current checkpoint count: 458
+2025-05-16 16:38:29,824 - INFO - Current recompute count: 162
+2025-05-16 16:38:29,824 - INFO - New best schedule found with peak memory: 9.68 GB
+2025-05-16 16:38:29,831 - INFO - Considering activation: convolution_97, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 977
+2025-05-16 16:38:29,831 - INFO - Choosing to RECOMPUTE convolution_97 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:29,831 - INFO - 
+Iteration 164/1000 (Elapsed time: 62.0s)
+2025-05-16 16:38:30,227 - INFO - Simulated peak memory: 9.67 GB. Budget: 8.00 GB. Exec time: 10.56s
+2025-05-16 16:38:30,227 - INFO - Current checkpoint count: 457
+2025-05-16 16:38:30,227 - INFO - Current recompute count: 163
+2025-05-16 16:38:30,227 - INFO - New best schedule found with peak memory: 9.67 GB
+2025-05-16 16:38:30,233 - INFO - Considering activation: relu__95, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 950
+2025-05-16 16:38:30,233 - INFO - Choosing to RECOMPUTE relu__95 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:30,233 - INFO - 
+Iteration 165/1000 (Elapsed time: 62.4s)
+2025-05-16 16:38:30,627 - INFO - Simulated peak memory: 9.66 GB. Budget: 8.00 GB. Exec time: 10.57s
+2025-05-16 16:38:30,627 - INFO - Current checkpoint count: 456
+2025-05-16 16:38:30,627 - INFO - Current recompute count: 164
+2025-05-16 16:38:30,627 - INFO - New best schedule found with peak memory: 9.66 GB
+2025-05-16 16:38:30,633 - INFO - Considering activation: relu__88, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1066
+2025-05-16 16:38:30,633 - INFO - Choosing to RECOMPUTE relu__88 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:30,633 - INFO - 
+Iteration 166/1000 (Elapsed time: 62.8s)
+2025-05-16 16:38:31,030 - INFO - Simulated peak memory: 9.64 GB. Budget: 8.00 GB. Exec time: 10.59s
+2025-05-16 16:38:31,030 - INFO - Current checkpoint count: 455
+2025-05-16 16:38:31,030 - INFO - Current recompute count: 165
+2025-05-16 16:38:31,030 - INFO - New best schedule found with peak memory: 9.64 GB
+2025-05-16 16:38:31,035 - INFO - Considering activation: convolution_64, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1527
+2025-05-16 16:38:31,035 - INFO - Choosing to RECOMPUTE convolution_64 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:31,035 - INFO - 
+Iteration 167/1000 (Elapsed time: 63.2s)
+2025-05-16 16:38:31,434 - INFO - Simulated peak memory: 9.63 GB. Budget: 8.00 GB. Exec time: 10.60s
+2025-05-16 16:38:31,434 - INFO - Current checkpoint count: 454
+2025-05-16 16:38:31,434 - INFO - Current recompute count: 166
+2025-05-16 16:38:31,434 - INFO - New best schedule found with peak memory: 9.63 GB
+2025-05-16 16:38:31,441 - INFO - Considering activation: relu__62, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1500
+2025-05-16 16:38:31,441 - INFO - Choosing to RECOMPUTE relu__62 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:31,441 - INFO - 
+Iteration 168/1000 (Elapsed time: 63.6s)
+2025-05-16 16:38:31,840 - INFO - Simulated peak memory: 9.62 GB. Budget: 8.00 GB. Exec time: 10.61s
+2025-05-16 16:38:31,840 - INFO - Current checkpoint count: 453
+2025-05-16 16:38:31,840 - INFO - Current recompute count: 167
+2025-05-16 16:38:31,840 - INFO - New best schedule found with peak memory: 9.62 GB
+2025-05-16 16:38:31,847 - INFO - Considering activation: convolution_41, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1911
+2025-05-16 16:38:31,847 - INFO - Choosing to RECOMPUTE convolution_41 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:31,847 - INFO - 
+Iteration 169/1000 (Elapsed time: 64.0s)
+2025-05-16 16:38:32,249 - INFO - Simulated peak memory: 9.61 GB. Budget: 8.00 GB. Exec time: 10.62s
+2025-05-16 16:38:32,249 - INFO - Current checkpoint count: 452
+2025-05-16 16:38:32,249 - INFO - Current recompute count: 168
+2025-05-16 16:38:32,250 - INFO - New best schedule found with peak memory: 9.61 GB
+2025-05-16 16:38:32,256 - INFO - Considering activation: convolution_98, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 961
+2025-05-16 16:38:32,256 - INFO - Choosing to RECOMPUTE convolution_98 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:32,256 - INFO - 
+Iteration 170/1000 (Elapsed time: 64.4s)
+2025-05-16 16:38:32,656 - INFO - Simulated peak memory: 9.59 GB. Budget: 8.00 GB. Exec time: 10.64s
+2025-05-16 16:38:32,657 - INFO - Current checkpoint count: 451
+2025-05-16 16:38:32,657 - INFO - Current recompute count: 169
+2025-05-16 16:38:32,657 - INFO - New best schedule found with peak memory: 9.59 GB
+2025-05-16 16:38:32,662 - INFO - Considering activation: convolution_74, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1361
+2025-05-16 16:38:32,662 - INFO - Choosing to RECOMPUTE convolution_74 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:32,662 - INFO - 
+Iteration 171/1000 (Elapsed time: 64.8s)
+2025-05-16 16:38:33,077 - INFO - Simulated peak memory: 9.58 GB. Budget: 8.00 GB. Exec time: 10.65s
+2025-05-16 16:38:33,077 - INFO - Current checkpoint count: 450
+2025-05-16 16:38:33,077 - INFO - Current recompute count: 170
+2025-05-16 16:38:33,077 - INFO - New best schedule found with peak memory: 9.58 GB
+2025-05-16 16:38:33,083 - INFO - Considering activation: relu__50, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1700
+2025-05-16 16:38:33,083 - INFO - Choosing to RECOMPUTE relu__50 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:33,084 - INFO - 
+Iteration 172/1000 (Elapsed time: 65.2s)
+2025-05-16 16:38:33,502 - INFO - Simulated peak memory: 9.57 GB. Budget: 8.00 GB. Exec time: 10.66s
+2025-05-16 16:38:33,502 - INFO - Current checkpoint count: 449
+2025-05-16 16:38:33,502 - INFO - Current recompute count: 171
+2025-05-16 16:38:33,502 - INFO - New best schedule found with peak memory: 9.57 GB
+2025-05-16 16:38:33,508 - INFO - Considering activation: relu__70, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1366
+2025-05-16 16:38:33,508 - INFO - Choosing to RECOMPUTE relu__70 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:33,508 - INFO - 
+Iteration 173/1000 (Elapsed time: 65.7s)
+2025-05-16 16:38:33,927 - INFO - Simulated peak memory: 9.56 GB. Budget: 8.00 GB. Exec time: 10.67s
+2025-05-16 16:38:33,927 - INFO - Current checkpoint count: 448
+2025-05-16 16:38:33,927 - INFO - Current recompute count: 172
+2025-05-16 16:38:33,927 - INFO - New best schedule found with peak memory: 9.56 GB
+2025-05-16 16:38:33,933 - INFO - Considering activation: relu__53, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1650
+2025-05-16 16:38:33,933 - INFO - Choosing to RECOMPUTE relu__53 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:33,933 - INFO - 
+Iteration 174/1000 (Elapsed time: 66.1s)
+2025-05-16 16:38:34,343 - INFO - Simulated peak memory: 9.54 GB. Budget: 8.00 GB. Exec time: 10.69s
+2025-05-16 16:38:34,343 - INFO - Current checkpoint count: 447
+2025-05-16 16:38:34,343 - INFO - Current recompute count: 173
+2025-05-16 16:38:34,344 - INFO - New best schedule found with peak memory: 9.54 GB
+2025-05-16 16:38:34,350 - INFO - Considering activation: relu__83, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1150
+2025-05-16 16:38:34,350 - INFO - Choosing to RECOMPUTE relu__83 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:34,350 - INFO - 
+Iteration 175/1000 (Elapsed time: 66.5s)
+2025-05-16 16:38:34,769 - INFO - Simulated peak memory: 9.53 GB. Budget: 8.00 GB. Exec time: 10.70s
+2025-05-16 16:38:34,769 - INFO - Current checkpoint count: 446
+2025-05-16 16:38:34,769 - INFO - Current recompute count: 174
+2025-05-16 16:38:34,769 - INFO - New best schedule found with peak memory: 9.53 GB
+2025-05-16 16:38:34,775 - INFO - Considering activation: convolution_52, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1727
+2025-05-16 16:38:34,775 - INFO - Choosing to RECOMPUTE convolution_52 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:34,775 - INFO - 
+Iteration 176/1000 (Elapsed time: 66.9s)
+2025-05-16 16:38:35,185 - INFO - Simulated peak memory: 9.52 GB. Budget: 8.00 GB. Exec time: 10.71s
+2025-05-16 16:38:35,185 - INFO - Current checkpoint count: 445
+2025-05-16 16:38:35,185 - INFO - Current recompute count: 175
+2025-05-16 16:38:35,185 - INFO - New best schedule found with peak memory: 9.52 GB
+2025-05-16 16:38:35,191 - INFO - Considering activation: convolution_85, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1177
+2025-05-16 16:38:35,191 - INFO - Choosing to RECOMPUTE convolution_85 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:35,191 - INFO - 
+Iteration 177/1000 (Elapsed time: 67.3s)
+2025-05-16 16:38:35,598 - INFO - Simulated peak memory: 9.50 GB. Budget: 8.00 GB. Exec time: 10.72s
+2025-05-16 16:38:35,598 - INFO - Current checkpoint count: 444
+2025-05-16 16:38:35,598 - INFO - Current recompute count: 176
+2025-05-16 16:38:35,598 - INFO - New best schedule found with peak memory: 9.50 GB
+2025-05-16 16:38:35,605 - INFO - Considering activation: relu__71, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1350
+2025-05-16 16:38:35,605 - INFO - Choosing to RECOMPUTE relu__71 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:35,605 - INFO - 
+Iteration 178/1000 (Elapsed time: 67.7s)
+2025-05-16 16:38:36,016 - INFO - Simulated peak memory: 9.49 GB. Budget: 8.00 GB. Exec time: 10.74s
+2025-05-16 16:38:36,016 - INFO - Current checkpoint count: 443
+2025-05-16 16:38:36,016 - INFO - Current recompute count: 177
+2025-05-16 16:38:36,016 - INFO - New best schedule found with peak memory: 9.49 GB
+2025-05-16 16:38:36,022 - INFO - Considering activation: relu__137, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 250
+2025-05-16 16:38:36,022 - INFO - Choosing to RECOMPUTE relu__137 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:36,022 - INFO - 
+Iteration 179/1000 (Elapsed time: 68.2s)
+2025-05-16 16:38:36,430 - INFO - Simulated peak memory: 9.48 GB. Budget: 8.00 GB. Exec time: 10.75s
+2025-05-16 16:38:36,430 - INFO - Current checkpoint count: 442
+2025-05-16 16:38:36,430 - INFO - Current recompute count: 178
+2025-05-16 16:38:36,430 - INFO - New best schedule found with peak memory: 9.48 GB
+2025-05-16 16:38:36,437 - INFO - Considering activation: convolution_115, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 677
+2025-05-16 16:38:36,437 - INFO - Choosing to RECOMPUTE convolution_115 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:36,437 - INFO - 
+Iteration 180/1000 (Elapsed time: 68.6s)
+2025-05-16 16:38:36,855 - INFO - Simulated peak memory: 9.47 GB. Budget: 8.00 GB. Exec time: 10.76s
+2025-05-16 16:38:36,855 - INFO - Current checkpoint count: 441
+2025-05-16 16:38:36,855 - INFO - Current recompute count: 179
+2025-05-16 16:38:36,855 - INFO - New best schedule found with peak memory: 9.47 GB
+2025-05-16 16:38:36,861 - INFO - Considering activation: relu__121, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 516
+2025-05-16 16:38:36,862 - INFO - Choosing to RECOMPUTE relu__121 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:36,862 - INFO - 
+Iteration 181/1000 (Elapsed time: 69.0s)
+2025-05-16 16:38:37,269 - INFO - Simulated peak memory: 9.45 GB. Budget: 8.00 GB. Exec time: 10.77s
+2025-05-16 16:38:37,269 - INFO - Current checkpoint count: 440
+2025-05-16 16:38:37,269 - INFO - Current recompute count: 180
+2025-05-16 16:38:37,269 - INFO - New best schedule found with peak memory: 9.45 GB
+2025-05-16 16:38:37,276 - INFO - Considering activation: relu__82, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1166
+2025-05-16 16:38:37,276 - INFO - Choosing to RECOMPUTE relu__82 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:37,276 - INFO - 
+Iteration 182/1000 (Elapsed time: 69.4s)
+2025-05-16 16:38:37,687 - INFO - Simulated peak memory: 9.44 GB. Budget: 8.00 GB. Exec time: 10.79s
+2025-05-16 16:38:37,687 - INFO - Current checkpoint count: 439
+2025-05-16 16:38:37,687 - INFO - Current recompute count: 181
+2025-05-16 16:38:37,687 - INFO - New best schedule found with peak memory: 9.44 GB
+2025-05-16 16:38:37,693 - INFO - Considering activation: convolution_134, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 361
+2025-05-16 16:38:37,693 - INFO - Choosing to RECOMPUTE convolution_134 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:37,693 - INFO - 
+Iteration 183/1000 (Elapsed time: 69.8s)
+2025-05-16 16:38:38,125 - INFO - Simulated peak memory: 9.43 GB. Budget: 8.00 GB. Exec time: 10.80s
+2025-05-16 16:38:38,125 - INFO - Current checkpoint count: 438
+2025-05-16 16:38:38,125 - INFO - Current recompute count: 182
+2025-05-16 16:38:38,125 - INFO - New best schedule found with peak memory: 9.43 GB
+2025-05-16 16:38:38,131 - INFO - Considering activation: relu__55, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1616
+2025-05-16 16:38:38,131 - INFO - Choosing to RECOMPUTE relu__55 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:38,131 - INFO - 
+Iteration 184/1000 (Elapsed time: 70.3s)
+2025-05-16 16:38:38,545 - INFO - Simulated peak memory: 9.42 GB. Budget: 8.00 GB. Exec time: 10.81s
+2025-05-16 16:38:38,546 - INFO - Current checkpoint count: 437
+2025-05-16 16:38:38,546 - INFO - Current recompute count: 183
+2025-05-16 16:38:38,546 - INFO - New best schedule found with peak memory: 9.42 GB
+2025-05-16 16:38:38,551 - INFO - Considering activation: relu__119, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 550
+2025-05-16 16:38:38,551 - INFO - Choosing to RECOMPUTE relu__119 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:38,551 - INFO - 
+Iteration 185/1000 (Elapsed time: 70.7s)
+2025-05-16 16:38:38,980 - INFO - Simulated peak memory: 9.40 GB. Budget: 8.00 GB. Exec time: 10.82s
+2025-05-16 16:38:38,980 - INFO - Current checkpoint count: 436
+2025-05-16 16:38:38,980 - INFO - Current recompute count: 184
+2025-05-16 16:38:38,980 - INFO - New best schedule found with peak memory: 9.40 GB
+2025-05-16 16:38:38,987 - INFO - Considering activation: relu__92, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1000
+2025-05-16 16:38:38,987 - INFO - Choosing to RECOMPUTE relu__92 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:38,987 - INFO - 
+Iteration 186/1000 (Elapsed time: 71.1s)
+2025-05-16 16:38:39,399 - INFO - Simulated peak memory: 9.39 GB. Budget: 8.00 GB. Exec time: 10.84s
+2025-05-16 16:38:39,399 - INFO - Current checkpoint count: 435
+2025-05-16 16:38:39,399 - INFO - Current recompute count: 185
+2025-05-16 16:38:39,399 - INFO - New best schedule found with peak memory: 9.39 GB
+2025-05-16 16:38:39,405 - INFO - Considering activation: relu__58, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1566
+2025-05-16 16:38:39,406 - INFO - Choosing to RECOMPUTE relu__58 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:39,406 - INFO - 
+Iteration 187/1000 (Elapsed time: 71.5s)
+2025-05-16 16:38:39,813 - INFO - Simulated peak memory: 9.38 GB. Budget: 8.00 GB. Exec time: 10.85s
+2025-05-16 16:38:39,813 - INFO - Current checkpoint count: 434
+2025-05-16 16:38:39,813 - INFO - Current recompute count: 186
+2025-05-16 16:38:39,813 - INFO - New best schedule found with peak memory: 9.38 GB
+2025-05-16 16:38:39,819 - INFO - Considering activation: relu__130, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 366
+2025-05-16 16:38:39,819 - INFO - Choosing to RECOMPUTE relu__130 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:39,819 - INFO - 
+Iteration 188/1000 (Elapsed time: 72.0s)
+2025-05-16 16:38:40,243 - INFO - Simulated peak memory: 9.36 GB. Budget: 8.00 GB. Exec time: 10.86s
+2025-05-16 16:38:40,244 - INFO - Current checkpoint count: 433
+2025-05-16 16:38:40,244 - INFO - Current recompute count: 187
+2025-05-16 16:38:40,244 - INFO - New best schedule found with peak memory: 9.36 GB
+2025-05-16 16:38:40,250 - INFO - Considering activation: relu__131, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 350
+2025-05-16 16:38:40,250 - INFO - Choosing to RECOMPUTE relu__131 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:40,250 - INFO - 
+Iteration 189/1000 (Elapsed time: 72.4s)
+2025-05-16 16:38:40,688 - INFO - Simulated peak memory: 9.35 GB. Budget: 8.00 GB. Exec time: 10.87s
+2025-05-16 16:38:40,688 - INFO - Current checkpoint count: 432
+2025-05-16 16:38:40,688 - INFO - Current recompute count: 188
+2025-05-16 16:38:40,689 - INFO - New best schedule found with peak memory: 9.35 GB
+2025-05-16 16:38:40,695 - INFO - Considering activation: relu__115, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 616
+2025-05-16 16:38:40,695 - INFO - Choosing to RECOMPUTE relu__115 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:40,695 - INFO - 
+Iteration 190/1000 (Elapsed time: 72.8s)
+2025-05-16 16:38:41,105 - INFO - Simulated peak memory: 9.34 GB. Budget: 8.00 GB. Exec time: 10.89s
+2025-05-16 16:38:41,105 - INFO - Current checkpoint count: 431
+2025-05-16 16:38:41,105 - INFO - Current recompute count: 189
+2025-05-16 16:38:41,105 - INFO - New best schedule found with peak memory: 9.34 GB
+2025-05-16 16:38:41,111 - INFO - Considering activation: convolution_47, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1811
+2025-05-16 16:38:41,111 - INFO - Choosing to RECOMPUTE convolution_47 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:41,111 - INFO - 
+Iteration 191/1000 (Elapsed time: 73.3s)
+2025-05-16 16:38:41,530 - INFO - Simulated peak memory: 9.33 GB. Budget: 8.00 GB. Exec time: 10.90s
+2025-05-16 16:38:41,530 - INFO - Current checkpoint count: 430
+2025-05-16 16:38:41,530 - INFO - Current recompute count: 190
+2025-05-16 16:38:41,530 - INFO - New best schedule found with peak memory: 9.33 GB
+2025-05-16 16:38:41,537 - INFO - Considering activation: relu__85, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1116
+2025-05-16 16:38:41,537 - INFO - Choosing to RECOMPUTE relu__85 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:41,537 - INFO - 
+Iteration 192/1000 (Elapsed time: 73.7s)
+2025-05-16 16:38:41,958 - INFO - Simulated peak memory: 9.31 GB. Budget: 8.00 GB. Exec time: 10.91s
+2025-05-16 16:38:41,958 - INFO - Current checkpoint count: 429
+2025-05-16 16:38:41,958 - INFO - Current recompute count: 191
+2025-05-16 16:38:41,958 - INFO - New best schedule found with peak memory: 9.31 GB
+2025-05-16 16:38:41,965 - INFO - Considering activation: relu__113, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 650
+2025-05-16 16:38:41,965 - INFO - Choosing to RECOMPUTE relu__113 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:41,965 - INFO - 
+Iteration 193/1000 (Elapsed time: 74.1s)
+2025-05-16 16:38:42,388 - INFO - Simulated peak memory: 9.30 GB. Budget: 8.00 GB. Exec time: 10.92s
+2025-05-16 16:38:42,388 - INFO - Current checkpoint count: 428
+2025-05-16 16:38:42,388 - INFO - Current recompute count: 192
+2025-05-16 16:38:42,389 - INFO - New best schedule found with peak memory: 9.30 GB
+2025-05-16 16:38:42,395 - INFO - Considering activation: convolution_49, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1777
+2025-05-16 16:38:42,395 - INFO - Choosing to RECOMPUTE convolution_49 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:42,395 - INFO - 
+Iteration 194/1000 (Elapsed time: 74.5s)
+2025-05-16 16:38:42,809 - INFO - Simulated peak memory: 9.29 GB. Budget: 8.00 GB. Exec time: 10.94s
+2025-05-16 16:38:42,809 - INFO - Current checkpoint count: 427
+2025-05-16 16:38:42,809 - INFO - Current recompute count: 193
+2025-05-16 16:38:42,809 - INFO - New best schedule found with peak memory: 9.29 GB
+2025-05-16 16:38:42,816 - INFO - Considering activation: convolution_68, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 1461
+2025-05-16 16:38:42,816 - INFO - Choosing to RECOMPUTE convolution_68 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:42,816 - INFO - 
+Iteration 195/1000 (Elapsed time: 75.0s)
+2025-05-16 16:38:43,248 - INFO - Simulated peak memory: 9.28 GB. Budget: 8.00 GB. Exec time: 10.95s
+2025-05-16 16:38:43,248 - INFO - Current checkpoint count: 426
+2025-05-16 16:38:43,248 - INFO - Current recompute count: 194
+2025-05-16 16:38:43,248 - INFO - New best schedule found with peak memory: 9.28 GB
+2025-05-16 16:38:43,254 - INFO - Considering activation: convolution_127, recompute_benefit_ratio: 1023999991.84, mem_size: 12.25 MB, recomp_time: 0.012544s, lifetime: 477
+2025-05-16 16:38:43,254 - INFO - Choosing to RECOMPUTE convolution_127 (memory saved: 12.25 MB, recompute overhead: 0.012544s)
+2025-05-16 16:38:43,254 - INFO - 
+Iteration 196/1000 (Elapsed time: 75.4s)
