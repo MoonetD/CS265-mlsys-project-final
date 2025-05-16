@@ -172,12 +172,25 @@ class ActivationCheckpointingAlgorithm:
             float: Estimated peak GPU memory in bytes.
             float: Total execution time in seconds.
         """
+        # Start timing the simulation
+        sim_start_time = time.time()
+        
+        # Initialize timing dictionary for detailed breakdown
+        sim_timing = {
+            'execution_time_calc': 0,
+            'recompute_overhead_calc': 0,
+            'memory_mapping': 0,
+            'node_processing': 0,
+            'total': 0
+        }
+        
         if debug:
             logger.info(f"Starting memory simulation with {len(current_schedule)} activations...")
             logger.info(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.3f} GB")
             
         # --- Calculate Total Execution Time ---
         # Start with sum of all base node run times
+        exec_time_start = time.time()
         if debug:
             logger.info("Calculating total execution time...")
             
@@ -197,16 +210,21 @@ class ActivationCheckpointingAlgorithm:
                     total_execution_time += recomp_time
                     recompute_time_total += recomp_time
                     recompute_count += 1
+        
+        sim_timing['execution_time_calc'] = time.time() - exec_time_start
 
-        if debug:
-            logger.info(f"Base execution time: {total_execution_time - recompute_time_total:.4f}s")
-            logger.info(f"Added recomputation time for {recompute_count} activations: {recompute_time_total:.4f}s")
-            logger.info(f"Total execution time: {total_execution_time:.4f}s")
+        # if debug:
+        #     logger.info(f"Base execution time: {total_execution_time - recompute_time_total:.4f}s")
+        #     logger.info(f"Added recomputation time for {recompute_count} activations: {recompute_time_total:.4f}s")
+        #     logger.info(f"Total execution time: {total_execution_time:.4f}s")
 
-        # --- Simulate Peak Memory Usage ---
-        if debug:
-            logger.info("Simulating peak memory usage...")
+        # # --- Simulate Peak Memory Usage ---
+        # if debug:
+        #     logger.info("Simulating peak memory usage...")
             
+        # --- Simulate Peak Memory Usage ---
+        memory_mapping_start = time.time()
+        
         # Initialize memory tracking variables
         fw_inter_mem = 0  # Memory for intermediate tensors in forward pass
         bw_inter_mem = 0  # Memory for intermediate tensors in backward pass
@@ -214,15 +232,16 @@ class ActivationCheckpointingAlgorithm:
         bw_active_mem = 0  # Active memory during backward pass
         peak_mem = fixed_overhead_bytes  # Track peak memory, start with fixed overhead
         
-        # Calculate initial bw_inter_mem (all checkpointed activations)
-        for act_name, decision in current_schedule.items():
-            if decision == 'RETAINED':  # Only count activations we're keeping in memory
-                act_details = self._get_activation_details(act_name)
-                if act_details is not None and 'median_mem_size_bytes' in act_details:
-                    bw_inter_mem += act_details['median_mem_size_bytes']
+        # We'll track forward and backward passes separately
+        fw_peak_mem = fixed_overhead_bytes
+        bw_peak_mem = fixed_overhead_bytes
+        
+        # We'll also track retained activations that need to be kept for backward pass
+        retained_activations_mem = 0
+        
+        sim_timing['memory_mapping'] = time.time() - memory_mapping_start
         
         if debug:
-            logger.info(f"Initial intermediate memory: {bw_inter_mem / (1024**3):.3f} GB")
             logger.info(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.3f} GB")
             logger.info(f"Starting peak memory: {peak_mem / (1024**3):.3f} GB")
         
@@ -280,102 +299,160 @@ class ActivationCheckpointingAlgorithm:
                 activations_by_last_fw_use_rank[rank].append(act_details_series)
         
         # Process nodes in execution order
+        node_processing_start = time.time()
         total_nodes = len(execution_order)
         if debug:
             logger.info(f"Processing {total_nodes} nodes in execution order...")
         
-        for i, node_name in enumerate(execution_order):
-            if debug and i % max(1, total_nodes // 10) == 0:
-                logger.info(f"  Processing node {i+1}/{total_nodes} ({(i+1)/total_nodes*100:.1f}%)...")
+        # First, simulate forward pass
+        if debug:
+            logger.info("Simulating forward pass...")
+        
+        # Find the boundary between forward and backward passes
+        forward_nodes = []
+        backward_nodes = []
+        for node_name in execution_order:
+            node_details = node_details_cache[node_name]
+            if node_details is None:
+                continue
+            
+            if node_details['gtype'] == 'forward':
+                forward_nodes.append(node_name)
+            elif node_details['gtype'] == 'backward':
+                backward_nodes.append(node_name)
+        
+        # Process forward pass nodes
+        for i, node_name in enumerate(forward_nodes):
+            if debug and i % max(1, len(forward_nodes) // 10) == 0:
+                logger.info(f"  Processing forward node {i+1}/{len(forward_nodes)} ({(i+1)/len(forward_nodes)*100:.1f}%)...")
             
             node_details = node_details_cache[node_name]
             if node_details is None:
                 continue
             
             node_rank = node_details['rank']
-            node_gtype = node_details['gtype']
             
-            # Update active memory based on node type
-            if node_gtype == 'backward':
-                if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                    bw_active_mem = node_details['median_active_mem_bytes']
-                
-                # Add memory for prefetched tensors
-                if node_rank in activations_by_first_bw_use_rank:
-                    for act_details in activations_by_first_bw_use_rank[node_rank]:
-                        act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'RETAINED':
-                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                                bw_inter_mem += act_details['median_mem_size_bytes']
-                
-                # Add memory for recomputed tensors
-                if node_rank in activations_by_first_bw_use_rank:
-                    for act_details in activations_by_first_bw_use_rank[node_rank]:
-                        act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'RECOMPUTE':
-                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                                # Add the memory for this recomputed activation
-                                mem_size = act_details['median_mem_size_bytes']
-                                bw_inter_mem += mem_size
-                                if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
-                                    logger.info(f"  Added {mem_size/(1024**2):.2f} MB for recomputed activation {act_name}")
-                
-                # Remove memory for tensors that are no longer needed in backward pass
-                if node_rank in activations_by_last_bw_use_rank:
-                    for act_details in activations_by_last_bw_use_rank[node_rank]:
-                        act_name = act_details['activation_name']
+            # Update active memory for forward pass - use a scaling factor to avoid double-counting
+            # Since active memory might include some intermediate tensors we're already tracking
+            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
+                # Use 70% of reported active memory to avoid double-counting with intermediate tensors
+                fw_active_mem = node_details['median_active_mem_bytes'] * 1
+            
+            # Add memory for newly created tensors
+            if node_rank in activations_by_creation_rank:
+                for act_details in activations_by_creation_rank[node_rank]:
+                    act_name = act_details['activation_name']
+                    if current_schedule.get(act_name) == 'RETAINED':
+                        # Only add memory for activations we're keeping (not recomputing)
                         if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                            # Remove the memory for this activation after its last use
                             mem_size = act_details['median_mem_size_bytes']
-                            bw_inter_mem -= mem_size
+                            fw_inter_mem += mem_size
+                            
+                            # Also track retained activations for backward pass
+                            if pd.notna(act_details['first_bw_use_rank']):
+                                retained_activations_mem += mem_size
+                                
                             if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
-                                logger.info(f"  Removed {mem_size/(1024**2):.2f} MB for activation {act_name} (no longer needed)")
+                                logger.info(f"  Added {mem_size/(1024**2):.2f} MB for retained activation {act_name}")
             
-            elif node_gtype == 'forward':
-                if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                    fw_active_mem = node_details['median_active_mem_bytes']
-                
-                # Add memory for newly created tensors
-                if node_rank in activations_by_creation_rank:
-                    for act_details in activations_by_creation_rank[node_rank]:
-                        act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'RETAINED':
-                            # Only add memory for activations we're keeping (not recomputing)
-                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                                mem_size = act_details['median_mem_size_bytes']
-                                fw_inter_mem += mem_size
-                                if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
-                                    logger.info(f"  Added {mem_size/(1024**2):.2f} MB for retained activation {act_name}")
-                        else:
-                            # For RECOMPUTE activations, we don't keep them in memory
-                            if debug and 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                                mem_size = act_details['median_mem_size_bytes']
-                                if mem_size > 1024*1024:  # Only log significant activations (>1MB)
-                                    logger.info(f"  Discarded {mem_size/(1024**2):.2f} MB for activation {act_name} (will recompute)")
-                
-                # Remove memory for tensors that are no longer needed
-                if node_rank in activations_by_last_fw_use_rank:
-                    for act_details in activations_by_last_fw_use_rank[node_rank]:
-                        act_name = act_details['activation_name']
-                        if current_schedule.get(act_name) == 'RETAINED':
-                            if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                                fw_inter_mem -= act_details['median_mem_size_bytes']
+            # Remove memory for tensors that are no longer needed in forward pass
+            if node_rank in activations_by_last_fw_use_rank:
+                for act_details in activations_by_last_fw_use_rank[node_rank]:
+                    act_name = act_details['activation_name']
+                    if current_schedule.get(act_name) == 'RETAINED':
+                        if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                            fw_inter_mem -= act_details['median_mem_size_bytes']
             
-            # Calculate current memory consumption
-            current_mem = fw_active_mem + bw_active_mem + fw_inter_mem + bw_inter_mem + fixed_overhead_bytes
+            # Calculate current forward pass memory
+            current_fw_mem = fw_active_mem + fw_inter_mem + fixed_overhead_bytes
             
-            # Update peak memory
-            if current_mem > peak_mem:
-                peak_mem = current_mem
+            # Update peak forward memory
+            if current_fw_mem > fw_peak_mem:
+                fw_peak_mem = current_fw_mem
                 if debug:
-                    logger.info(f"  New peak memory: {peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
-                    logger.info(f"    Breakdown: FW active={fw_active_mem/(1024**3):.3f} GB, BW active={bw_active_mem/(1024**3):.3f} GB")
-                    logger.info(f"    FW inter={fw_inter_mem/(1024**3):.3f} GB, BW inter={bw_inter_mem/(1024**3):.3f} GB")
+                    logger.info(f"  New forward peak memory: {fw_peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
+                    logger.info(f"    Breakdown: FW active={fw_active_mem/(1024**3):.3f} GB, FW inter={fw_inter_mem/(1024**3):.3f} GB")
                     logger.info(f"    Fixed overhead={fixed_overhead_bytes/(1024**3):.3f} GB")
+        
+        # Now, simulate backward pass
+        if debug:
+            logger.info("Simulating backward pass...")
+            logger.info(f"Retained activations memory: {retained_activations_mem / (1024**3):.3f} GB")
+        
+        # Reset intermediate memory for backward pass
+        fw_inter_mem = 0
+        bw_inter_mem = 0  # Don't start with all retained activations at once
+        
+        # Process backward pass nodes
+        for i, node_name in enumerate(backward_nodes):
+            if debug and i % max(1, len(backward_nodes) // 10) == 0:
+                logger.info(f"  Processing backward node {i+1}/{len(backward_nodes)} ({(i+1)/len(backward_nodes)*100:.1f}%)...")
+            
+            node_details = node_details_cache[node_name]
+            if node_details is None:
+                continue
+            
+            node_rank = node_details['rank']
+            
+            # Update active memory for backward pass - use a scaling factor to avoid double-counting
+            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
+                # Use 70% of reported active memory to avoid double-counting with intermediate tensors
+                bw_active_mem = node_details['median_active_mem_bytes'] * 1
+            
+            # Add memory for activations needed at this rank (both retained and recomputed)
+            if node_rank in activations_by_first_bw_use_rank:
+                for act_details in activations_by_first_bw_use_rank[node_rank]:
+                    act_name = act_details['activation_name']
+                    decision = current_schedule.get(act_name)
+                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                        mem_size = act_details['median_mem_size_bytes']
+                        
+                        if decision == 'RECOMPUTE':
+                            # Add memory for recomputed activation
+                            bw_inter_mem += mem_size
+                            if debug and mem_size > 1024*1024:
+                                logger.info(f"  Added {mem_size/(1024**2):.2f} MB for recomputed activation {act_name}")
+                        elif decision == 'RETAINED':
+                            # Add memory for retained activation only when it's first used in backward pass
+                            bw_inter_mem += mem_size
+                            if debug and mem_size > 1024*1024:
+                                logger.info(f"  Added {mem_size/(1024**2):.2f} MB for retained activation {act_name}")
+            
+            # Remove memory for tensors that are no longer needed in backward pass
+            if node_rank in activations_by_last_bw_use_rank:
+                for act_details in activations_by_last_bw_use_rank[node_rank]:
+                    act_name = act_details['activation_name']
+                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                        # Remove the memory for this activation after its last use
+                        mem_size = act_details['median_mem_size_bytes']
+                        bw_inter_mem -= mem_size
+                        if debug and mem_size > 1024*1024:  # Only log significant activations (>1MB)
+                            logger.info(f"  Removed {mem_size/(1024**2):.2f} MB for activation {act_name} (no longer needed)")
+            
+            # Calculate current backward pass memory
+            current_bw_mem = bw_active_mem + bw_inter_mem + fixed_overhead_bytes
+            
+            # Update peak backward memory
+            if current_bw_mem > bw_peak_mem:
+                bw_peak_mem = current_bw_mem
+                if debug:
+                    logger.info(f"  New backward peak memory: {bw_peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
+                    logger.info(f"    Breakdown: BW active={bw_active_mem/(1024**3):.3f} GB, BW inter={bw_inter_mem/(1024**3):.3f} GB")
+                    logger.info(f"    Fixed overhead={fixed_overhead_bytes/(1024**3):.3f} GB")
+        
+        # Overall peak memory is the maximum of forward and backward peaks
+        peak_mem = max(fw_peak_mem, bw_peak_mem)
+        
+        sim_timing['node_processing'] = time.time() - node_processing_start
+        
+        # Calculate total simulation time
+        sim_timing['total'] = time.time() - sim_start_time
         
         if debug:
             logger.info(f"Memory simulation complete.")
-            logger.info(f"Peak memory: {peak_mem / (1024**3):.3f} GB")
+            logger.info(f"Forward pass peak memory: {fw_peak_mem / (1024**3):.3f} GB")
+            logger.info(f"Backward pass peak memory: {bw_peak_mem / (1024**3):.3f} GB")
+            logger.info(f"Overall peak memory: {peak_mem / (1024**3):.3f} GB")
             logger.info(f"Final execution time: {total_execution_time:.4f}s")
             
             # Calculate memory savings
@@ -388,6 +465,13 @@ class ActivationCheckpointingAlgorithm:
             )
             logger.info(f"Memory savings from activation checkpointing: {memory_savings / (1024**3):.3f} GB")
             logger.info(f"Computation overhead from recomputation: {recompute_time_total:.4f}s")
+            
+            # Log timing information for the simulation
+            logger.info(f"Simulation timing breakdown:")
+            logger.info(f"  Total simulation time: {sim_timing['total']:.4f}s")
+            logger.info(f"  Execution time calculation: {sim_timing['execution_time_calc']:.4f}s ({sim_timing['execution_time_calc']/sim_timing['total']*100:.1f}%)")
+            logger.info(f"  Memory mapping: {sim_timing['memory_mapping']:.4f}s ({sim_timing['memory_mapping']/sim_timing['total']*100:.1f}%)")
+            logger.info(f"  Node processing: {sim_timing['node_processing']:.4f}s ({sim_timing['node_processing']/sim_timing['total']*100:.1f}%)")
         
         return peak_mem, total_execution_time
 
@@ -440,12 +524,30 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             dict: A schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
         """
+        # Start overall timing
+        overall_start_time = time.time()
+        
         logger.info(f"Starting checkpoint decision algorithm...")
         logger.info(f"Fixed overhead: {fixed_overhead_gb} GB, Memory budget: {self.memory_budget_bytes / (1024**3):.2f} GB")
         
         fixed_overhead_bytes = fixed_overhead_gb * (1024**3)
 
+        # Initialize timing dictionary to track execution time of different parts
+        timing_stats = {
+            'initialization': 0,
+            'initial_memory_simulation': 0,
+            'memory_component_analysis': 0,
+            'candidate_filtering': 0,
+            'main_loop': 0,
+            'main_loop_iterations': [],
+            'memory_simulations': 0,
+            'candidate_selection': 0,
+            'final_memory_simulation': 0,
+            'total': 0
+        }
+        
         # Initial state: checkpoint all activations (mark all as RETAINED)
+        init_start = time.time()
         logger.info("Initializing schedule with all activations checkpointed...")
         current_schedule = {
             act_name: 'RETAINED'
@@ -453,29 +555,36 @@ class ActivationCheckpointingAlgorithm:
             if pd.notna(self.activation_stats_df.loc[act_name, 'median_mem_size_bytes']) and
                self.activation_stats_df.loc[act_name, 'median_mem_size_bytes'] > 0
         }
+        timing_stats['initialization'] = time.time() - init_start
         
         logger.info(f"Initial schedule has {len(current_schedule)} activations marked for RETAINED")
         
         # Run initial memory simulation to get baseline
+        sim_start = time.time()
         initial_peak_memory, initial_exec_time = self._simulate_memory_usage(
             current_schedule,
             fixed_overhead_bytes,
             debug=debug
         )
+        timing_stats['initial_memory_simulation'] = time.time() - sim_start
         
         logger.info(f"Initial peak memory: {initial_peak_memory / (1024**3):.2f} GB")
         logger.info(f"Initial execution time: {initial_exec_time:.2f}s")
         
         # Analyze memory components to determine if budget is achievable
+        mem_analysis_start = time.time()
         fw_active_mem, bw_active_mem, fw_inter_mem, bw_inter_mem = self._analyze_memory_components(
             current_schedule, fixed_overhead_bytes, debug=debug
         )
+        timing_stats['memory_component_analysis'] = time.time() - mem_analysis_start
         
         # Calculate incompressible memory (memory that can't be reduced through activation checkpointing)
         # Apply a safety factor to account for potential underestimation
         safety_factor = 1.0  # No safety factor - use exact incompressible memory
-        incompressible_memory = fw_active_mem + bw_active_mem + fixed_overhead_bytes
-        logger.info(f"Incompressible memory: {incompressible_memory / (1024**3):.2f} GB (FW active: {fw_active_mem / (1024**3):.2f} GB, BW active: {bw_active_mem / (1024**3):.2f} GB, Fixed overhead: {fixed_overhead_bytes / (1024**3):.2f} GB)")
+        # Take the maximum of forward and backward active memory, not their sum
+        # This is because forward and backward passes don't occur simultaneously
+        incompressible_memory = max(fw_active_mem, bw_active_mem) + fixed_overhead_bytes
+        logger.info(f"Incompressible memory: {incompressible_memory / (1024**3):.2f} GB (Max of FW active: {fw_active_mem / (1024**3):.2f} GB and BW active: {bw_active_mem / (1024**3):.2f} GB, plus Fixed overhead: {fixed_overhead_bytes / (1024**3):.2f} GB)")
         logger.info(f"Applied safety factor of {safety_factor:.2f} to incompressible memory estimate")
         
         # Check if budget is achievable
@@ -494,10 +603,11 @@ class ActivationCheckpointingAlgorithm:
             logger.info(f"Setting effective target budget to {effective_budget / (1024**3):.2f} GB (2% below requested)")
         
         # Filter out activations with no valid size or recompute stats
+        filter_start = time.time()
         logger.info("Filtering valid activations...")
         valid_activations_df = self.activation_stats_df.dropna(subset=['median_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'last_fw_use_rank'])
-        # Lower the minimum memory size threshold to consider more activations
-        valid_activations_df = valid_activations_df[valid_activations_df['median_mem_size_bytes'] > 100 * 1024]  # 100KB minimum
+        # No minimum memory size threshold - consider all activations regardless of size
+        timing_stats['candidate_filtering'] = time.time() - filter_start
         logger.info(f"Found {len(valid_activations_df)} valid activations for consideration")
 
         # Create a set of candidate activations
@@ -512,9 +622,13 @@ class ActivationCheckpointingAlgorithm:
         best_exec_time = initial_exec_time
         
         # Main loop of Algorithm B
+        main_loop_start = time.time()
         iteration = 0
         start_time = time.time()
         while iteration < max_iterations and candidate_set:
+            # Start timing for this iteration
+            iter_start_time = time.time()
+            
             # Check for timeout
             current_time = time.time()
             elapsed_time = current_time - start_time
@@ -526,11 +640,14 @@ class ActivationCheckpointingAlgorithm:
             logger.info(f"\nIteration {iteration}/{max_iterations} (Elapsed time: {elapsed_time:.1f}s)")
             
             # Run memory simulation to check current state
+            sim_start = time.time()
             current_peak_memory, current_exec_time = self._simulate_memory_usage(
                 current_schedule,
                 fixed_overhead_bytes,
                 debug=(iteration == 1 and debug)
             )
+            sim_time = time.time() - sim_start
+            timing_stats['memory_simulations'] += sim_time
             
             logger.info(f"Simulated peak memory: {current_peak_memory / (1024**3):.2f} GB. Budget: {self.memory_budget_bytes / (1024**3):.2f} GB. Exec time: {current_exec_time:.2f}s")
             logger.info(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'RETAINED')}")
@@ -545,15 +662,21 @@ class ActivationCheckpointingAlgorithm:
 
             # Check if we've met the budget
             # Use effective_budget for comparison to ensure we meet the actual budget
-            if current_peak_memory <= effective_budget:
-                logger.info(f"Effective budget of {effective_budget / (1024**3):.2f} GB met.")
-                logger.info(f"Actual memory usage: {current_peak_memory / (1024**3):.2f} GB vs requested budget: {self.memory_budget_bytes / (1024**3):.2f} GB")
-                break # Budget met
+            # Check if we've met the original budget (not the effective budget)
+            if current_peak_memory <= self.memory_budget_bytes:
+                logger.info(f"Memory budget of {self.memory_budget_bytes / (1024**3):.2f} GB met.")
+                logger.info(f"Actual memory usage: {current_peak_memory / (1024**3):.2f} GB")
+                break # Original budget met
+                
+            # We'll always try to get as close as possible to the original budget
+            # Never exit early even if we've met the effective budget
+            # Only exit if we've met the original budget or run out of candidates
             
             # Enhanced candidate selection strategy
             # Try to select multiple candidates at once if we're far from the budget
             # Use the actual requested budget for calculating the gap, not the effective budget
             # This ensures we're always trying to get as close as possible to the user's requested budget
+            selection_start = time.time()
             memory_gap = current_peak_memory - self.memory_budget_bytes
             
             # If we're far from the budget, process multiple candidates at once
@@ -620,67 +743,80 @@ class ActivationCheckpointingAlgorithm:
                 
                 # Remove chosen candidate from set
                 candidate_set.remove(r_cand)
+                
+            # Record timing for candidate selection in this iteration
+            selection_time = time.time() - selection_start
+            timing_stats['candidate_selection'] += selection_time
+            
+            # Record total time for this iteration
+            iter_time = time.time() - iter_start_time
+            timing_stats['main_loop_iterations'].append({
+                'iteration': iteration,
+                'time': iter_time,
+                'memory_simulation': sim_time,
+                'candidate_selection': selection_time
+            })
             
             # If we've run out of candidates but still over budget
-            if not candidate_set and current_peak_memory > effective_budget:
-                logger.warning("No candidates left to process, but still over effective budget.")
+            if not candidate_set and current_peak_memory > self.memory_budget_bytes:
+                logger.warning("No candidates left to process, but still over requested budget.")
                 
                 # Calculate how close we got to the budget
                 memory_gap = current_peak_memory - self.memory_budget_bytes
-                effective_gap = current_peak_memory - effective_budget
                 logger.warning(f"Gap to requested budget: {memory_gap / (1024**3):.2f} GB")
-                logger.warning(f"Gap to effective budget: {effective_gap / (1024**3):.2f} GB")
                 
                 # Check if we're close to the incompressible memory
                 gap_to_incompressible = current_peak_memory - incompressible_memory
                 logger.warning(f"Gap to incompressible memory: {gap_to_incompressible / (1024**3):.2f} GB")
                 
-                # Try more aggressive recomputation if we're still far from budget
-                # Even if we're close to incompressible, try to get closer to the requested budget
-                if memory_gap > 0.05 * (1024**3):  # More than 50MB from requested budget
-                    logger.warning("Still far from incompressible memory. Attempting more aggressive recomputation...")
+                # Always try more aggressive recomputation to get as close as possible to the budget
+                logger.warning("Attempting more aggressive recomputation to get closer to the requested budget...")
                     
-                    # Find activations that were previously filtered out due to size threshold
-                    small_activations = []
-                    for act_name in self.activation_stats_df['activation_name']:
-                        if act_name not in current_schedule:
-                            continue
-                            
-                        if current_schedule[act_name] == 'RETAINED':
-                            act_details = self._get_activation_details(act_name)
-                            if act_details is not None and 'median_mem_size_bytes' in act_details:
-                                mem_size = act_details['median_mem_size_bytes']
-                                recomp_time = act_details.get('recomp_time_s', 0)
-                                if pd.notna(mem_size) and mem_size > 0 and pd.notna(recomp_time) and recomp_time > 0:
-                                    # Include recomputation time in the decision
-                                    ratio = mem_size / (recomp_time + 1e-6)
-                                    small_activations.append((act_name, mem_size, recomp_time, ratio))
-                    
-                    # Sort by ratio (best memory/time tradeoff first)
-                    small_activations.sort(key=lambda x: x[3], reverse=True)
-                    
-                    # Mark additional activations for recomputation
-                    additional_marked = 0
-                    additional_memory_saved = 0
-                    for act_name, mem_size, recomp_time, ratio in small_activations[:100]:  # Try up to 100 more activations
-                        current_schedule[act_name] = 'RECOMPUTE'
-                        additional_marked += 1
-                        additional_memory_saved += mem_size
-                        logger.info(f"Aggressively marking {act_name} for RECOMPUTE (size: {mem_size/(1024*1024):.2f} MB)")
+                # Find all remaining RETAINED activations for potential recomputation
+                remaining_activations = []
+                for act_name in self.activation_stats_df['activation_name']:
+                    if act_name not in current_schedule:
+                        continue
                         
-                        # Check if we've saved enough memory
-                        if additional_memory_saved > memory_gap:
-                            break
+                    if current_schedule[act_name] == 'RETAINED':
+                        act_details = self._get_activation_details(act_name)
+                        if act_details is not None and 'median_mem_size_bytes' in act_details:
+                            mem_size = act_details['median_mem_size_bytes']
+                            recomp_time = act_details.get('recomp_time_s', 0)
+                            if pd.notna(mem_size) and mem_size > 0:
+                                # Include even activations with very small recomputation time
+                                # Use a minimum recomputation time to avoid division by zero
+                                effective_recomp_time = max(recomp_time, 1e-6) if pd.notna(recomp_time) else 1e-6
+                                ratio = mem_size / effective_recomp_time
+                                remaining_activations.append((act_name, mem_size, recomp_time, ratio))
+                    
+                # Sort by ratio (best memory/time tradeoff first)
+                remaining_activations.sort(key=lambda x: x[3], reverse=True)
+                
+                # Mark additional activations for recomputation
+                additional_marked = 0
+                additional_memory_saved = 0
+                for act_name, mem_size, recomp_time, ratio in remaining_activations[:min(100, len(remaining_activations))]:
+                    current_schedule[act_name] = 'RECOMPUTE'
+                    additional_marked += 1
+                    additional_memory_saved += mem_size
+                    logger.info(f"Aggressively marking {act_name} for RECOMPUTE (size: {mem_size/(1024*1024):.2f} MB, ratio: {ratio:.2f})")
+                    
+                    # Check if we've saved enough memory
+                    if additional_memory_saved > memory_gap * 1.1:  # Add 10% margin
+                        break
                     
                     logger.info(f"Marked {additional_marked} additional activations for recomputation")
                     logger.info(f"Additional memory saved: {additional_memory_saved / (1024**3):.2f} GB")
                     
                     # Run one more memory simulation
+                    final_sim_start = time.time()
                     final_peak_memory, final_exec_time = self._simulate_memory_usage(
                         current_schedule,
                         fixed_overhead_bytes,
                         debug=debug
                     )
+                    timing_stats['final_memory_simulation'] = time.time() - final_sim_start
                     
                     logger.info(f"After aggressive recomputation: peak memory = {final_peak_memory / (1024**3):.2f} GB")
                     if final_peak_memory <= self.memory_budget_bytes:
@@ -691,12 +827,29 @@ class ActivationCheckpointingAlgorithm:
                         if gap_to_incompressible < 0.1 * (1024**3):  # Within 100MB of incompressible
                             logger.warning("Current memory usage is very close to the incompressible minimum.")
                             logger.warning("Further reduction is likely not possible through activation checkpointing.")
+                # Run one more memory simulation
+                final_sim_start = time.time()
+                final_peak_memory, final_exec_time = self._simulate_memory_usage(
+                    current_schedule,
+                    fixed_overhead_bytes,
+                    debug=debug
+                )
+                timing_stats['final_memory_simulation'] = time.time() - final_sim_start
+                
+                logger.info(f"After aggressive recomputation: peak memory = {final_peak_memory / (1024**3):.2f} GB")
+                if final_peak_memory <= self.memory_budget_bytes:
+                    logger.info("Memory budget met after aggressive recomputation!")
                 else:
+                    logger.warning(f"Still over budget by {(final_peak_memory - self.memory_budget_bytes) / (1024**3):.2f} GB")
+                    
                     if gap_to_incompressible < 0.1 * (1024**3):  # Within 100MB of incompressible
                         logger.warning("Current memory usage is very close to the incompressible minimum.")
                         logger.warning("Further reduction is likely not possible through activation checkpointing.")
                 break
 
+        # End timing for main loop
+        timing_stats['main_loop'] = time.time() - main_loop_start
+        
         # Check if we timed out
         elapsed_time = time.time() - start_time
         if elapsed_time > timeout_seconds:
@@ -705,11 +858,13 @@ class ActivationCheckpointingAlgorithm:
             current_schedule = best_schedule
         
         # Final memory simulation
+        final_sim_start = time.time()
         final_peak_memory, final_exec_time = self._simulate_memory_usage(
             current_schedule,
             fixed_overhead_bytes,
             debug=debug
         )
+        timing_stats['final_memory_simulation'] = time.time() - final_sim_start
         
         # Report final results
         logger.info(f"\nFinal Results:")
@@ -728,6 +883,28 @@ class ActivationCheckpointingAlgorithm:
         # Save the schedule to a CSV file for easier analysis
         self._save_schedule_to_csv(current_schedule)
         
+        # Calculate total execution time and update timing stats
+        timing_stats['total'] = time.time() - overall_start_time
+        
+        # Log timing statistics
+        logger.info("\nTiming Statistics:")
+        logger.info(f"Total execution time: {timing_stats['total']:.2f}s")
+        logger.info(f"Initialization: {timing_stats['initialization']:.2f}s ({timing_stats['initialization']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"Initial memory simulation: {timing_stats['initial_memory_simulation']:.2f}s ({timing_stats['initial_memory_simulation']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"Memory component analysis: {timing_stats['memory_component_analysis']:.2f}s ({timing_stats['memory_component_analysis']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"Candidate filtering: {timing_stats['candidate_filtering']:.2f}s ({timing_stats['candidate_filtering']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"Main loop: {timing_stats['main_loop']:.2f}s ({timing_stats['main_loop']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"  - Memory simulations: {timing_stats['memory_simulations']:.2f}s ({timing_stats['memory_simulations']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"  - Candidate selection: {timing_stats['candidate_selection']:.2f}s ({timing_stats['candidate_selection']/timing_stats['total']*100:.1f}%)")
+        logger.info(f"Final memory simulation: {timing_stats['final_memory_simulation']:.2f}s ({timing_stats['final_memory_simulation']/timing_stats['total']*100:.1f}%)")
+        
+        # Find the slowest iterations
+        if timing_stats['main_loop_iterations']:
+            sorted_iterations = sorted(timing_stats['main_loop_iterations'], key=lambda x: x['time'], reverse=True)
+            logger.info("\nTop 5 slowest iterations:")
+            for i, iter_data in enumerate(sorted_iterations[:5]):
+                logger.info(f"  {i+1}. Iteration {iter_data['iteration']}: {iter_data['time']:.2f}s (Simulation: {iter_data['memory_simulation']:.2f}s, Selection: {iter_data['candidate_selection']:.2f}s)")
+        
         return self.schedule
         
     def _analyze_memory_components(self, current_schedule, fixed_overhead_bytes, debug=False):
@@ -742,24 +919,45 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             tuple: (fw_active_mem, bw_active_mem, fw_inter_mem, bw_inter_mem)
         """
+        # Start timing the analysis
+        analysis_start_time = time.time()
+        
+        # Initialize timing dictionary for detailed breakdown
+        analysis_timing = {
+            'initialization': 0,
+            'execution_order': 0,
+            'node_details_cache': 0,
+            'active_memory_analysis': 0,
+            'intermediate_memory_calculation': 0,
+            'total': 0
+        }
+        
+        init_start = time.time()
         # Initialize memory tracking variables
         fw_active_mem = 0
         bw_active_mem = 0
         fw_inter_mem = 0
         bw_inter_mem = 0
+        analysis_timing['initialization'] = time.time() - init_start
         
         # Get execution order
+        exec_order_start = time.time()
         execution_order = self._get_node_execution_order()
+        analysis_timing['execution_order'] = time.time() - exec_order_start
+        
         if not execution_order:
             logger.warning("Could not determine execution order.")
             return fw_active_mem, bw_active_mem, fw_inter_mem, bw_inter_mem
         
         # Pre-fetch all node details to avoid repeated lookups
+        cache_start = time.time()
         node_details_cache = {}
         for node_name in execution_order:
             node_details_cache[node_name] = self._get_node_details(node_name)
+        analysis_timing['node_details_cache'] = time.time() - cache_start
         
         # Find maximum active memory for forward and backward passes
+        active_mem_start = time.time()
         for node_name in execution_order:
             node_details = node_details_cache[node_name]
             if node_details is None:
@@ -773,8 +971,10 @@ class ActivationCheckpointingAlgorithm:
             elif node_gtype == 'backward':
                 if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
                     bw_active_mem = max(bw_active_mem, node_details['median_active_mem_bytes'])
+        analysis_timing['active_memory_analysis'] = time.time() - active_mem_start
         
         # Calculate intermediate memory
+        inter_mem_start = time.time()
         for act_name, decision in current_schedule.items():
             act_details = self._get_activation_details(act_name)
             if act_details is None or 'median_mem_size_bytes' not in act_details:
@@ -786,6 +986,10 @@ class ActivationCheckpointingAlgorithm:
                 
             if decision == 'RETAINED':
                 bw_inter_mem += mem_size
+        analysis_timing['intermediate_memory_calculation'] = time.time() - inter_mem_start
+        
+        # Calculate total analysis time
+        analysis_timing['total'] = time.time() - analysis_start_time
         
         if debug:
             logger.info(f"Memory components analysis:")
@@ -795,6 +999,15 @@ class ActivationCheckpointingAlgorithm:
             logger.info(f"  BW intermediate memory: {bw_inter_mem / (1024**3):.2f} GB")
             logger.info(f"  Fixed overhead: {fixed_overhead_bytes / (1024**3):.2f} GB")
             logger.info(f"  Total incompressible memory: {(fw_active_mem + bw_active_mem + fixed_overhead_bytes) / (1024**3):.2f} GB")
+            
+            # Log timing information for the analysis
+            logger.info(f"Memory analysis timing breakdown:")
+            logger.info(f"  Total analysis time: {analysis_timing['total']:.4f}s")
+            logger.info(f"  Initialization: {analysis_timing['initialization']:.4f}s ({analysis_timing['initialization']/analysis_timing['total']*100:.1f}%)")
+            logger.info(f"  Execution order: {analysis_timing['execution_order']:.4f}s ({analysis_timing['execution_order']/analysis_timing['total']*100:.1f}%)")
+            logger.info(f"  Node details cache: {analysis_timing['node_details_cache']:.4f}s ({analysis_timing['node_details_cache']/analysis_timing['total']*100:.1f}%)")
+            logger.info(f"  Active memory analysis: {analysis_timing['active_memory_analysis']:.4f}s ({analysis_timing['active_memory_analysis']/analysis_timing['total']*100:.1f}%)")
+            logger.info(f"  Intermediate memory calculation: {analysis_timing['intermediate_memory_calculation']:.4f}s ({analysis_timing['intermediate_memory_calculation']/analysis_timing['total']*100:.1f}%)")
         
         return fw_active_mem, bw_active_mem, fw_inter_mem, bw_inter_mem
 
@@ -811,10 +1024,6 @@ class ActivationCheckpointingAlgorithm:
         max_ratio = -1
         max_candidate = None
         
-        # Reduced minimum memory size threshold to 100KB (was 1MB)
-        # This allows more candidates to be considered for recomputation
-        MIN_MEMORY_SIZE_BYTES = 100 * 1024  # 100 KB
-        
         for act_name in candidate_set:
             act_details = self._get_activation_details(act_name)
             if act_details is None:
@@ -829,13 +1038,8 @@ class ActivationCheckpointingAlgorithm:
             if pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
                 continue
                 
-            # Skip candidates with extremely small memory size
-            # Lowered threshold to allow more candidates
-            if mem_size < MIN_MEMORY_SIZE_BYTES:
-                continue
-                
             # Calculate recompute benefit ratio (memory saved / recomputation time)
-            # Modified to prioritize memory savings more heavily
+            # No discrimination against small bytes - consider all activations
             ratio = mem_size / (recomp_time + 1e-6)
             
             if ratio > max_ratio:
@@ -855,8 +1059,17 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             int: Number of times the candidate will be recomputed.
         """
-        # In this simplified implementation, we assume each activation is recomputed once
-        # A more complex implementation would track dependencies between activations
+        # Get activation details
+        act_details = self._get_activation_details(cand)
+        if act_details is None:
+            return 1
+            
+        # In a more complex implementation, we would track dependencies between activations
+        # and calculate how many times this activation needs to be recomputed based on
+        # its dependencies with other activations marked for recomputation
+        
+        # For now, we assume each activation is recomputed once
+        # This could be extended to handle more complex dependency tracking
         return 1
 
     def _update_candidates(self, cand, recomp_cnt, candidate_set):
@@ -868,12 +1081,21 @@ class ActivationCheckpointingAlgorithm:
             recomp_cnt (int): Number of times the candidate will be recomputed.
             candidate_set (set): Set of remaining candidates.
         """
-        # In this simplified implementation, we don't need to update other candidates
-        # A more complex implementation would update recomputation sources and times
+        # In a more complex implementation, we would update the recomputation times
+        # and memory savings of remaining candidates based on the chosen candidate
+        
+        # For example, if two activations share computation, recomputing one might
+        # reduce the recomputation cost of the other
+        
+        # This is a placeholder for future improvements
+        # For now, we don't update other candidates
         pass
 
 
 if __name__ == "__main__":
+    # Start overall timing
+    script_start_time = time.time()
+    
     # Example usage
     node_stats_file = "reports/profiler_stats_bs4_node_stats.csv"
     activation_stats_file = "reports/profiler_stats_bs4_activation_stats.csv"
@@ -896,16 +1118,19 @@ if __name__ == "__main__":
     parser.add_argument('--batch-size', type=int, default=50, help='Number of activations to evict per iteration')
     parser.add_argument('--max-iterations', type=int, default=1000, help='Maximum number of iterations')
     parser.add_argument('--memory-budget', type=float, default=memory_budget, help='Memory budget in GB')
-    parser.add_argument('--fixed-overhead', type=float, default=0.5, help='Fixed overhead in GB')
+    parser.add_argument('--fixed-overhead', type=float, default=0.3, help='Fixed overhead in GB')
     args = parser.parse_args()
 
     try:
         # Initialize the algorithm
+        init_start_time = time.time()
         ac_algo = ActivationCheckpointingAlgorithm(
             node_stats_path=args.node_stats,
             activation_stats_path=args.activation_stats,
             memory_budget_gb=args.memory_budget
         )
+        init_time = time.time() - init_start_time
+        logger.info(f"Algorithm initialization time: {init_time:.2f}s")
         
         # Run the algorithm with increased timeout for more thorough search
         final_schedule = ac_algo.decide_checkpoints(
@@ -934,6 +1159,16 @@ if __name__ == "__main__":
         
         print(f"Estimated Peak GPU Memory with schedule: {final_peak_mem / (1024**3):.2f} GB")
         print(f"Estimated Total Execution Time with schedule: {final_exec_time:.2f} s")
+        
+        # Calculate and print total script execution time
+        script_execution_time = time.time() - script_start_time
+        print(f"\nTotal script execution time: {script_execution_time:.2f} seconds")
+        
+        # Print timing breakdown
+        print("\nTiming Breakdown:")
+        print(f"  Initialization: {init_time:.2f}s ({init_time/script_execution_time*100:.1f}%)")
+        algorithm_time = script_execution_time - init_time
+        print(f"  Algorithm execution: {algorithm_time:.2f}s ({algorithm_time/script_execution_time*100:.1f}%)")
         
     except Exception as e:
         print(f"An error occurred: {e}")
