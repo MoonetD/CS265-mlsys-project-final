@@ -10,12 +10,16 @@ with different batch sizes (4, 8, 16, 32, 64). It generates multiple visualizati
 
 To run this script:
     conda run -n ml_env python starter_code/batch_memory_analysis.py
+    
+To specify batch sizes:
+    conda run -n ml_env python starter_code/batch_memory_analysis.py --batch-sizes 4 8 16
 """
 
 # Standard library imports
 import os
 import numpy as np
 import pandas as pd
+import argparse
 from collections import defaultdict
 from functools import wraps
 
@@ -211,6 +215,18 @@ def ensure_reports_directory():
         
     return reports_dir
 
+def parse_args():
+    """
+    Parse command line arguments.
+    
+    Returns:
+        Parsed arguments
+    """
+    parser = argparse.ArgumentParser(description='Batch Memory Analysis for ResNet-152')
+    parser.add_argument('--batch-sizes', type=int, nargs='+', default=[4, 8, 16, 32, 64],
+                        help='Batch sizes to profile (default: 4 8 16 32 64)')
+    return parser.parse_args()
+
 def main():
     """
     Main function to run the batch memory analysis.
@@ -220,6 +236,9 @@ def main():
     2. Generates visualizations of memory usage
     3. Saves results to the reports directory
     """
+    # Parse command line arguments
+    args = parse_args()
+    
     print("=== Batch Memory Analysis for ResNet-152 ===")
     
     # Set random seed for reproducibility
@@ -229,8 +248,9 @@ def main():
     device_str = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device_str}")
     
-    # Define batch sizes to test
-    batch_sizes = [4, 8, 16, 32, 64]
+    # Use batch sizes from command line arguments
+    batch_sizes = args.batch_sizes
+    print(f"Profiling batch sizes: {batch_sizes}")
     
     # Define out-of-memory cap in MiB (1.5 GB = 1536 MiB)
     oom_cap_mib = 1536
