@@ -159,25 +159,88 @@ class GraphProfiler(fx.Interpreter):
             else: # Between fw_end and bw_start, or other complex cases
                 self.node_gtypes[node_name] = "intermediate/other"
 
-
-            # Check for optimizer state nodes based on function name patterns
+            # Enhanced parameter identification
+            is_param = False
+            if node_name in self.param_node_names:
+                is_param = True
+            elif node.op == OP.GET_ATTR:
+                # Parameters are often accessed via get_attr
+                is_param = True
+            elif node_name.lower().endswith(('weight', 'bias', 'param', 'parameter')):
+                # Common naming patterns for parameters
+                is_param = True
+            # Check for convolution, linear, or batch norm operations which use parameters
+            elif node.op == OP.CALL_FUNCTION and hasattr(node, 'target'):
+                target_str = str(node.target).lower()
+                if any(op in target_str for op in ['conv', 'linear', 'batch_norm', 'bn']):
+                    # Check if this node has args that could be parameters
+                    for arg in node.args:
+                        if isinstance(arg, fx.Node) and arg.op == OP.GET_ATTR:
+                            # Mark the argument as a parameter
+                            self.param_node_names.add(arg.name)
+                            self.node_types[arg.name] = NodeType.PARAM
+            
+            # Enhanced gradient identification
+            is_grad = False
+            if node_name in self.grad_node_names:
+                is_grad = True
+            elif node_name.lower().find('grad') >= 0 or node_name.lower().find('derivative') >= 0:
+                # Common naming patterns for gradients
+                is_grad = True
+            elif self.node_gtypes[node_name] == "backward":
+                # Check if this is a backward operation that produces gradients
+                if node.op == OP.CALL_FUNCTION and hasattr(node, 'target'):
+                    target_str = str(node.target).lower()
+                    if "_backward" in target_str or "gradient" in target_str or "grad" in target_str:
+                        is_grad = True
+            
+            # Enhanced optimizer state identification
             is_opt_state = False
             if node.op == OP.CALL_FUNCTION and hasattr(node, 'target'):
                 target_str = str(node.target).lower()
-                if "aten._fused_" in target_str or "adam" in target_str or "sgd" in target_str:
-                    self.node_types[node_name] = NodeType.OPT_STATE
+                # Expanded list of optimizer-related function names
+                opt_keywords = [
+                    "aten._fused_", "adam", "sgd", "adagrad", "rmsprop", "momentum",
+                    "optimizer", "step", "update", "learning_rate", "lr", "decay"
+                ]
+                if any(keyword in target_str for keyword in opt_keywords):
                     is_opt_state = True
+                    
+                # Special handling for optimizer operations
+                if "adam" in target_str or "sgd" in target_str or "optim" in target_str:
+                    # Mark this node as optimizer state
+                    is_opt_state = True
+                    
+                    # Check the arguments to this optimizer operation
+                    for i, arg in enumerate(node.args):
+                        if isinstance(arg, fx.Node):
+                            # First argument is often parameters
+                            if i == 0 and not arg.name in self.param_node_names:
+                                self.param_node_names.add(arg.name)
+                                self.node_types[arg.name] = NodeType.PARAM
+                            # Second argument is often gradients
+                            elif i == 1 and not arg.name in self.grad_node_names:
+                                self.grad_node_names.add(arg.name)
+                                self.node_types[arg.name] = NodeType.GRAD
+                            # Other arguments might be optimizer states
+                            elif i > 1:
+                                self.node_types[arg.name] = NodeType.OPT_STATE
+                                
+            # Check for optimizer state naming patterns
+            elif any(keyword in node_name.lower() for keyword in ["momentum", "velocity", "adam_", "optimizer_state"]):
+                is_opt_state = True
+                
+            # Check if node is in optimizer section and not a parameter or gradient
+            elif self.node_gtypes[node_name] == "optimizer/other" and not is_param and not is_grad:
+                is_opt_state = True
 
-            # Classify nodes by type
-            if node_name in self.param_node_names:
-                # Node is a parameter
+            # Classify nodes by type with enhanced logic
+            if is_param:
                 self.node_types[node_name] = NodeType.PARAM
-            elif node_name in self.grad_node_names:
-                # Node is a gradient
+            elif is_grad:
                 self.node_types[node_name] = NodeType.GRAD
             elif is_opt_state:
-                # Already set above, just for clarity
-                pass
+                self.node_types[node_name] = NodeType.OPT_STATE
             else:
                 is_activation = False
                 if node.op not in [OP.PLACEHOLDER, OP.OUTPUT]: # Activations are not placeholders or outputs
@@ -309,30 +372,97 @@ class GraphProfiler(fx.Interpreter):
         # This captures the peak memory usage that occurred while running this node
         self.peak_mem_node[node_name].append(torch.cuda.max_memory_allocated())
 
-        # Calculate and store the memory size of activation tensors
+        # Calculate and store the memory size for all tensor types
         mem_size = 0
-        if self.node_types.get(node_name) == NodeType.ACT:
+        node_type = self.node_types.get(node_name)
+        
+        # Process the result to calculate memory size
+        if isinstance(result, torch.Tensor) and result.device.type == 'cuda':
+            # Direct tensor result
+            mem_size = result.element_size() * result.nelement()
+            
+            # Additional type detection based on result properties
+            if node_type == NodeType.OTHER:
+                # Try to identify parameters and gradients based on tensor properties
+                if hasattr(result, 'requires_grad') and result.requires_grad:
+                    # Parameters typically require gradients
+                    self.node_types[node_name] = NodeType.PARAM
+                    self.param_node_names.add(node_name)
+                    node_type = NodeType.PARAM
+                elif hasattr(result, 'grad_fn') and result.grad_fn is not None:
+                    # Tensors with grad_fn are typically activations or gradients
+                    if self.node_gtypes.get(node_name) == "backward":
+                        self.node_types[node_name] = NodeType.GRAD
+                        self.grad_node_names.add(node_name)
+                        node_type = NodeType.GRAD
+        else:
             # For complex outputs (like tuples), flatten the structure to process all tensors
             for t in torch.utils._pytree.tree_flatten(result)[0]:
                 # Only count CUDA tensors (skip CPU tensors and non-tensor objects)
                 if isinstance(t, torch.Tensor) and t.device.type == 'cuda':
                     # Calculate tensor size in bytes (element size × number of elements)
                     mem_size += t.element_size() * t.nelement()
-            
-            # Always record the memory size even if it's zero
-            # This ensures consistent data collection across all profiling runs
-            self.memory_sizes[node_name].append(mem_size)
+                    
+                    # Try to identify parameters and gradients in complex outputs
+                    if node_type == NodeType.OTHER:
+                        if hasattr(t, 'requires_grad') and t.requires_grad:
+                            self.node_types[node_name] = NodeType.PARAM
+                            self.param_node_names.add(node_name)
+                            node_type = NodeType.PARAM
+                        elif hasattr(t, 'grad_fn') and t.grad_fn is not None:
+                            if self.node_gtypes.get(node_name) == "backward":
+                                self.node_types[node_name] = NodeType.GRAD
+                                self.grad_node_names.add(node_name)
+                                node_type = NodeType.GRAD
         
-        # Track gradient sizes during backward pass
-        if self.node_gtypes.get(node_name) == "backward" and node_name in self.grad_node_names:
-            # Iterate through parameter nodes to find corresponding gradients
+        # Record memory size for all node types
+        if mem_size > 0:
+            self.memory_sizes[node_name].append(mem_size)
+            
+            # Store sizes in type-specific dictionaries for easier analysis
+            if node_type == NodeType.PARAM:
+                self.param_sizes[node_name] = mem_size
+            elif node_type == NodeType.GRAD:
+                self.grad_sizes[node_name] = mem_size
+        
+        # Enhanced gradient tracking during backward pass
+        if self.node_gtypes.get(node_name) == "backward":
+            # Check if this node produces gradients
+            if node_type == NodeType.GRAD:
+                # Store gradient size directly
+                if mem_size > 0:
+                    self.grad_sizes[node_name] = mem_size
+            
+            # Also check for parameters with gradients
             for param_name in self.param_node_names:
                 # Check if parameter exists and has a gradient
-                if param_name in self.env and self.env[param_name].grad is not None:
+                if param_name in self.env and isinstance(self.env[param_name], torch.Tensor) and self.env[param_name].grad is not None:
                     # Calculate and store the gradient size in bytes
                     grad_size = self.env[param_name].grad.element_size() * self.env[param_name].grad.nelement()
                     self.grad_sizes[param_name] = grad_size
-
+                    
+                    # Also add this gradient to the grad_node_names set for future reference
+                    grad_node_name = f"{param_name}_grad"
+                    self.grad_node_names.add(grad_node_name)
+                    self.node_types[grad_node_name] = NodeType.GRAD
+        
+        # Check for optimizer operations
+        if n.op == OP.CALL_FUNCTION and hasattr(n, 'target'):
+            target_str = str(n.target).lower()
+            if "adam" in target_str or "sgd" in target_str or "optim" in target_str or "step" in target_str:
+                # This is an optimizer operation
+                self.node_types[node_name] = NodeType.OPT_STATE
+                
+                # Check the environment for optimizer state tensors
+                for env_name, env_val in self.env.items():
+                    if isinstance(env_val, torch.Tensor) and env_val.device.type == 'cuda':
+                        # Skip parameters and gradients we've already identified
+                        if env_name in self.param_node_names or env_name in self.grad_node_names:
+                            continue
+                            
+                        # This might be an optimizer state tensor
+                        if env_name not in self.node_types or self.node_types[env_name] == NodeType.OTHER:
+                            self.node_types[env_name] = NodeType.OPT_STATE
 
         return result
 
@@ -677,7 +807,7 @@ class GraphProfiler(fx.Interpreter):
             with open(activation_csv_filename, 'w', newline='') as csvfile:
                 # Define CSV columns for activations
                 fieldnames = [
-                    'activation_name', 'creation_rank', 'last_fw_use_rank', 'first_bw_use_rank', 'last_bw_use_rank',
+                    'activation_name', 'node_type', 'creation_rank', 'last_fw_use_rank', 'first_bw_use_rank', 'last_bw_use_rank',
                     'median_mem_size_bytes', 'inactive_time_s', 'recomp_time_s', 'recomp_memory_bytes'
                 ]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -698,6 +828,7 @@ class GraphProfiler(fx.Interpreter):
                     # Write row to CSV
                     writer.writerow({
                         'activation_name': act_name,  # Always use the original FX node name
+                        'node_type': self.node_types.get(act_name, NodeType.OTHER).value,  # Include node type
                         'creation_rank': liveness['creation_rank'],
                         'last_fw_use_rank': liveness['last_fw_use_rank'],
                         'first_bw_use_rank': liveness['first_bw_use_rank'],
