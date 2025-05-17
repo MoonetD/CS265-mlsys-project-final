@@ -90,7 +90,20 @@ In our project we will implement the algorithm for activation checkpointing in Î
 
 1.  **Inputs:** We will experiment with two open source models (one vision and one LLM) [cite: 35]
     * a. Resnet-152 [cite: 35]
-    * b. Bert [cite: 36]
+    * b. Definitive Transformer Architecture for Activation Checkpointing Experiments [cite: 36]
+       * Core Architecture Specifications:
+         * Embedding dimension (d_model): 512
+         * Number of encoder layers: 6
+         * Number of attention heads: 8
+         * Feed-forward dimension: 2048
+         * Dropout rate: 0.1
+         * Vocabulary size: 30,000
+         * Maximum sequence length: 512
+       * This creates a model that's:
+         * Large enough to demonstrate meaningful memory constraints
+         * Small enough to train efficiently
+         * Similar to the original Transformer paper's base model
+         * Well-suited for showing activation checkpointing benefits
 2.  **AI Framework:** We will be using PyTorch as our framework for implementation and experimentation[cite: 36].
 3.  **Components to be built:** [cite: 36]
     * a. Computation graph profiler[cite: 37],
