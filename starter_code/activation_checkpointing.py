@@ -764,15 +764,8 @@ class ActivationCheckpointingAlgorithm:
             logger.warning(f"Memory budget of {self.memory_budget_bytes / (1024**3):.2f} GB is not achievable!")
             logger.warning(f"Estimated minimum possible memory is {incompressible_memory / (1024**3):.2f} GB due to incompressible components")
             logger.warning(f"Will try to get as close as possible to the budget")
-            
-            # Set a more realistic target if budget is unachievable
-            # Use the incompressible memory as the target - we can't go below this
-            effective_budget = incompressible_memory
-            logger.warning(f"Setting effective target budget to incompressible memory: {effective_budget / (1024**3):.2f} GB")
         else:
-            # Set a slightly lower effective budget to ensure we meet the actual budget
-            effective_budget = self.memory_budget_bytes * 0.98  # 2% below requested budget
-            logger.info(f"Setting effective target budget to {effective_budget / (1024**3):.2f} GB (2% below requested)")
+            logger.info(f"Memory budget of {self.memory_budget_bytes / (1024**3):.2f} GB should be achievable")
         
         # Filter out activations with no valid size or recompute stats
         filter_start = time.time()
@@ -838,7 +831,6 @@ class ActivationCheckpointingAlgorithm:
                 # logger.info(f"New best schedule found with peak memory: {best_peak_memory / (1024**3):.2f} GB")
 
             # Check if we've met the budget
-            # Use effective_budget for comparison to ensure we meet the actual budget
             # Check if we've met the original budget (not the effective budget)
             if current_peak_memory <= self.memory_budget_bytes:
                 logger.info(f"Memory budget of {self.memory_budget_bytes / (1024**3):.2f} GB met.")
@@ -846,12 +838,10 @@ class ActivationCheckpointingAlgorithm:
                 break # Original budget met
                 
             # We'll always try to get as close as possible to the original budget
-            # Never exit early even if we've met the effective budget
             # Only exit if we've met the original budget or run out of candidates
             
             # Enhanced candidate selection strategy
             # Try to select multiple candidates at once if we're far from the budget
-            # Use the actual requested budget for calculating the gap, not the effective budget
             # This ensures we're always trying to get as close as possible to the user's requested budget
             selection_start = time.time()
             memory_gap = current_peak_memory - self.memory_budget_bytes
@@ -913,82 +903,9 @@ class ActivationCheckpointingAlgorithm:
                 gap_to_incompressible = current_peak_memory - incompressible_memory
                 logger.warning(f"Gap to incompressible memory: {gap_to_incompressible / (1024**3):.2f} GB")
                 
-                # We don't recalculate incompressible memory with heuristics
-                logger.warning("Incompressible memory remains the same without heuristic reductions")
-                    
-                # Find all remaining RETAINED activations for potential recomputation
-                remaining_activations = []
-                for act_name in self.activation_stats_df['activation_name']:
-                    if act_name not in current_schedule:
-                        continue
-                        
-                    if current_schedule[act_name] == 'RETAINED':
-                        act_details = self._get_activation_details_cached(act_name)
-                        if act_details is not None and 'median_mem_size_bytes' in act_details:
-                            mem_size = act_details['median_mem_size_bytes']
-                            recomp_time = act_details.get('recomp_time_s', 0)
-                            if pd.notna(mem_size) and mem_size > 0:
-                                # Include even activations with very small recomputation time
-                                # Use a minimum recomputation time to avoid division by zero
-                                effective_recomp_time = max(recomp_time, 1e-6) if pd.notna(recomp_time) else 1e-6
-                                ratio = mem_size / effective_recomp_time
-                                remaining_activations.append((act_name, mem_size, recomp_time, ratio))
-                    
-                # Sort by ratio (best memory/time tradeoff first)
-                remaining_activations.sort(key=lambda x: x[3], reverse=True)
-                
-                # Mark additional activations for recomputation
-                additional_marked = 0
-                additional_memory_saved = 0
-                for act_name, mem_size, recomp_time, ratio in remaining_activations[:min(100, len(remaining_activations))]:
-                    current_schedule[act_name] = 'RECOMPUTE'
-                    additional_marked += 1
-                    additional_memory_saved += mem_size
-                    
-                    # Check if we've saved enough memory
-                    if additional_memory_saved > memory_gap * 1.1:  # Add 10% margin
-                        break
-                    
-                    logger.info(f"Marked {additional_marked} additional activations for recomputation")
-                    logger.info(f"Additional memory saved: {additional_memory_saved / (1024**3):.2f} GB")
-                    
-                    # Run one more memory simulation
-                    final_sim_start = time.time()
-                    final_peak_memory, final_exec_time = self._simulate_memory_usage(
-                        current_schedule,
-                        fixed_overhead_bytes,
-                        debug=debug
-                    )
-                    timing_stats['final_memory_simulation'] = time.time() - final_sim_start
-                    
-                    logger.info(f"After aggressive recomputation: peak memory = {final_peak_memory / (1024**3):.2f} GB")
-                    if final_peak_memory <= self.memory_budget_bytes:
-                        logger.info("Memory budget met after aggressive recomputation!")
-                    else:
-                        logger.warning(f"Still over budget by {(final_peak_memory - self.memory_budget_bytes) / (1024**3):.2f} GB")
-                        
-                        # Don't give up too easily - we can be more aggressive with recomputation
-                        if gap_to_incompressible < 0.05 * (1024**3):  # Within 50MB of incompressible
-                            logger.warning("Current memory usage is very close to the incompressible minimum.")
-                            logger.warning("Further reduction may require more aggressive recomputation strategies.")
-                # Run one more memory simulation
-                final_sim_start = time.time()
-                final_peak_memory, final_exec_time = self._simulate_memory_usage(
-                    current_schedule,
-                    fixed_overhead_bytes,
-                    debug=debug
-                )
-                timing_stats['final_memory_simulation'] = time.time() - final_sim_start
-                
-                logger.info(f"After aggressive recomputation: peak memory = {final_peak_memory / (1024**3):.2f} GB")
-                if final_peak_memory <= self.memory_budget_bytes:
-                    logger.info("Memory budget met after aggressive recomputation!")
-                else:
-                    logger.warning(f"Still over budget by {(final_peak_memory - self.memory_budget_bytes) / (1024**3):.2f} GB")
-                    
-                    if gap_to_incompressible < 0.05 * (1024**3):  # Within 50MB of incompressible
-                        logger.warning("Current memory usage is very close to the incompressible minimum.")
-                        logger.warning("Further reduction may require more aggressive recomputation strategies.")
+                # Just report that we can't meet the budget
+                logger.warning("Cannot meet the memory budget with the current activation set.")
+                logger.warning("Consider increasing memory budget or optimizing model architecture.")
                 break
 
         # End timing for main loop
