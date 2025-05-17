@@ -1,96 +1,193 @@
-# Stage 2 Activation Checkpointing Results
+# Stage 2: Activation Checkpointing Algorithm
 
-This document summarizes the results of the Stage 2 implementation of the activation checkpointing algorithm based on the Π-TWO paper. The algorithm decides which activations to keep in memory and which to recompute during the backward pass to reduce peak memory usage.
+This document explains the implementation of the activation checkpointing algorithm based on the Π-TWO paper. The algorithm decides which activation tensors to retain in memory during the forward pass and which to discard and recompute during the backward pass.
 
-## Implementation Overview
+## 1. Introduction to Activation Checkpointing
 
-The activation checkpointing algorithm was implemented following Algorithm B from the Π-TWO paper, which:
+### 1.1 The Memory Problem in Deep Learning
 
-1. Takes profiling data from Stage 1 as input
-2. Analyzes activation statistics (memory size, recomputation time, usage patterns)
-3. Selects activations for recomputation based on their memory-to-computation ratio
-4. Simulates memory usage to ensure decisions meet the memory budget constraints
+Training deep neural networks requires significant GPU memory. During the forward pass, intermediate tensors (activations) are generated and stored for later use in the backward pass to compute gradients. These activations can consume up to 70-85% of the total memory during training, as noted in the project requirements.
 
-## Results Summary
+The key observation is that activations have high "inactive time" - they are created during the forward pass but may not be used until much later in the backward pass. This leads to inefficient memory usage, as these tensors occupy valuable GPU memory while being idle.
 
-The algorithm was tested with two different batch sizes (4 and 64) with a memory budget of 2GB. Here are the key results:
+### 1.2 The Activation Checkpointing Solution
 
-| Metric | Batch Size 4 | Batch Size 64 |
-|--------|--------------|---------------|
-| Total activations | 620 | 620 |
-| Activations marked for RECOMPUTE | 409 (66%) | 410 (66%) |
-| Activations marked for RETAIN | 211 (34%) | 210 (34%) |
-| Estimated peak GPU memory | 3.26 GB | 23.24 GB |
-| Estimated execution time | 1.77 s | 12.28 s |
-| Memory budget target | 2.00 GB | 2.00 GB |
+Activation checkpointing (AC) addresses this memory inefficiency by:
 
-## Analysis
+1. **Not storing all activations** in memory during the forward pass
+2. **Storing only a subset** of activations (checkpoints)
+3. **Recomputing the others** during the backward pass when needed
 
-### Why Similar Recomputation Decisions Across Batch Sizes
+This approach trades computation time for memory savings, allowing the training of larger models or the use of larger batch sizes on the same hardware.
 
-It might seem surprising that both batch sizes result in almost identical numbers of activations being marked for recomputation (409 vs 410 out of 620), despite the significant difference in memory requirements. This is explained by:
+## 2. Algorithm Overview from Π-TWO
 
-1. **Ratio-Based Selection**: The algorithm selects activations based on their recompute benefit ratio (memory saved / recomputation time), not absolute memory size. These ratios remain similar across batch sizes.
+The activation checkpointing algorithm in Π-TWO (as described in the paper) makes decisions about which activations to retain and which to recompute based on:
 
-2. **Incompressible Memory**: For both batch sizes, the 2GB memory budget is impossible to achieve:
-   - Batch size 4: Incompressible memory is 3.26 GB (FW active: 1.35 GB, BW active: 1.41 GB, Fixed overhead: 0.50 GB)
-   - Batch size 64: Incompressible memory is 23.24 GB (FW active: 11.36 GB, BW active: 11.39 GB, Fixed overhead: 0.50 GB)
+1. **Inactive time**: The duration an activation remains idle in memory between its last use in the forward pass and its first use in the backward pass
+2. **Recompute ratio**: The ratio of memory occupied by a tensor over the time required to recompute it
 
-3. **Exhaustive Processing**: Since the memory budget is unachievable in both cases, the algorithm continues until it processes all viable candidates.
+The algorithm follows these key steps:
 
-### Why Certain Activations Remain RETAINED
+1. Start with all activations marked for retention (checkpointing)
+2. Iteratively select candidates for recomputation based on their metrics
+3. For each candidate, calculate the overhead of swapping vs. recomputing
+4. Choose the option with lower overhead
+5. Update the schedule and simulate memory consumption
+6. Continue until memory consumption is below the specified limit
 
-Looking at the decisions in `ac_decisions.csv`, we can see that activations remain RETAINED for several reasons:
+## 3. Implementation Details
 
-1. **Size Threshold**: Activations smaller than 100KB are automatically excluded from consideration. For example, many `getitem` operations have sizes of only 256 bytes to 1KB. This threshold is an implementation detail in the code, not a requirement from the Π-TWO paper. The comment "Reduced minimum memory size threshold to 100KB (was 1MB)" suggests this was a design decision that was adjusted during development to balance practical considerations.
+Our implementation in `activation_checkpointing.py` follows the core principles of the Π-TWO algorithm with optimizations for performance and usability.
 
-2. **Poor Memory-to-Computation Ratio**: Some activations don't provide enough memory savings relative to their recomputation cost.
+### 3.1 Core Components
 
-3. **Diminishing Returns**: The algorithm selects the "best" activations first (highest benefit ratio), leaving those with progressively worse ratios.
+The implementation consists of these main components:
 
-### Memory Reduction
+1. **ActivationCheckpointingAlgorithm class**: The main class that implements the algorithm
+2. **Input processing**: Loading and processing profiling data from Stage 1
+3. **Memory simulation**: Simulating memory usage during training with different checkpointing decisions
+4. **Decision algorithm**: Implementing the core decision logic for activation checkpointing
+5. **Output generation**: Saving the final decisions to a CSV file
 
-- **Batch Size 4**: The algorithm attempted to meet the 2GB memory budget but could only reduce memory to 3.26GB due to incompressible memory components.
+### 3.2 Algorithm Workflow
 
-- **Batch Size 64**: With the larger batch size, memory requirements increased significantly to 23.24GB. The algorithm still marked a similar percentage of activations for recomputation (~66%), but the absolute memory size of each activation is much larger with batch size 64.
+The algorithm follows this workflow:
 
-### Computation-Memory Tradeoff
+1. **Initialization**: Load profiling data from Stage 1 CSV files
+2. **Initial state**: Mark all activations as RETAINED (checkpointed)
+3. **Memory analysis**: Analyze memory components to determine if the budget is achievable
+4. **Candidate selection**: Identify valid activation candidates for recomputation
+5. **Main loop**: Iteratively select activations for recomputation until memory budget is met
+6. **Memory simulation**: Simulate memory usage after each decision
+7. **Output generation**: Save final decisions to a CSV file
 
-The algorithm demonstrates the fundamental tradeoff between memory usage and computation time:
+## 4. Input and Output Formats
 
-- By marking ~66% of activations for recomputation, the algorithm significantly reduces memory usage compared to retaining all activations.
-- This comes at the cost of increased execution time due to recomputation overhead.
+### 4.1 Input: Profiling Data from Stage 1
 
-## Output Format
+The algorithm takes two CSV files as input:
 
-The algorithm produces a CSV file (`ac_decisions.csv`) that contains the following information for each activation:
+1. **Node statistics** (`profiler_stats_bs<X>_node_stats.csv`):
+   - Contains metrics for every operation in the computation graph
+   - Key columns: `rank`, `node_name`, `node_type`, `gtype`, `median_run_time_s`, `median_peak_mem_bytes`, `median_active_mem_bytes`
 
-| Column | Description |
-|--------|-------------|
-| `activation_name` | Unique identifier for the activation |
-| `decision` | Either "RECOMPUTE" or "RETAINED" |
-| `median_mem_size_bytes` | Memory size of the activation in bytes |
-| `recomp_time_s` | Time required to recompute the activation in seconds |
-| `creation_rank` | Topological rank when the activation is created |
-| `first_bw_use_rank` | Topological rank of first use in backward pass |
+2. **Activation statistics** (`profiler_stats_bs<X>_activation_stats.csv`):
+   - Contains metrics for each activation tensor
+   - Key columns: `activation_name`, `creation_rank`, `last_fw_use_rank`, `first_bw_use_rank`, `last_bw_use_rank`, `median_mem_size_bytes`, `inactive_time_s`, `recomp_time_s`
 
-## Preparation for Stage 3
+### 4.2 Output: Activation Checkpointing Decisions
 
-The output of Stage 2 provides all the necessary information for Stage 3 (Graph Rewriter):
+The algorithm outputs a CSV file with the following information:
 
-1. **Clear Decisions**: Each activation is marked as either "RECOMPUTE" or "RETAINED", providing unambiguous instructions for the Graph Rewriter.
+- `activation_name`: Name of the activation tensor
+- `decision`: Either 'RETAINED' (keep in memory) or 'RECOMPUTE' (discard and recompute)
+- Additional columns from the input data for reference
 
-2. **Timing Information**: The `creation_rank` and `first_bw_use_rank` fields help the Graph Rewriter determine where to insert recomputation subgraphs in the backward pass.
+## 5. Key Components of the Algorithm
 
-3. **Memory and Performance Metrics**: The memory and timing statistics help validate that the Graph Rewriter's implementation achieves the expected memory savings and performance characteristics.
+### 5.1 Memory Simulation
 
-In Stage 3, the Graph Rewriter will:
-- Extract subgraphs for each activation marked as "RECOMPUTE"
-- Insert these subgraphs at the appropriate points in the backward pass
-- Modify the execution strategy to implement these decisions
+The `_simulate_memory_usage` method is a critical component that:
 
-## Conclusion
+1. Simulates the execution of the model with a given checkpointing schedule
+2. Tracks memory usage throughout forward and backward passes
+3. Calculates peak memory consumption and total execution time
+4. Accounts for both retained and recomputed activations
 
-The Stage 2 implementation successfully applies the activation checkpointing algorithm from the Π-TWO paper to determine which activations to recompute vs. retain. While the algorithm couldn't meet the 2GB memory budget due to incompressible memory components, it made optimal decisions within the constraints, marking approximately 66% of activations for recomputation.
+This simulation allows the algorithm to evaluate different checkpointing decisions without actually running the model.
 
-The implementation is ready for Stage 3, which will modify the execution strategy to implement these decisions by extracting and inserting recomputation subgraphs.
+### 5.2 Candidate Selection Strategy
+
+The algorithm selects candidates for recomputation based on the "recompute benefit ratio" (memory saved per unit of recomputation time):
+
+```python
+ratio = mem_size / (recomp_time + 1e-6)
+```
+
+Activations with higher ratios are prioritized for recomputation, as they provide the most memory savings relative to their recomputation cost.
+
+### 5.3 Memory Budget Handling
+
+The algorithm handles the memory budget constraint by:
+
+1. Checking if the budget is achievable given the model's incompressible memory components
+2. Iteratively selecting activations for recomputation until the budget is met or no more candidates are available
+3. Providing the best possible solution even if the budget cannot be fully met
+
+## 6. Performance Characteristics and Trade-offs
+
+### 6.1 Memory-Computation Trade-off
+
+The algorithm explicitly manages the trade-off between memory usage and computation time:
+
+- **Memory savings**: Achieved by marking activations for recomputation
+- **Computation overhead**: Incurred by recomputing activations during the backward pass
+
+The algorithm aims to minimize peak memory usage while keeping the computation overhead reasonable.
+
+### 6.2 Algorithm Efficiency
+
+The implementation includes several optimizations for efficiency:
+
+1. **Caching**: Frequently accessed data is cached to avoid redundant calculations
+2. **Simulation optimization**: The memory simulation is optimized to run quickly
+3. **Early stopping**: The algorithm stops when the memory budget is met
+4. **Timeout mechanism**: Prevents excessive runtime for large models
+
+### 6.3 Scalability
+
+The algorithm is designed to scale with model size and complexity:
+
+- Works with models of varying sizes and architectures
+- Handles different batch sizes
+- Processes large numbers of activations efficiently
+
+## 7. Usage Example
+
+Here's how to use the activation checkpointing algorithm:
+
+```python
+# Initialize the algorithm with profiling data and memory budget
+ac_algo = ActivationCheckpointingAlgorithm(
+    node_stats_path="reports/profiler_stats_bs16_node_stats.csv",
+    activation_stats_path="reports/profiler_stats_bs16_activation_stats.csv",
+    memory_budget_gb=4.0
+)
+
+# Run the algorithm to decide which activations to checkpoint
+final_schedule = ac_algo.decide_checkpoints(
+    fixed_overhead_gb=0.3,  # Memory for parameters, gradients, optimizer states
+    debug=False,
+    max_iterations=1000,
+    timeout_seconds=300,
+    model_info="model_bs16"  # Optional: for naming output files
+)
+
+# The final_schedule is a dictionary mapping activation names to 'RETAINED' or 'RECOMPUTE'
+```
+
+## 8. Algorithm Performance Metrics
+
+The algorithm provides detailed performance metrics:
+
+1. **Memory reduction**: The amount of memory saved compared to retaining all activations
+2. **Execution time overhead**: The additional computation time due to recomputation
+3. **Percentage of activations recomputed**: The proportion of activations marked for recomputation
+4. **Gap to budget**: How close the final memory usage is to the specified budget
+
+## 9. Relationship to Stage 3
+
+The output of Stage 2 (the activation checkpointing decisions) will be used in Stage 3 to:
+
+1. Extract subgraphs for activations marked for recomputation
+2. Replicate these subgraphs in the backward pass
+3. Modify the execution strategy to implement the checkpointing decisions
+
+This will complete the implementation of activation checkpointing in the training process.
+
+## 10. Conclusion
+
+The activation checkpointing algorithm implemented in Stage 2 provides an effective solution to the memory constraints in deep neural network training. By selectively recomputing activations during the backward pass, it reduces peak memory consumption at the cost of increased computation time.
+
+This implementation follows the principles outlined in the Π-TWO paper while adding optimizations for performance and usability. The algorithm makes data-driven decisions based on profiling information from Stage 1, resulting in an optimal trade-off between memory usage and computation time.
