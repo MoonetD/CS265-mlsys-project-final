@@ -438,7 +438,9 @@ class ActivationCheckpointingAlgorithm:
                                 logger.info(f"  Removed {mem_size/(1024**2):.2f} MB for activation {act_name} (last forward use)")
             
             # Calculate current forward pass memory
-            current_fw_mem = fw_active_mem + fw_inter_mem + fixed_overhead_bytes
+            # fw_active_mem already includes the memory for activations, so we should not add fw_inter_mem
+            # current_fw_mem = fw_active_mem + fw_inter_mem + fixed_overhead_bytes
+            current_fw_mem = max(fw_active_mem, fw_inter_mem) + fixed_overhead_bytes
             
             # Update peak forward memory
             if current_fw_mem > fw_peak_mem:
@@ -446,6 +448,7 @@ class ActivationCheckpointingAlgorithm:
                 if debug:
                     logger.info(f"  New forward peak memory: {fw_peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
                     logger.info(f"    Breakdown: FW active={fw_active_mem/(1024**3):.3f} GB, FW inter={fw_inter_mem/(1024**3):.3f} GB")
+                    logger.info(f"    Max(FW active, FW inter)={max(fw_active_mem, fw_inter_mem)/(1024**3):.3f} GB")
         
         # Now, simulate backward pass
         if debug:
@@ -511,7 +514,9 @@ class ActivationCheckpointingAlgorithm:
             
             # Calculate current backward pass memory
             retained_mem = sum(retained_activations.values())
-            current_bw_mem = bw_active_mem + bw_inter_mem + retained_mem + fixed_overhead_bytes
+            # bw_active_mem already includes memory for activations, so we should not add bw_inter_mem and retained_mem
+            # current_bw_mem = bw_active_mem + bw_inter_mem + retained_mem + fixed_overhead_bytes
+            current_bw_mem = max(bw_active_mem, bw_inter_mem + retained_mem) + fixed_overhead_bytes
             
             # Update peak backward memory
             if current_bw_mem > bw_peak_mem:
@@ -520,6 +525,7 @@ class ActivationCheckpointingAlgorithm:
                     logger.info(f"  New backward peak memory: {bw_peak_mem/(1024**3):.3f} GB at node {node_name} (rank {node_rank})")
                     logger.info(f"    Breakdown: BW active={bw_active_mem/(1024**3):.3f} GB, BW inter={bw_inter_mem/(1024**3):.3f} GB")
                     logger.info(f"    Retained={retained_mem/(1024**3):.3f} GB, Fixed overhead={fixed_overhead_bytes/(1024**3):.3f} GB")
+                    logger.info(f"    Max(BW active, BW inter+retained)={max(bw_active_mem, bw_inter_mem + retained_mem)/(1024**3):.3f} GB")
         
         # Overall peak memory is the maximum of forward and backward peaks
         peak_mem = max(fw_peak_mem, bw_peak_mem)
@@ -528,11 +534,11 @@ class ActivationCheckpointingAlgorithm:
         
         # Calculate total simulation time
         sim_timing['total'] = time.time() - sim_start_time
-        logger.info(f"Memory simulation complete.")
-        logger.info(f"Forward pass peak memory: {fw_peak_mem / (1024**3):.3f} GB")
-        logger.info(f"Backward pass peak memory: {bw_peak_mem / (1024**3):.3f} GB")
-        logger.info(f"Overall peak memory: {peak_mem / (1024**3):.3f} GB")
-        logger.info(f"Final execution time: {total_execution_time:.4f}s")
+        # logger.info(f"Memory simulation complete.")
+        # logger.info(f"Forward pass peak memory: {fw_peak_mem / (1024**3):.3f} GB")
+        # logger.info(f"Backward pass peak memory: {bw_peak_mem / (1024**3):.3f} GB")
+        # logger.info(f"Overall peak memory: {peak_mem / (1024**3):.3f} GB")
+        # logger.info(f"Final execution time: {total_execution_time:.4f}s")
         
         if debug:
             
