@@ -1,0 +1,6 @@
+Batch Size,Initial Peak Memory (GB),Final Peak Memory (GB),Memory Reduction (GB),Memory Reduction (%),Initial Execution Time (s),Final Execution Time (s),Execution Time Overhead (s),Execution Time Overhead (%),Recomputation Time (s),Retained Activations,Retained Activations (%),Recomputed Activations,Recomputed Activations (%),Retained Memory (GB),Saved Memory (GB)
+4,1.47,1.47,0.0,0.0,1.32,1.32,0.0,0.0,0.0,620,100.0,0,0.0,0.67,0.0
+8,2.13,1.5,0.6299999999999999,29.57746478873239,1.39,2.07,0.6799999999999999,48.92086330935252,0.6791,559,90.2,61,9.8,0.68,0.65
+16,3.44,1.5,1.94,56.395348837209305,1.63,3.7,2.0700000000000003,126.99386503067487,2.0715,501,80.8,119,19.2,0.67,1.98
+32,6.08,1.49,4.59,75.49342105263158,1.04,5.92,4.88,469.23076923076917,4.8813,420,67.7,200,32.3,0.62,4.66
+64,11.35,1.49,9.86,86.87224669603523,1.43,11.91,10.48,732.8671328671329,10.4742,363,58.5,257,41.5,0.56,9.99

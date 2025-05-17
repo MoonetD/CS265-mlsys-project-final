@@ -14,6 +14,8 @@ import os
 import logging
 import datetime
 from pathlib import Path
+import re
+import argparse
 
 # Configure logging with datetime-formatted log file
 log_dir = Path("logs")
@@ -440,6 +442,7 @@ class ActivationCheckpointingAlgorithm:
             # Calculate current forward pass memory
             # fw_active_mem already includes the memory for activations, so we should not add fw_inter_mem
             # current_fw_mem = fw_active_mem + fw_inter_mem + fixed_overhead_bytes
+            fw_active_mem = 0
             current_fw_mem = max(fw_active_mem, fw_inter_mem) + fixed_overhead_bytes
             
             # Update peak forward memory
@@ -516,6 +519,7 @@ class ActivationCheckpointingAlgorithm:
             retained_mem = sum(retained_activations.values())
             # bw_active_mem already includes memory for activations, so we should not add bw_inter_mem and retained_mem
             # current_bw_mem = bw_active_mem + bw_inter_mem + retained_mem + fixed_overhead_bytes
+            bw_active_mem = 0
             current_bw_mem = max(bw_active_mem, bw_inter_mem + retained_mem) + fixed_overhead_bytes
             
             # Update peak backward memory
@@ -641,12 +645,13 @@ class ActivationCheckpointingAlgorithm:
         act_details = self._get_activation_details_cached(act_name)
         return act_details is not None and pd.notna(act_details.get('first_bw_use_rank'))
         
-    def _save_schedule_to_csv(self, schedule):
+    def _save_schedule_to_csv(self, schedule, model_info=None):
         """
         Save the activation checkpointing schedule to a CSV file.
         
         Args:
             schedule (dict): The schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
+            model_info (str, optional): Model and batch size info for the filename (e.g., 'resnet_bs64').
         """
         try:
             # Create a list of dictionaries for the CSV data
@@ -675,14 +680,18 @@ class ActivationCheckpointingAlgorithm:
             reports_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports')
             os.makedirs(reports_dir, exist_ok=True)
             
-            # Save to CSV
-            output_path = os.path.join(reports_dir, 'ac_decisions.csv')
+            # Save to CSV with model info in the filename if provided
+            if model_info:
+                output_path = os.path.join(reports_dir, f'ac_decisions_{model_info}.csv')
+            else:
+                output_path = os.path.join(reports_dir, 'ac_decisions.csv')
+                
             schedule_df.to_csv(output_path, index=False)
             logger.info(f"Saved activation checkpointing decisions to {output_path}")
         except Exception as e:
             logger.error(f"Error saving schedule to CSV: {e}")
 
-    def decide_checkpoints(self, fixed_overhead_gb=0.3, debug=False, max_iterations=1000, timeout_seconds=120):
+    def decide_checkpoints(self, fixed_overhead_gb=0.3, debug=False, max_iterations=1000, timeout_seconds=120, model_info=None):
         """
         Decides which activations to checkpoint and which to recompute.
         Implements Algorithm B from the Π-TWO paper with optimizations for performance.
@@ -693,6 +702,7 @@ class ActivationCheckpointingAlgorithm:
             debug (bool): Whether to print detailed debug information.
             max_iterations (int): Maximum number of iterations to prevent infinite loops.
             timeout_seconds (int): Maximum time in seconds to run the algorithm before timing out.
+            model_info (str, optional): Model and batch size info for naming output files.
             
         Returns:
             dict: A schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
@@ -752,10 +762,16 @@ class ActivationCheckpointingAlgorithm:
         )
         timing_stats['memory_component_analysis'] = time.time() - mem_analysis_start
         
-        # Calculate incompressible memory without applying heuristic reductions
-        incompressible_memory = max(fw_active_mem, bw_active_mem) + fixed_overhead_bytes
+        # Find the largest activation tensor size
+        largest_activation_size = 0
+        for act_name, act_details in self.activation_stats.items():
+            mem_size = act_details.get('median_mem_size_bytes', 0)
+            if pd.notna(mem_size) and mem_size > largest_activation_size:
+                largest_activation_size = mem_size
+        incompressible_memory = largest_activation_size + fixed_overhead_bytes
         
-        logger.info(f"Incompressible memory: {incompressible_memory / (1024**3):.2f} GB")
+        logger.info(f"Incompressible memory with checkpointing: {incompressible_memory / (1024**3):.2f} GB")
+        logger.info(f"Largest single activation: {largest_activation_size / (1024**3):.2f} GB")
         logger.info(f"Active memory - FW: {fw_active_mem / (1024**3):.2f} GB, BW: {bw_active_mem / (1024**3):.2f} GB")
         logger.info(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.2f} GB")
         
@@ -934,7 +950,7 @@ class ActivationCheckpointingAlgorithm:
         logger.info(f"Memory reduction: {(initial_peak_memory - final_peak_memory) / (1024**3):.2f} GB ({(initial_peak_memory - final_peak_memory) / initial_peak_memory * 100:.1f}%)")
         logger.info(f"Memory budget: {self.memory_budget_bytes / (1024**3):.2f} GB")
         logger.info(f"Gap to budget: {(final_peak_memory - self.memory_budget_bytes) / (1024**3):.2f} GB")
-        logger.info(f"Estimated incompressible memory: {incompressible_memory / (1024**3):.2f} GB")
+        logger.info(f"Theoretical minimum memory (extreme checkpointing): {incompressible_memory / (1024**3):.2f} GB")
         logger.info(f"Initial execution time: {initial_exec_time:.2f}s")
         logger.info(f"Final execution time: {final_exec_time:.2f}s")
         logger.info(f"Execution time overhead: {(final_exec_time - initial_exec_time):.2f}s ({(final_exec_time - initial_exec_time) / initial_exec_time * 100:.1f}%)")
@@ -952,10 +968,50 @@ class ActivationCheckpointingAlgorithm:
         logger.info(f"Total activations marked for recomputation: {recomputed_count}")
         logger.info(f"Total memory saved by recomputation: {recomputed_memory / (1024**3):.2f} GB")
         
+        # Calculate memory used by retained activations and add clearer summary
+        retained_count = sum(1 for decision in current_schedule.values() if decision == 'RETAINED')
+        total_count = len(current_schedule)
+        retained_memory = 0
+        
+        # Recalculate recomputation time total
+        recompute_time_total = 0.0
+        for act_name, decision in current_schedule.items():
+            if decision == 'RECOMPUTE':
+                act_details = self._get_activation_details_cached(act_name)
+                if act_details is not None and 'recomp_time_s' in act_details:
+                    recomp_time = act_details['recomp_time_s']
+                    if pd.notna(recomp_time):
+                        recompute_time_total += recomp_time
+        
+        for act_name, decision in current_schedule.items():
+            if decision == 'RETAINED':
+                act_details = self._get_activation_details_cached(act_name)
+                if act_details is not None and 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
+                    retained_memory += act_details['median_mem_size_bytes']
+        
+        # Print a clearer summary with percentages
+        logger.info("\n" + "="*50)
+        logger.info("ACTIVATION CHECKPOINTING SUMMARY")
+        logger.info("="*50)
+        logger.info(f"Total activations considered:        {total_count}")
+        logger.info(f"Activations marked RETAINED:         {retained_count} ({retained_count/total_count*100:.1f}%)")
+        logger.info(f"Activations marked for RECOMPUTE:    {recomputed_count} ({recomputed_count/total_count*100:.1f}%)")
+        logger.info(f"Memory used by RETAINED activations: {retained_memory / (1024**3):.2f} GB")
+        logger.info(f"Memory saved by RECOMPUTE decisions: {recomputed_memory / (1024**3):.2f} GB")
+        logger.info(f"Final peak memory usage:             {final_peak_memory / (1024**3):.2f} GB")
+        logger.info(f"Memory budget:                       {self.memory_budget_bytes / (1024**3):.2f} GB")
+        logger.info(f"Gap to budget:                       {(final_peak_memory - self.memory_budget_bytes) / (1024**3):.2f} GB")
+        logger.info("-"*50)
+        logger.info(f"Initial execution time:              {initial_exec_time:.4f}s")
+        logger.info(f"Final execution time:                {final_exec_time:.4f}s")
+        logger.info(f"Recomputation time overhead:         {recompute_time_total:.4f}s")
+        logger.info(f"Execution time overhead:             {(final_exec_time - initial_exec_time):.4f}s ({(final_exec_time - initial_exec_time) / initial_exec_time * 100:.1f}%)")
+        logger.info("="*50 + "\n")
+        
         self.schedule = current_schedule
         
         # Save the schedule to a CSV file for easier analysis
-        self._save_schedule_to_csv(current_schedule)
+        self._save_schedule_to_csv(current_schedule, model_info)
         
         # Calculate total execution time and update timing stats
         timing_stats['total'] = time.time() - overall_start_time
@@ -980,7 +1036,6 @@ class ActivationCheckpointingAlgorithm:
                 logger.info(f"  {i+1}. Iteration {iter_data['iteration']}: {iter_data['time']:.2f}s (Simulation: {iter_data['memory_simulation']:.2f}s, Selection: {iter_data['candidate_selection']:.2f}s)")
         
         return self.schedule
-        
     def _analyze_memory_components(self, current_schedule, fixed_overhead_bytes, debug=False):
         """
         Analyze memory components to determine incompressible memory.
@@ -1056,38 +1111,16 @@ class ActivationCheckpointingAlgorithm:
             recomp_time = act_details.get('recomp_time_s')
             
             if not mem_size or not recomp_time or pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
+                # logger.warning(f"Invalid activation details for {act_name}: mem_size={mem_size}, recomp_time={recomp_time}")
                 continue
             
             # Calculate basic recompute benefit ratio
             ratio = mem_size / (recomp_time + 1e-6)
             
-            # Check if this activation is likely to contribute to peak memory
-            # Activations that are created early and used late are more likely to contribute
-            creation_rank = act_details.get('creation_rank', float('inf'))
-            first_bw_use_rank = act_details.get('first_bw_use_rank', float('inf'))
-            last_fw_use_rank = act_details.get('last_fw_use_rank', -1)
-            
-            # If the activation has a long lifetime (created early, used late), it's more likely to contribute to peak memory
-            if pd.notna(creation_rank) and pd.notna(first_bw_use_rank):
-                lifetime = first_bw_use_rank - creation_rank
-                # Boost ratio for activations with long lifetime
-                if lifetime > 100:  # Arbitrary threshold for "long lifetime"
-                    ratio *= 2.0  # Higher boost factor for activations with long lifetime
-                elif lifetime > 50:
-                    ratio *= 1.5  # Medium boost for medium lifetime
-            
-            # Boost ratio for larger activations - more aggressive boosting
-            if mem_size > 50 * (1024 * 1024):  # Very large activations (>50MB)
-                ratio *= 3.0
-            elif mem_size > 10 * (1024 * 1024):  # Large activations (>10MB)
-                ratio *= 2.0
-            elif mem_size > 1 * (1024 * 1024):  # Medium activations (>1MB)
-                ratio *= 1.5
-                
             if ratio > max_ratio:
                 max_ratio = ratio
                 max_candidate = act_name
-                
+        # logger.info(f"Max recompute ratio candidate: {max_candidate}, ratio: {max_ratio}")
         return max_candidate
 
 
@@ -1097,7 +1130,6 @@ if __name__ == "__main__":
     
     # Example usage
     node_stats_file = "reports/profiler_stats_bs4_node_stats.csv"
-    activation_stats_file = "reports/profiler_stats_bs4_activation_stats.csv"
     memory_budget = 4.0  # GB
     
     # Log startup information
@@ -1106,19 +1138,48 @@ if __name__ == "__main__":
     logger.info(f"Log file: {log_path}")
 
     # Parse command line arguments
-    import argparse
-    
     parser = argparse.ArgumentParser(description='Activation Checkpointing Algorithm')
     parser.add_argument('--node-stats', type=str, default=node_stats_file,
                         help='Path to node statistics CSV file')
-    parser.add_argument('--activation-stats', type=str, default=activation_stats_file,
-                        help='Path to activation statistics CSV file')
+    parser.add_argument('--activation-stats', type=str, default=None,
+                        help='Path to activation statistics CSV file (optional, will be inferred from node-stats if not provided)')
     parser.add_argument('--debug', action='store_true', help='Enable debug output')
-    parser.add_argument('--batch-size', type=int, default=50, help='Number of activations to evict per iteration')
     parser.add_argument('--max-iterations', type=int, default=1000, help='Maximum number of iterations')
     parser.add_argument('--memory-budget', type=float, default=memory_budget, help='Memory budget in GB')
     parser.add_argument('--fixed-overhead', type=float, default=0.3, help='Fixed overhead in GB')
     args = parser.parse_args()
+    
+    # Extract model and batch size info from filename for better output naming
+    model_info = None
+    try:
+        # Try to extract model and batch size pattern (e.g., 'resnet_bs64')
+        match = re.search(r'profiler_stats_([a-zA-Z0-9_]+)_bs(\d+)_node_stats', args.node_stats)
+        if match:
+            model_name = match.group(1)
+            batch_size = match.group(2)
+            model_info = f"{model_name}_bs{batch_size}"
+            logger.info(f"Detected model: {model_name}, batch size: {batch_size}")
+        else:
+            # Try alternative pattern formats
+            match = re.search(r'([a-zA-Z0-9_]+)_bs(\d+)', args.node_stats)
+            if match:
+                model_name = match.group(1)
+                batch_size = match.group(2)
+                model_info = f"{model_name}_bs{batch_size}"
+                logger.info(f"Detected model: {model_name}, batch size: {batch_size}")
+    except Exception as e:
+        logger.warning(f"Could not parse model info from filename: {e}")
+    
+    # If activation-stats not provided, infer it from node-stats path
+    if args.activation_stats is None:
+        if model_info:
+            # Use model_info to create activation stats path
+            args.activation_stats = args.node_stats.replace('node_stats', 'activation_stats')
+            logger.info(f"Inferred activation stats path: {args.activation_stats}")
+        else:
+            # Simple replacement as fallback
+            args.activation_stats = args.node_stats.replace('node_stats', 'activation_stats')
+            logger.info(f"Inferred activation stats path: {args.activation_stats}")
 
     try:
         # Initialize the algorithm
@@ -1136,8 +1197,13 @@ if __name__ == "__main__":
             fixed_overhead_gb=args.fixed_overhead,
             debug=args.debug,
             max_iterations=args.max_iterations,
-            timeout_seconds=300  # Increased timeout to 5 minutes
+            timeout_seconds=300,  # Increased timeout to 5 minutes
+            model_info=model_info
         )
+        
+        # No need for this separate call as it's now handled in decide_checkpoints
+        # if model_info:
+        #     ac_algo._save_schedule_to_csv(final_schedule, model_info)
         
         # Print summary
         recomputed_count = sum(1 for decision in final_schedule.values() if decision == 'RECOMPUTE')

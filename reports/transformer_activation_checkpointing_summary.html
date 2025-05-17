@@ -1,0 +1,66 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Transformer Activation Checkpointing Summary</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+                max-width: 1600px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            table {
+                border-collapse: collapse;
+                font-size: 12pt;
+                width: 100%;
+                margin: 20px 0;
+            }
+            th {
+                background-color: #4472C4;
+                color: white;
+                font-weight: bold;
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #ddd;
+            }
+            td {
+                text-align: center;
+                padding: 8px;
+                border: 1px solid #ddd;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            h1 {
+                color: #333;
+                text-align: center;
+            }
+            .memory-budget {
+                color: red;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Transformer Activation Checkpointing Summary</h1>
+        <p>Memory Budget: <span class="memory-budget">1.5 GB</span></p>
+        <table>
+<thead>
+<tr><th style="text-align: right;">  </th><th style="text-align: right;">  Batch Size</th><th style="text-align: right;">  Initial Peak Memory (GB)</th><th style="text-align: right;">  Final Peak Memory (GB)</th><th style="text-align: right;">  Memory Reduction (GB)</th><th>Memory Reduction (%)  </th><th style="text-align: right;">  Initial Execution Time (s)</th><th style="text-align: right;">  Final Execution Time (s)</th><th style="text-align: right;">  Execution Time Overhead (s)</th><th>Execution Time Overhead (%)  </th><th style="text-align: right;">  Recomputation Time (s)</th><th style="text-align: right;">  Retained Activations</th><th>Retained Activations (%)  </th><th style="text-align: right;">  Recomputed Activations</th><th>Recomputed Activations (%)  </th><th style="text-align: right;">  Retained Memory (GB)</th><th style="text-align: right;">  Saved Memory (GB)</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: right;"> 0</td><td style="text-align: right;">           2</td><td style="text-align: right;">                      1.39</td><td style="text-align: right;">                    1.39</td><td style="text-align: right;">                   0   </td><td>0.0%                  </td><td style="text-align: right;">                        0.15</td><td style="text-align: right;">                      0.15</td><td style="text-align: right;">                         0   </td><td>0.0%                         </td><td style="text-align: right;">                  0     </td><td style="text-align: right;">                   150</td><td>100.0%                    </td><td style="text-align: right;">                       0</td><td>0.0%                        </td><td style="text-align: right;">                  0.19</td><td style="text-align: right;">               0   </td></tr>
+<tr><td style="text-align: right;"> 1</td><td style="text-align: right;">           4</td><td style="text-align: right;">                      1.46</td><td style="text-align: right;">                    1.46</td><td style="text-align: right;">                   0   </td><td>0.0%                  </td><td style="text-align: right;">                        0.31</td><td style="text-align: right;">                      0.31</td><td style="text-align: right;">                         0   </td><td>0.0%                         </td><td style="text-align: right;">                  0     </td><td style="text-align: right;">                   150</td><td>100.0%                    </td><td style="text-align: right;">                       0</td><td>0.0%                        </td><td style="text-align: right;">                  0.26</td><td style="text-align: right;">               0   </td></tr>
+<tr><td style="text-align: right;"> 2</td><td style="text-align: right;">           8</td><td style="text-align: right;">                      1.59</td><td style="text-align: right;">                    1.5 </td><td style="text-align: right;">                   0.09</td><td>5.7%                  </td><td style="text-align: right;">                        0.41</td><td style="text-align: right;">                      0.57</td><td style="text-align: right;">                         0.16</td><td>39.0%                        </td><td style="text-align: right;">                  0.1583</td><td style="text-align: right;">                   137</td><td>91.3%                     </td><td style="text-align: right;">                      13</td><td>8.7%                        </td><td style="text-align: right;">                  0.24</td><td style="text-align: right;">               0.15</td></tr>
+<tr><td style="text-align: right;"> 3</td><td style="text-align: right;">          16</td><td style="text-align: right;">                      1.85</td><td style="text-align: right;">                    1.5 </td><td style="text-align: right;">                   0.35</td><td>18.9%                 </td><td style="text-align: right;">                        0.22</td><td style="text-align: right;">                      0.66</td><td style="text-align: right;">                         0.44</td><td>200.0%                       </td><td style="text-align: right;">                  0.4368</td><td style="text-align: right;">                   105</td><td>70.0%                     </td><td style="text-align: right;">                      45</td><td>30.0%                       </td><td style="text-align: right;">                  0.24</td><td style="text-align: right;">               0.42</td></tr>
+<tr><td style="text-align: right;"> 4</td><td style="text-align: right;">          32</td><td style="text-align: right;">                      2.38</td><td style="text-align: right;">                    1.49</td><td style="text-align: right;">                   0.89</td><td>37.4%                 </td><td style="text-align: right;">                        0.24</td><td style="text-align: right;">                      1.28</td><td style="text-align: right;">                         1.04</td><td>433.3%                       </td><td style="text-align: right;">                  1.0348</td><td style="text-align: right;">                    78</td><td>52.0%                     </td><td style="text-align: right;">                      72</td><td>48.0%                       </td><td style="text-align: right;">                  0.19</td><td style="text-align: right;">               0.99</td></tr>
+<tr><td style="text-align: right;"> 5</td><td style="text-align: right;">          64</td><td style="text-align: right;">                      3.43</td><td style="text-align: right;">                    1.5 </td><td style="text-align: right;">                   1.93</td><td>56.3%                 </td><td style="text-align: right;">                        0.25</td><td style="text-align: right;">                      2.55</td><td style="text-align: right;">                         2.3 </td><td>920.0%                       </td><td style="text-align: right;">                  2.3005</td><td style="text-align: right;">                    40</td><td>26.7%                     </td><td style="text-align: right;">                     110</td><td>73.3%                       </td><td style="text-align: right;">                  0.03</td><td style="text-align: right;">               2.19</td></tr>
+<tr><td style="text-align: right;"> 6</td><td style="text-align: right;">         128</td><td style="text-align: right;">                      5.52</td><td style="text-align: right;">                    1.74</td><td style="text-align: right;">                   3.78</td><td>68.5%                 </td><td style="text-align: right;">                        0.44</td><td style="text-align: right;">                      4.98</td><td style="text-align: right;">                         4.54</td><td>1031.8%                      </td><td style="text-align: right;">                  4.5345</td><td style="text-align: right;">                     0</td><td>0.0%                      </td><td style="text-align: right;">                     150</td><td>100.0%                      </td><td style="text-align: right;">                  0   </td><td style="text-align: right;">               4.32</td></tr>
+<tr><td style="text-align: right;"> 7</td><td style="text-align: right;">         256</td><td style="text-align: right;">                      9.72</td><td style="text-align: right;">                    2.27</td><td style="text-align: right;">                   7.45</td><td>76.6%                 </td><td style="text-align: right;">                        0.88</td><td style="text-align: right;">                      9.84</td><td style="text-align: right;">                         8.96</td><td>1018.2%                      </td><td style="text-align: right;">                  8.9621</td><td style="text-align: right;">                     0</td><td>0.0%                      </td><td style="text-align: right;">                     150</td><td>100.0%                      </td><td style="text-align: right;">                  0   </td><td style="text-align: right;">               8.52</td></tr>
+</tbody>
+</table>
+    </body>
+    </html>
+    

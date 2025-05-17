@@ -1,0 +1,70 @@
+2025-05-17 04:05:01,126 - INFO - ================================================================================
+2025-05-17 04:05:01,126 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 04:05:01,126 - INFO - Log file: logs\activation_checkpointing_20250517_040501.log
+2025-05-17 04:05:01,127 - INFO - Detected model: resnet, batch size: 8
+2025-05-17 04:05:01,127 - INFO - Inferred activation stats path: reports/profiler_stats_resnet_bs8_activation_stats.csv
+2025-05-17 04:05:01,814 - INFO - Loaded node stats with 18493 rows
+2025-05-17 04:05:01,815 - INFO - Loaded activation stats with 775 rows
+2025-05-17 04:05:01,815 - INFO - Memory budget set to 6.0 GB (6442450944.0 bytes)
+2025-05-17 04:05:01,815 - INFO - Algorithm initialization time: 0.69s
+2025-05-17 04:05:01,815 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 04:05:01,815 - INFO - Fixed overhead: 0.8 GB, Memory budget: 6.00 GB
+2025-05-17 04:05:01,815 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 04:05:01,815 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-17 04:05:01,830 - INFO - Built activation mappings with 775 activations
+2025-05-17 04:05:01,831 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-17 04:05:01,863 - INFO - Initial peak memory: 2.13 GB
+2025-05-17 04:05:01,863 - INFO - Initial execution time: 1.39s
+2025-05-17 04:05:01,873 - INFO - Incompressible memory with checkpointing: 0.82 GB
+2025-05-17 04:05:01,873 - INFO - Largest single activation: 0.02 GB
+2025-05-17 04:05:01,873 - INFO - Active memory - FW: 2.02 GB, BW: 2.07 GB
+2025-05-17 04:05:01,874 - INFO - Fixed overhead: 0.80 GB
+2025-05-17 04:05:01,874 - INFO - Memory budget of 6.00 GB should be achievable
+2025-05-17 04:05:01,874 - INFO - Filtering valid activations...
+2025-05-17 04:05:01,874 - INFO - Found 775 valid activations for consideration
+2025-05-17 04:05:01,907 - INFO - Memory budget of 6.00 GB met.
+2025-05-17 04:05:01,907 - INFO - Actual memory usage: 2.13 GB
+2025-05-17 04:05:01,937 - INFO - 
+Final Results:
+2025-05-17 04:05:01,937 - INFO - Initial peak memory: 2.13 GB
+2025-05-17 04:05:01,937 - INFO - Final peak memory: 2.13 GB
+2025-05-17 04:05:01,937 - INFO - Memory reduction: 0.00 GB (0.0%)
+2025-05-17 04:05:01,938 - INFO - Memory budget: 6.00 GB
+2025-05-17 04:05:01,938 - INFO - Gap to budget: -3.87 GB
+2025-05-17 04:05:01,938 - INFO - Theoretical minimum memory (extreme checkpointing): 0.82 GB
+2025-05-17 04:05:01,938 - INFO - Initial execution time: 1.39s
+2025-05-17 04:05:01,938 - INFO - Final execution time: 1.39s
+2025-05-17 04:05:01,938 - INFO - Execution time overhead: 0.00s (0.0%)
+2025-05-17 04:05:01,938 - INFO - Total activations marked for recomputation: 0
+2025-05-17 04:05:01,938 - INFO - Total memory saved by recomputation: 0.00 GB
+2025-05-17 04:05:01,938 - INFO - 
+==================================================
+2025-05-17 04:05:01,938 - INFO - ACTIVATION CHECKPOINTING SUMMARY
+2025-05-17 04:05:01,938 - INFO - ==================================================
+2025-05-17 04:05:01,938 - INFO - Total activations considered:        620
+2025-05-17 04:05:01,938 - INFO - Activations marked RETAINED:         620 (100.0%)
+2025-05-17 04:05:01,938 - INFO - Activations marked for RECOMPUTE:    0 (0.0%)
+2025-05-17 04:05:01,938 - INFO - Memory used by RETAINED activations: 1.33 GB
+2025-05-17 04:05:01,938 - INFO - Memory saved by RECOMPUTE decisions: 0.00 GB
+2025-05-17 04:05:01,938 - INFO - Final peak memory usage:             2.13 GB
+2025-05-17 04:05:01,938 - INFO - Memory budget:                       6.00 GB
+2025-05-17 04:05:01,938 - INFO - Gap to budget:                       -3.87 GB
+2025-05-17 04:05:01,939 - INFO - --------------------------------------------------
+2025-05-17 04:05:01,939 - INFO - Initial execution time:              1.3902s
+2025-05-17 04:05:01,939 - INFO - Final execution time:                1.3902s
+2025-05-17 04:05:01,939 - INFO - Recomputation time overhead:         0.0000s
+2025-05-17 04:05:01,939 - INFO - Execution time overhead:             0.0000s (0.0%)
+2025-05-17 04:05:01,939 - INFO - ==================================================
+
+2025-05-17 04:05:01,943 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions_resnet_bs8.csv
+2025-05-17 04:05:01,943 - INFO - 
+Timing Statistics:
+2025-05-17 04:05:01,943 - INFO - Total execution time: 0.13s
+2025-05-17 04:05:01,943 - INFO - Initialization: 0.00s (0.0%)
+2025-05-17 04:05:01,943 - INFO - Initial memory simulation: 0.05s (37.5%)
+2025-05-17 04:05:01,943 - INFO - Memory component analysis: 0.01s (7.7%)
+2025-05-17 04:05:01,943 - INFO - Candidate filtering: 0.00s (0.0%)
+2025-05-17 04:05:01,943 - INFO - Main loop: 0.03s (25.8%)
+2025-05-17 04:05:01,943 - INFO -   - Memory simulations: 0.03s (25.8%)
+2025-05-17 04:05:01,943 - INFO -   - Candidate selection: 0.00s (0.0%)
+2025-05-17 04:05:01,944 - INFO - Final memory simulation: 0.03s (23.3%)

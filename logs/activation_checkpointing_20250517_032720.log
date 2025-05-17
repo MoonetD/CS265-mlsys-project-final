@@ -1,0 +1,21 @@
+2025-05-17 03:27:20,803 - INFO - ================================================================================
+2025-05-17 03:27:20,803 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 03:27:20,803 - INFO - Log file: logs\activation_checkpointing_20250517_032720.log
+2025-05-17 03:27:21,479 - INFO - Loaded node stats with 18493 rows
+2025-05-17 03:27:21,479 - INFO - Loaded activation stats with 775 rows
+2025-05-17 03:27:21,479 - INFO - Memory budget set to 8.0 GB (8589934592.0 bytes)
+2025-05-17 03:27:21,479 - INFO - Algorithm initialization time: 0.67s
+2025-05-17 03:27:21,489 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 03:27:21,489 - INFO - Fixed overhead: 0.3 GB, Memory budget: 8.00 GB
+2025-05-17 03:27:21,489 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 03:27:21,489 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-17 03:27:21,505 - INFO - Built activation mappings with 775 activations
+2025-05-17 03:27:21,505 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-17 03:27:21,663 - INFO - Initial peak memory: 11.68 GB
+2025-05-17 03:27:21,663 - INFO - Initial execution time: 1.43s
+2025-05-17 03:27:21,675 - INFO - Incompressible memory: 0.49 GB
+2025-05-17 03:27:21,675 - INFO - Active memory - FW: 0.19 GB, BW: 0.19 GB
+2025-05-17 03:27:21,675 - INFO - Fixed overhead: 0.30 GB
+2025-05-17 03:27:21,675 - INFO - Memory budget of 8.00 GB should be achievable
+2025-05-17 03:27:21,675 - INFO - Filtering valid activations...
+2025-05-17 03:27:21,676 - INFO - Found 775 valid activations for consideration
