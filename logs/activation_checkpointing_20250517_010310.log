@@ -1,0 +1,62 @@
+2025-05-17 01:03:10,630 - INFO - ================================================================================
+2025-05-17 01:03:10,631 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 01:03:10,631 - INFO - Log file: logs\activation_checkpointing_20250517_010310.log
+2025-05-17 01:03:10,763 - INFO - Loaded node stats with 3663 rows
+2025-05-17 01:03:10,763 - INFO - Loaded activation stats with 150 rows
+2025-05-17 01:03:10,763 - INFO - Memory budget set to 3.0 GB (3221225472.0 bytes)
+2025-05-17 01:03:10,763 - INFO - Algorithm initialization time: 0.13s
+2025-05-17 01:03:10,764 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 01:03:10,764 - INFO - Fixed overhead: 0.3 GB, Memory budget: 3.00 GB
+2025-05-17 01:03:10,764 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 01:03:10,764 - INFO - Initial schedule has 150 activations marked for RETAINED
+2025-05-17 01:03:10,767 - INFO - Built activation mappings with 150 activations
+2025-05-17 01:03:10,767 - INFO - Initialized simulation cache with 3663 nodes, 714 forward nodes, 2947 backward nodes
+2025-05-17 01:03:10,772 - INFO - Initial peak memory: 6.21 GB
+2025-05-17 01:03:10,772 - INFO - Initial execution time: 0.25s
+2025-05-17 01:03:10,774 - INFO - Incompressible memory: 3.98 GB
+2025-05-17 01:03:10,774 - INFO - Active memory - FW: 3.68 GB, BW: 2.88 GB
+2025-05-17 01:03:10,774 - INFO - Fixed overhead: 0.30 GB
+2025-05-17 01:03:10,774 - WARNING - Memory budget of 3.00 GB is not achievable!
+2025-05-17 01:03:10,774 - WARNING - Estimated minimum possible memory is 3.98 GB due to incompressible components
+2025-05-17 01:03:10,774 - WARNING - Will try to get as close as possible to the budget
+2025-05-17 01:03:10,775 - WARNING - Setting effective target budget to incompressible memory: 3.98 GB
+2025-05-17 01:03:10,775 - INFO - Filtering valid activations...
+2025-05-17 01:03:10,775 - INFO - Found 150 valid activations for consideration
+2025-05-17 01:03:11,541 - WARNING - No candidates left to process, but still over requested budget.
+2025-05-17 01:03:11,541 - WARNING - Gap to requested budget: 1.17 GB
+2025-05-17 01:03:11,541 - WARNING - Gap to incompressible memory: 0.19 GB
+2025-05-17 01:03:11,541 - WARNING - Incompressible memory remains the same without heuristic reductions
+2025-05-17 01:03:11,546 - INFO - After aggressive recomputation: peak memory = 4.17 GB
+2025-05-17 01:03:11,546 - WARNING - Still over budget by 1.17 GB
+2025-05-17 01:03:11,551 - INFO - 
+Final Results:
+2025-05-17 01:03:11,551 - INFO - Initial peak memory: 6.21 GB
+2025-05-17 01:03:11,551 - INFO - Final peak memory: 4.17 GB
+2025-05-17 01:03:11,551 - INFO - Memory reduction: 2.03 GB (32.8%)
+2025-05-17 01:03:11,551 - INFO - Memory budget: 3.00 GB
+2025-05-17 01:03:11,551 - INFO - Gap to budget: 1.17 GB
+2025-05-17 01:03:11,551 - INFO - Estimated incompressible memory: 3.98 GB
+2025-05-17 01:03:11,551 - INFO - Initial execution time: 0.25s
+2025-05-17 01:03:11,551 - INFO - Final execution time: 2.58s
+2025-05-17 01:03:11,551 - INFO - Execution time overhead: 2.33s (931.0%)
+2025-05-17 01:03:11,551 - INFO - Total activations marked for recomputation: 150
+2025-05-17 01:03:11,551 - INFO - Total memory saved by recomputation: 2.23 GB
+2025-05-17 01:03:11,553 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions.csv
+2025-05-17 01:03:11,554 - INFO - 
+Timing Statistics:
+2025-05-17 01:03:11,554 - INFO - Total execution time: 0.79s
+2025-05-17 01:03:11,554 - INFO - Initialization: 0.00s (0.0%)
+2025-05-17 01:03:11,554 - INFO - Initial memory simulation: 0.01s (1.0%)
+2025-05-17 01:03:11,554 - INFO - Memory component analysis: 0.00s (0.3%)
+2025-05-17 01:03:11,554 - INFO - Candidate filtering: 0.00s (0.0%)
+2025-05-17 01:03:11,554 - INFO - Main loop: 0.77s (97.6%)
+2025-05-17 01:03:11,554 - INFO -   - Memory simulations: 0.75s (94.8%)
+2025-05-17 01:03:11,554 - INFO -   - Candidate selection: 0.02s (2.1%)
+2025-05-17 01:03:11,554 - INFO - Final memory simulation: 0.01s (0.6%)
+2025-05-17 01:03:11,554 - INFO - 
+Top 5 slowest iterations:
+2025-05-17 01:03:11,554 - INFO -   1. Iteration 2: 0.01s (Simulation: 0.01s, Selection: 0.00s)
+2025-05-17 01:03:11,554 - INFO -   2. Iteration 107: 0.01s (Simulation: 0.01s, Selection: 0.00s)
+2025-05-17 01:03:11,554 - INFO -   3. Iteration 4: 0.01s (Simulation: 0.01s, Selection: 0.00s)
+2025-05-17 01:03:11,554 - INFO -   4. Iteration 90: 0.01s (Simulation: 0.01s, Selection: 0.00s)
+2025-05-17 01:03:11,554 - INFO -   5. Iteration 25: 0.01s (Simulation: 0.01s, Selection: 0.00s)

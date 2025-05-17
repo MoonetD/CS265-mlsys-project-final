@@ -1,0 +1,28 @@
+2025-05-17 00:59:05,138 - INFO - ================================================================================
+2025-05-17 00:59:05,138 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 00:59:05,138 - INFO - Log file: logs\activation_checkpointing_20250517_005905.log
+2025-05-17 00:59:05,289 - INFO - Loaded node stats with 3663 rows
+2025-05-17 00:59:05,289 - INFO - Loaded activation stats with 150 rows
+2025-05-17 00:59:05,289 - INFO - Memory budget set to 3.0 GB (3221225472.0 bytes)
+2025-05-17 00:59:05,289 - INFO - Algorithm initialization time: 0.15s
+2025-05-17 00:59:05,290 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 00:59:05,290 - INFO - Fixed overhead: 0.3 GB, Memory budget: 3.00 GB
+2025-05-17 00:59:05,290 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 00:59:05,291 - INFO - Initial schedule has 150 activations marked for RETAINED
+2025-05-17 00:59:05,294 - INFO - Built activation mappings with 150 activations
+2025-05-17 00:59:05,294 - INFO - Initialized simulation cache with 3663 nodes, 714 forward nodes, 2947 backward nodes
+2025-05-17 00:59:05,299 - INFO - Initial peak memory: 6.21 GB
+2025-05-17 00:59:05,299 - INFO - Initial execution time: 0.25s
+2025-05-17 00:59:05,301 - INFO - Incompressible memory: 3.98 GB
+2025-05-17 00:59:05,301 - INFO - Active memory - FW: 3.68 GB, BW: 2.88 GB
+2025-05-17 00:59:05,301 - INFO - Fixed overhead: 0.30 GB
+2025-05-17 00:59:05,301 - WARNING - Memory budget of 3.00 GB is not achievable!
+2025-05-17 00:59:05,301 - WARNING - Estimated minimum possible memory is 3.98 GB due to incompressible components
+2025-05-17 00:59:05,301 - WARNING - Will try to get as close as possible to the budget
+2025-05-17 00:59:05,302 - WARNING - Setting effective target budget to incompressible memory: 3.98 GB
+2025-05-17 00:59:05,302 - INFO - Filtering valid activations...
+2025-05-17 00:59:05,302 - INFO - Found 150 valid activations for consideration
+2025-05-17 00:59:06,115 - WARNING - No candidates left to process, but still over requested budget.
+2025-05-17 00:59:06,115 - WARNING - Gap to requested budget: 1.17 GB
+2025-05-17 00:59:06,115 - WARNING - Gap to incompressible memory: 0.19 GB
+2025-05-17 00:59:06,115 - WARNING - Incompressible memory remains the same without heuristic reductions

@@ -1,0 +1,48 @@
+2025-05-17 00:58:15,712 - INFO - ================================================================================
+2025-05-17 00:58:15,713 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 00:58:15,713 - INFO - Log file: logs\activation_checkpointing_20250517_005815.log
+2025-05-17 00:58:15,849 - INFO - Loaded node stats with 3663 rows
+2025-05-17 00:58:15,849 - INFO - Loaded activation stats with 150 rows
+2025-05-17 00:58:15,849 - INFO - Memory budget set to 20.0 GB (21474836480.0 bytes)
+2025-05-17 00:58:15,849 - INFO - Algorithm initialization time: 0.13s
+2025-05-17 00:58:15,850 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 00:58:15,850 - INFO - Fixed overhead: 0.3 GB, Memory budget: 20.00 GB
+2025-05-17 00:58:15,850 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 00:58:15,850 - INFO - Initial schedule has 150 activations marked for RETAINED
+2025-05-17 00:58:15,853 - INFO - Built activation mappings with 150 activations
+2025-05-17 00:58:15,853 - INFO - Initialized simulation cache with 3663 nodes, 714 forward nodes, 2947 backward nodes
+2025-05-17 00:58:15,858 - INFO - Initial peak memory: 6.21 GB
+2025-05-17 00:58:15,858 - INFO - Initial execution time: 0.25s
+2025-05-17 00:58:15,860 - INFO - Incompressible memory: 3.98 GB
+2025-05-17 00:58:15,860 - INFO - Active memory - FW: 3.68 GB, BW: 2.88 GB
+2025-05-17 00:58:15,860 - INFO - Fixed overhead: 0.30 GB
+2025-05-17 00:58:15,860 - INFO - Setting effective target budget to 19.60 GB (2% below requested)
+2025-05-17 00:58:15,860 - INFO - Filtering valid activations...
+2025-05-17 00:58:15,861 - INFO - Found 150 valid activations for consideration
+2025-05-17 00:58:15,867 - INFO - Memory budget of 20.00 GB met.
+2025-05-17 00:58:15,867 - INFO - Actual memory usage: 6.21 GB
+2025-05-17 00:58:15,872 - INFO - 
+Final Results:
+2025-05-17 00:58:15,872 - INFO - Initial peak memory: 6.21 GB
+2025-05-17 00:58:15,872 - INFO - Final peak memory: 6.21 GB
+2025-05-17 00:58:15,872 - INFO - Memory reduction: 0.00 GB (0.0%)
+2025-05-17 00:58:15,872 - INFO - Memory budget: 20.00 GB
+2025-05-17 00:58:15,872 - INFO - Gap to budget: -13.79 GB
+2025-05-17 00:58:15,872 - INFO - Estimated incompressible memory: 3.98 GB
+2025-05-17 00:58:15,872 - INFO - Initial execution time: 0.25s
+2025-05-17 00:58:15,872 - INFO - Final execution time: 0.25s
+2025-05-17 00:58:15,872 - INFO - Execution time overhead: 0.00s (0.0%)
+2025-05-17 00:58:15,872 - INFO - Total activations marked for recomputation: 0
+2025-05-17 00:58:15,873 - INFO - Total memory saved by recomputation: 0.00 GB
+2025-05-17 00:58:15,878 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions.csv
+2025-05-17 00:58:15,878 - INFO - 
+Timing Statistics:
+2025-05-17 00:58:15,878 - INFO - Total execution time: 0.03s
+2025-05-17 00:58:15,878 - INFO - Initialization: 0.00s (0.0%)
+2025-05-17 00:58:15,878 - INFO - Initial memory simulation: 0.01s (28.8%)
+2025-05-17 00:58:15,878 - INFO - Memory component analysis: 0.00s (7.2%)
+2025-05-17 00:58:15,878 - INFO - Candidate filtering: 0.00s (3.6%)
+2025-05-17 00:58:15,878 - INFO - Main loop: 0.01s (21.6%)
+2025-05-17 00:58:15,878 - INFO -   - Memory simulations: 0.01s (21.6%)
+2025-05-17 00:58:15,878 - INFO -   - Candidate selection: 0.00s (0.0%)
+2025-05-17 00:58:15,878 - INFO - Final memory simulation: 0.00s (18.0%)

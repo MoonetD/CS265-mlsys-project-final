@@ -1,0 +1,605 @@
+2025-05-17 01:12:09,345 - INFO - ================================================================================
+2025-05-17 01:12:09,345 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-17 01:12:09,345 - INFO - Log file: logs\activation_checkpointing_20250517_011209.log
+2025-05-17 01:12:10,022 - INFO - Loaded node stats with 18493 rows
+2025-05-17 01:12:10,022 - INFO - Loaded activation stats with 775 rows
+2025-05-17 01:12:10,022 - INFO - Memory budget set to 15.0 GB (16106127360.0 bytes)
+2025-05-17 01:12:10,022 - INFO - Algorithm initialization time: 0.67s
+2025-05-17 01:12:10,024 - INFO - Starting checkpoint decision algorithm...
+2025-05-17 01:12:10,024 - INFO - Fixed overhead: 0.3 GB, Memory budget: 15.00 GB
+2025-05-17 01:12:10,024 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-17 01:12:10,024 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-17 01:12:10,038 - INFO - Built activation mappings with 775 activations
+2025-05-17 01:12:10,038 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-17 01:12:10,069 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,069 - INFO - Forward pass peak memory: 22.203 GB
+2025-05-17 01:12:10,069 - INFO - Backward pass peak memory: 22.203 GB
+2025-05-17 01:12:10,069 - INFO - Overall peak memory: 22.203 GB
+2025-05-17 01:12:10,069 - INFO - Final execution time: 1.4647s
+2025-05-17 01:12:10,069 - INFO - Initial peak memory: 22.20 GB
+2025-05-17 01:12:10,069 - INFO - Initial execution time: 1.46s
+2025-05-17 01:12:10,079 - INFO - Incompressible memory: 11.69 GB
+2025-05-17 01:12:10,079 - INFO - Active memory - FW: 11.36 GB, BW: 11.39 GB
+2025-05-17 01:12:10,079 - INFO - Fixed overhead: 0.30 GB
+2025-05-17 01:12:10,079 - INFO - Setting effective target budget to 14.70 GB (2% below requested)
+2025-05-17 01:12:10,079 - INFO - Filtering valid activations...
+2025-05-17 01:12:10,080 - INFO - Found 775 valid activations for consideration
+2025-05-17 01:12:10,114 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,114 - INFO - Forward pass peak memory: 22.203 GB
+2025-05-17 01:12:10,114 - INFO - Backward pass peak memory: 22.203 GB
+2025-05-17 01:12:10,114 - INFO - Overall peak memory: 22.203 GB
+2025-05-17 01:12:10,115 - INFO - Final execution time: 1.4647s
+2025-05-17 01:12:10,148 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,149 - INFO - Forward pass peak memory: 22.012 GB
+2025-05-17 01:12:10,149 - INFO - Backward pass peak memory: 22.012 GB
+2025-05-17 01:12:10,149 - INFO - Overall peak memory: 22.012 GB
+2025-05-17 01:12:10,149 - INFO - Final execution time: 1.6654s
+2025-05-17 01:12:10,182 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,182 - INFO - Forward pass peak memory: 21.821 GB
+2025-05-17 01:12:10,182 - INFO - Backward pass peak memory: 21.820 GB
+2025-05-17 01:12:10,182 - INFO - Overall peak memory: 21.821 GB
+2025-05-17 01:12:10,182 - INFO - Final execution time: 1.8661s
+2025-05-17 01:12:10,215 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,215 - INFO - Forward pass peak memory: 21.629 GB
+2025-05-17 01:12:10,215 - INFO - Backward pass peak memory: 21.629 GB
+2025-05-17 01:12:10,215 - INFO - Overall peak memory: 21.629 GB
+2025-05-17 01:12:10,215 - INFO - Final execution time: 2.0669s
+2025-05-17 01:12:10,250 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,250 - INFO - Forward pass peak memory: 21.438 GB
+2025-05-17 01:12:10,250 - INFO - Backward pass peak memory: 21.438 GB
+2025-05-17 01:12:10,250 - INFO - Overall peak memory: 21.438 GB
+2025-05-17 01:12:10,250 - INFO - Final execution time: 2.2676s
+2025-05-17 01:12:10,286 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,286 - INFO - Forward pass peak memory: 21.246 GB
+2025-05-17 01:12:10,286 - INFO - Backward pass peak memory: 21.246 GB
+2025-05-17 01:12:10,286 - INFO - Overall peak memory: 21.246 GB
+2025-05-17 01:12:10,286 - INFO - Final execution time: 2.4683s
+2025-05-17 01:12:10,319 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,319 - INFO - Forward pass peak memory: 21.055 GB
+2025-05-17 01:12:10,319 - INFO - Backward pass peak memory: 21.055 GB
+2025-05-17 01:12:10,319 - INFO - Overall peak memory: 21.055 GB
+2025-05-17 01:12:10,319 - INFO - Final execution time: 2.6690s
+2025-05-17 01:12:10,352 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,352 - INFO - Forward pass peak memory: 20.864 GB
+2025-05-17 01:12:10,352 - INFO - Backward pass peak memory: 20.863 GB
+2025-05-17 01:12:10,352 - INFO - Overall peak memory: 20.864 GB
+2025-05-17 01:12:10,352 - INFO - Final execution time: 2.8697s
+2025-05-17 01:12:10,383 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,384 - INFO - Forward pass peak memory: 20.672 GB
+2025-05-17 01:12:10,384 - INFO - Backward pass peak memory: 20.672 GB
+2025-05-17 01:12:10,384 - INFO - Overall peak memory: 20.672 GB
+2025-05-17 01:12:10,384 - INFO - Final execution time: 3.0704s
+2025-05-17 01:12:10,415 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,415 - INFO - Forward pass peak memory: 20.481 GB
+2025-05-17 01:12:10,415 - INFO - Backward pass peak memory: 20.481 GB
+2025-05-17 01:12:10,415 - INFO - Overall peak memory: 20.481 GB
+2025-05-17 01:12:10,415 - INFO - Final execution time: 3.2711s
+2025-05-17 01:12:10,448 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,448 - INFO - Forward pass peak memory: 20.385 GB
+2025-05-17 01:12:10,448 - INFO - Backward pass peak memory: 20.385 GB
+2025-05-17 01:12:10,448 - INFO - Overall peak memory: 20.385 GB
+2025-05-17 01:12:10,448 - INFO - Final execution time: 3.3714s
+2025-05-17 01:12:10,482 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,482 - INFO - Forward pass peak memory: 20.385 GB
+2025-05-17 01:12:10,482 - INFO - Backward pass peak memory: 20.289 GB
+2025-05-17 01:12:10,482 - INFO - Overall peak memory: 20.385 GB
+2025-05-17 01:12:10,482 - INFO - Final execution time: 3.4718s
+2025-05-17 01:12:10,514 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,514 - INFO - Forward pass peak memory: 20.289 GB
+2025-05-17 01:12:10,514 - INFO - Backward pass peak memory: 20.193 GB
+2025-05-17 01:12:10,514 - INFO - Overall peak memory: 20.289 GB
+2025-05-17 01:12:10,514 - INFO - Final execution time: 3.5721s
+2025-05-17 01:12:10,545 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,545 - INFO - Forward pass peak memory: 20.194 GB
+2025-05-17 01:12:10,545 - INFO - Backward pass peak memory: 20.098 GB
+2025-05-17 01:12:10,545 - INFO - Overall peak memory: 20.194 GB
+2025-05-17 01:12:10,545 - INFO - Final execution time: 3.6725s
+2025-05-17 01:12:10,577 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,577 - INFO - Forward pass peak memory: 20.098 GB
+2025-05-17 01:12:10,577 - INFO - Backward pass peak memory: 20.002 GB
+2025-05-17 01:12:10,577 - INFO - Overall peak memory: 20.098 GB
+2025-05-17 01:12:10,577 - INFO - Final execution time: 3.7728s
+2025-05-17 01:12:10,609 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,609 - INFO - Forward pass peak memory: 20.002 GB
+2025-05-17 01:12:10,609 - INFO - Backward pass peak memory: 19.906 GB
+2025-05-17 01:12:10,609 - INFO - Overall peak memory: 20.002 GB
+2025-05-17 01:12:10,609 - INFO - Final execution time: 3.8732s
+2025-05-17 01:12:10,641 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,641 - INFO - Forward pass peak memory: 19.907 GB
+2025-05-17 01:12:10,641 - INFO - Backward pass peak memory: 19.811 GB
+2025-05-17 01:12:10,641 - INFO - Overall peak memory: 19.907 GB
+2025-05-17 01:12:10,641 - INFO - Final execution time: 3.9735s
+2025-05-17 01:12:10,676 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,676 - INFO - Forward pass peak memory: 19.811 GB
+2025-05-17 01:12:10,676 - INFO - Backward pass peak memory: 19.715 GB
+2025-05-17 01:12:10,676 - INFO - Overall peak memory: 19.811 GB
+2025-05-17 01:12:10,676 - INFO - Final execution time: 4.0739s
+2025-05-17 01:12:10,709 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,709 - INFO - Forward pass peak memory: 19.715 GB
+2025-05-17 01:12:10,709 - INFO - Backward pass peak memory: 19.619 GB
+2025-05-17 01:12:10,710 - INFO - Overall peak memory: 19.715 GB
+2025-05-17 01:12:10,710 - INFO - Final execution time: 4.1742s
+2025-05-17 01:12:10,741 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,741 - INFO - Forward pass peak memory: 19.619 GB
+2025-05-17 01:12:10,741 - INFO - Backward pass peak memory: 19.524 GB
+2025-05-17 01:12:10,741 - INFO - Overall peak memory: 19.619 GB
+2025-05-17 01:12:10,741 - INFO - Final execution time: 4.2746s
+2025-05-17 01:12:10,774 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,774 - INFO - Forward pass peak memory: 19.524 GB
+2025-05-17 01:12:10,774 - INFO - Backward pass peak memory: 19.428 GB
+2025-05-17 01:12:10,774 - INFO - Overall peak memory: 19.524 GB
+2025-05-17 01:12:10,774 - INFO - Final execution time: 4.3749s
+2025-05-17 01:12:10,807 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,807 - INFO - Forward pass peak memory: 19.428 GB
+2025-05-17 01:12:10,807 - INFO - Backward pass peak memory: 19.332 GB
+2025-05-17 01:12:10,807 - INFO - Overall peak memory: 19.428 GB
+2025-05-17 01:12:10,807 - INFO - Final execution time: 4.4753s
+2025-05-17 01:12:10,839 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,840 - INFO - Forward pass peak memory: 19.332 GB
+2025-05-17 01:12:10,840 - INFO - Backward pass peak memory: 19.236 GB
+2025-05-17 01:12:10,840 - INFO - Overall peak memory: 19.332 GB
+2025-05-17 01:12:10,840 - INFO - Final execution time: 4.5757s
+2025-05-17 01:12:10,871 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,872 - INFO - Forward pass peak memory: 19.237 GB
+2025-05-17 01:12:10,872 - INFO - Backward pass peak memory: 19.141 GB
+2025-05-17 01:12:10,872 - INFO - Overall peak memory: 19.237 GB
+2025-05-17 01:12:10,872 - INFO - Final execution time: 4.6760s
+2025-05-17 01:12:10,903 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,903 - INFO - Forward pass peak memory: 19.141 GB
+2025-05-17 01:12:10,903 - INFO - Backward pass peak memory: 19.045 GB
+2025-05-17 01:12:10,903 - INFO - Overall peak memory: 19.141 GB
+2025-05-17 01:12:10,903 - INFO - Final execution time: 4.7764s
+2025-05-17 01:12:10,933 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,933 - INFO - Forward pass peak memory: 19.045 GB
+2025-05-17 01:12:10,933 - INFO - Backward pass peak memory: 18.949 GB
+2025-05-17 01:12:10,933 - INFO - Overall peak memory: 19.045 GB
+2025-05-17 01:12:10,933 - INFO - Final execution time: 4.8767s
+2025-05-17 01:12:10,964 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,964 - INFO - Forward pass peak memory: 18.950 GB
+2025-05-17 01:12:10,964 - INFO - Backward pass peak memory: 18.854 GB
+2025-05-17 01:12:10,964 - INFO - Overall peak memory: 18.950 GB
+2025-05-17 01:12:10,964 - INFO - Final execution time: 4.9771s
+2025-05-17 01:12:10,995 - INFO - Memory simulation complete.
+2025-05-17 01:12:10,995 - INFO - Forward pass peak memory: 18.854 GB
+2025-05-17 01:12:10,995 - INFO - Backward pass peak memory: 18.758 GB
+2025-05-17 01:12:10,995 - INFO - Overall peak memory: 18.854 GB
+2025-05-17 01:12:10,996 - INFO - Final execution time: 5.0774s
+2025-05-17 01:12:11,027 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,027 - INFO - Forward pass peak memory: 18.758 GB
+2025-05-17 01:12:11,027 - INFO - Backward pass peak memory: 18.662 GB
+2025-05-17 01:12:11,027 - INFO - Overall peak memory: 18.758 GB
+2025-05-17 01:12:11,027 - INFO - Final execution time: 5.1778s
+2025-05-17 01:12:11,058 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,059 - INFO - Forward pass peak memory: 18.662 GB
+2025-05-17 01:12:11,059 - INFO - Backward pass peak memory: 18.567 GB
+2025-05-17 01:12:11,059 - INFO - Overall peak memory: 18.662 GB
+2025-05-17 01:12:11,059 - INFO - Final execution time: 5.2781s
+2025-05-17 01:12:11,090 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,090 - INFO - Forward pass peak memory: 18.615 GB
+2025-05-17 01:12:11,090 - INFO - Backward pass peak memory: 18.519 GB
+2025-05-17 01:12:11,090 - INFO - Overall peak memory: 18.615 GB
+2025-05-17 01:12:11,090 - INFO - Final execution time: 5.3283s
+2025-05-17 01:12:11,122 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,122 - INFO - Forward pass peak memory: 18.567 GB
+2025-05-17 01:12:11,122 - INFO - Backward pass peak memory: 18.471 GB
+2025-05-17 01:12:11,122 - INFO - Overall peak memory: 18.567 GB
+2025-05-17 01:12:11,122 - INFO - Final execution time: 5.3785s
+2025-05-17 01:12:11,153 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,153 - INFO - Forward pass peak memory: 18.519 GB
+2025-05-17 01:12:11,153 - INFO - Backward pass peak memory: 18.423 GB
+2025-05-17 01:12:11,153 - INFO - Overall peak memory: 18.519 GB
+2025-05-17 01:12:11,153 - INFO - Final execution time: 5.4286s
+2025-05-17 01:12:11,184 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,184 - INFO - Forward pass peak memory: 18.471 GB
+2025-05-17 01:12:11,184 - INFO - Backward pass peak memory: 18.375 GB
+2025-05-17 01:12:11,184 - INFO - Overall peak memory: 18.471 GB
+2025-05-17 01:12:11,184 - INFO - Final execution time: 5.4788s
+2025-05-17 01:12:11,214 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,214 - INFO - Forward pass peak memory: 18.423 GB
+2025-05-17 01:12:11,214 - INFO - Backward pass peak memory: 18.327 GB
+2025-05-17 01:12:11,214 - INFO - Overall peak memory: 18.423 GB
+2025-05-17 01:12:11,214 - INFO - Final execution time: 5.5290s
+2025-05-17 01:12:11,243 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,243 - INFO - Forward pass peak memory: 18.375 GB
+2025-05-17 01:12:11,243 - INFO - Backward pass peak memory: 18.279 GB
+2025-05-17 01:12:11,243 - INFO - Overall peak memory: 18.375 GB
+2025-05-17 01:12:11,243 - INFO - Final execution time: 5.5792s
+2025-05-17 01:12:11,273 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,279 - INFO - Forward pass peak memory: 18.327 GB
+2025-05-17 01:12:11,279 - INFO - Backward pass peak memory: 18.232 GB
+2025-05-17 01:12:11,279 - INFO - Overall peak memory: 18.327 GB
+2025-05-17 01:12:11,279 - INFO - Final execution time: 5.6293s
+2025-05-17 01:12:11,308 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,308 - INFO - Forward pass peak memory: 18.280 GB
+2025-05-17 01:12:11,308 - INFO - Backward pass peak memory: 18.184 GB
+2025-05-17 01:12:11,308 - INFO - Overall peak memory: 18.280 GB
+2025-05-17 01:12:11,308 - INFO - Final execution time: 5.6795s
+2025-05-17 01:12:11,338 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,338 - INFO - Forward pass peak memory: 18.232 GB
+2025-05-17 01:12:11,338 - INFO - Backward pass peak memory: 18.136 GB
+2025-05-17 01:12:11,338 - INFO - Overall peak memory: 18.232 GB
+2025-05-17 01:12:11,338 - INFO - Final execution time: 5.7297s
+2025-05-17 01:12:11,368 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,368 - INFO - Forward pass peak memory: 18.184 GB
+2025-05-17 01:12:11,368 - INFO - Backward pass peak memory: 18.088 GB
+2025-05-17 01:12:11,368 - INFO - Overall peak memory: 18.184 GB
+2025-05-17 01:12:11,368 - INFO - Final execution time: 5.7799s
+2025-05-17 01:12:11,397 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,397 - INFO - Forward pass peak memory: 18.136 GB
+2025-05-17 01:12:11,397 - INFO - Backward pass peak memory: 18.040 GB
+2025-05-17 01:12:11,397 - INFO - Overall peak memory: 18.136 GB
+2025-05-17 01:12:11,397 - INFO - Final execution time: 5.8301s
+2025-05-17 01:12:11,427 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,427 - INFO - Forward pass peak memory: 18.088 GB
+2025-05-17 01:12:11,427 - INFO - Backward pass peak memory: 17.992 GB
+2025-05-17 01:12:11,427 - INFO - Overall peak memory: 18.088 GB
+2025-05-17 01:12:11,427 - INFO - Final execution time: 5.8802s
+2025-05-17 01:12:11,455 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,455 - INFO - Forward pass peak memory: 18.040 GB
+2025-05-17 01:12:11,455 - INFO - Backward pass peak memory: 17.944 GB
+2025-05-17 01:12:11,455 - INFO - Overall peak memory: 18.040 GB
+2025-05-17 01:12:11,455 - INFO - Final execution time: 5.9304s
+2025-05-17 01:12:11,483 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,483 - INFO - Forward pass peak memory: 17.993 GB
+2025-05-17 01:12:11,484 - INFO - Backward pass peak memory: 17.897 GB
+2025-05-17 01:12:11,484 - INFO - Overall peak memory: 17.993 GB
+2025-05-17 01:12:11,484 - INFO - Final execution time: 5.9806s
+2025-05-17 01:12:11,513 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,513 - INFO - Forward pass peak memory: 17.945 GB
+2025-05-17 01:12:11,513 - INFO - Backward pass peak memory: 17.849 GB
+2025-05-17 01:12:11,513 - INFO - Overall peak memory: 17.945 GB
+2025-05-17 01:12:11,513 - INFO - Final execution time: 6.0308s
+2025-05-17 01:12:11,543 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,543 - INFO - Forward pass peak memory: 17.897 GB
+2025-05-17 01:12:11,543 - INFO - Backward pass peak memory: 17.801 GB
+2025-05-17 01:12:11,543 - INFO - Overall peak memory: 17.897 GB
+2025-05-17 01:12:11,543 - INFO - Final execution time: 6.0809s
+2025-05-17 01:12:11,572 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,572 - INFO - Forward pass peak memory: 17.849 GB
+2025-05-17 01:12:11,572 - INFO - Backward pass peak memory: 17.753 GB
+2025-05-17 01:12:11,572 - INFO - Overall peak memory: 17.849 GB
+2025-05-17 01:12:11,572 - INFO - Final execution time: 6.1311s
+2025-05-17 01:12:11,601 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,601 - INFO - Forward pass peak memory: 17.801 GB
+2025-05-17 01:12:11,601 - INFO - Backward pass peak memory: 17.705 GB
+2025-05-17 01:12:11,601 - INFO - Overall peak memory: 17.801 GB
+2025-05-17 01:12:11,601 - INFO - Final execution time: 6.1813s
+2025-05-17 01:12:11,629 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,629 - INFO - Forward pass peak memory: 17.753 GB
+2025-05-17 01:12:11,629 - INFO - Backward pass peak memory: 17.657 GB
+2025-05-17 01:12:11,630 - INFO - Overall peak memory: 17.753 GB
+2025-05-17 01:12:11,630 - INFO - Final execution time: 6.2315s
+2025-05-17 01:12:11,659 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,659 - INFO - Forward pass peak memory: 17.705 GB
+2025-05-17 01:12:11,659 - INFO - Backward pass peak memory: 17.609 GB
+2025-05-17 01:12:11,659 - INFO - Overall peak memory: 17.705 GB
+2025-05-17 01:12:11,659 - INFO - Final execution time: 6.2816s
+2025-05-17 01:12:11,686 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,687 - INFO - Forward pass peak memory: 17.658 GB
+2025-05-17 01:12:11,687 - INFO - Backward pass peak memory: 17.562 GB
+2025-05-17 01:12:11,687 - INFO - Overall peak memory: 17.658 GB
+2025-05-17 01:12:11,687 - INFO - Final execution time: 6.3318s
+2025-05-17 01:12:11,715 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,715 - INFO - Forward pass peak memory: 17.610 GB
+2025-05-17 01:12:11,715 - INFO - Backward pass peak memory: 17.514 GB
+2025-05-17 01:12:11,715 - INFO - Overall peak memory: 17.610 GB
+2025-05-17 01:12:11,715 - INFO - Final execution time: 6.3820s
+2025-05-17 01:12:11,743 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,743 - INFO - Forward pass peak memory: 17.562 GB
+2025-05-17 01:12:11,743 - INFO - Backward pass peak memory: 17.466 GB
+2025-05-17 01:12:11,743 - INFO - Overall peak memory: 17.562 GB
+2025-05-17 01:12:11,743 - INFO - Final execution time: 6.4322s
+2025-05-17 01:12:11,772 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,772 - INFO - Forward pass peak memory: 17.514 GB
+2025-05-17 01:12:11,772 - INFO - Backward pass peak memory: 17.418 GB
+2025-05-17 01:12:11,772 - INFO - Overall peak memory: 17.514 GB
+2025-05-17 01:12:11,773 - INFO - Final execution time: 6.4823s
+2025-05-17 01:12:11,803 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,803 - INFO - Forward pass peak memory: 17.466 GB
+2025-05-17 01:12:11,803 - INFO - Backward pass peak memory: 17.370 GB
+2025-05-17 01:12:11,803 - INFO - Overall peak memory: 17.466 GB
+2025-05-17 01:12:11,803 - INFO - Final execution time: 6.5325s
+2025-05-17 01:12:11,835 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,836 - INFO - Forward pass peak memory: 17.418 GB
+2025-05-17 01:12:11,836 - INFO - Backward pass peak memory: 17.322 GB
+2025-05-17 01:12:11,836 - INFO - Overall peak memory: 17.418 GB
+2025-05-17 01:12:11,836 - INFO - Final execution time: 6.5827s
+2025-05-17 01:12:11,866 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,866 - INFO - Forward pass peak memory: 17.370 GB
+2025-05-17 01:12:11,866 - INFO - Backward pass peak memory: 17.275 GB
+2025-05-17 01:12:11,866 - INFO - Overall peak memory: 17.370 GB
+2025-05-17 01:12:11,866 - INFO - Final execution time: 6.6329s
+2025-05-17 01:12:11,895 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,895 - INFO - Forward pass peak memory: 17.323 GB
+2025-05-17 01:12:11,895 - INFO - Backward pass peak memory: 17.227 GB
+2025-05-17 01:12:11,895 - INFO - Overall peak memory: 17.323 GB
+2025-05-17 01:12:11,895 - INFO - Final execution time: 6.6830s
+2025-05-17 01:12:11,923 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,923 - INFO - Forward pass peak memory: 17.275 GB
+2025-05-17 01:12:11,923 - INFO - Backward pass peak memory: 17.179 GB
+2025-05-17 01:12:11,923 - INFO - Overall peak memory: 17.275 GB
+2025-05-17 01:12:11,923 - INFO - Final execution time: 6.7332s
+2025-05-17 01:12:11,953 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,953 - INFO - Forward pass peak memory: 17.227 GB
+2025-05-17 01:12:11,953 - INFO - Backward pass peak memory: 17.131 GB
+2025-05-17 01:12:11,953 - INFO - Overall peak memory: 17.227 GB
+2025-05-17 01:12:11,953 - INFO - Final execution time: 6.7834s
+2025-05-17 01:12:11,981 - INFO - Memory simulation complete.
+2025-05-17 01:12:11,981 - INFO - Forward pass peak memory: 17.179 GB
+2025-05-17 01:12:11,981 - INFO - Backward pass peak memory: 17.083 GB
+2025-05-17 01:12:11,981 - INFO - Overall peak memory: 17.179 GB
+2025-05-17 01:12:11,981 - INFO - Final execution time: 6.8336s
+2025-05-17 01:12:12,009 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,009 - INFO - Forward pass peak memory: 17.131 GB
+2025-05-17 01:12:12,009 - INFO - Backward pass peak memory: 17.035 GB
+2025-05-17 01:12:12,009 - INFO - Overall peak memory: 17.131 GB
+2025-05-17 01:12:12,009 - INFO - Final execution time: 6.8837s
+2025-05-17 01:12:12,037 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,037 - INFO - Forward pass peak memory: 17.083 GB
+2025-05-17 01:12:12,037 - INFO - Backward pass peak memory: 16.987 GB
+2025-05-17 01:12:12,037 - INFO - Overall peak memory: 17.083 GB
+2025-05-17 01:12:12,037 - INFO - Final execution time: 6.9339s
+2025-05-17 01:12:12,065 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,065 - INFO - Forward pass peak memory: 17.035 GB
+2025-05-17 01:12:12,065 - INFO - Backward pass peak memory: 16.940 GB
+2025-05-17 01:12:12,065 - INFO - Overall peak memory: 17.035 GB
+2025-05-17 01:12:12,065 - INFO - Final execution time: 6.9841s
+2025-05-17 01:12:12,094 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,094 - INFO - Forward pass peak memory: 16.988 GB
+2025-05-17 01:12:12,094 - INFO - Backward pass peak memory: 16.892 GB
+2025-05-17 01:12:12,094 - INFO - Overall peak memory: 16.988 GB
+2025-05-17 01:12:12,094 - INFO - Final execution time: 7.0343s
+2025-05-17 01:12:12,123 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,124 - INFO - Forward pass peak memory: 16.940 GB
+2025-05-17 01:12:12,124 - INFO - Backward pass peak memory: 16.844 GB
+2025-05-17 01:12:12,124 - INFO - Overall peak memory: 16.940 GB
+2025-05-17 01:12:12,124 - INFO - Final execution time: 7.0845s
+2025-05-17 01:12:12,154 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,154 - INFO - Forward pass peak memory: 16.892 GB
+2025-05-17 01:12:12,154 - INFO - Backward pass peak memory: 16.796 GB
+2025-05-17 01:12:12,154 - INFO - Overall peak memory: 16.892 GB
+2025-05-17 01:12:12,154 - INFO - Final execution time: 7.1346s
+2025-05-17 01:12:12,183 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,183 - INFO - Forward pass peak memory: 16.844 GB
+2025-05-17 01:12:12,183 - INFO - Backward pass peak memory: 16.748 GB
+2025-05-17 01:12:12,183 - INFO - Overall peak memory: 16.844 GB
+2025-05-17 01:12:12,183 - INFO - Final execution time: 7.1848s
+2025-05-17 01:12:12,211 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,211 - INFO - Forward pass peak memory: 16.796 GB
+2025-05-17 01:12:12,211 - INFO - Backward pass peak memory: 16.700 GB
+2025-05-17 01:12:12,211 - INFO - Overall peak memory: 16.796 GB
+2025-05-17 01:12:12,211 - INFO - Final execution time: 7.2350s
+2025-05-17 01:12:12,239 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,239 - INFO - Forward pass peak memory: 16.748 GB
+2025-05-17 01:12:12,239 - INFO - Backward pass peak memory: 16.652 GB
+2025-05-17 01:12:12,240 - INFO - Overall peak memory: 16.748 GB
+2025-05-17 01:12:12,240 - INFO - Final execution time: 7.2852s
+2025-05-17 01:12:12,269 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,269 - INFO - Forward pass peak memory: 16.701 GB
+2025-05-17 01:12:12,269 - INFO - Backward pass peak memory: 16.605 GB
+2025-05-17 01:12:12,269 - INFO - Overall peak memory: 16.701 GB
+2025-05-17 01:12:12,269 - INFO - Final execution time: 7.3353s
+2025-05-17 01:12:12,298 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,298 - INFO - Forward pass peak memory: 16.653 GB
+2025-05-17 01:12:12,299 - INFO - Backward pass peak memory: 16.557 GB
+2025-05-17 01:12:12,299 - INFO - Overall peak memory: 16.653 GB
+2025-05-17 01:12:12,299 - INFO - Final execution time: 7.3855s
+2025-05-17 01:12:12,329 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,329 - INFO - Forward pass peak memory: 16.605 GB
+2025-05-17 01:12:12,329 - INFO - Backward pass peak memory: 16.509 GB
+2025-05-17 01:12:12,329 - INFO - Overall peak memory: 16.605 GB
+2025-05-17 01:12:12,329 - INFO - Final execution time: 7.4357s
+2025-05-17 01:12:12,358 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,358 - INFO - Forward pass peak memory: 16.557 GB
+2025-05-17 01:12:12,358 - INFO - Backward pass peak memory: 16.461 GB
+2025-05-17 01:12:12,358 - INFO - Overall peak memory: 16.557 GB
+2025-05-17 01:12:12,358 - INFO - Final execution time: 7.4859s
+2025-05-17 01:12:12,389 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,389 - INFO - Forward pass peak memory: 16.509 GB
+2025-05-17 01:12:12,389 - INFO - Backward pass peak memory: 16.413 GB
+2025-05-17 01:12:12,390 - INFO - Overall peak memory: 16.509 GB
+2025-05-17 01:12:12,390 - INFO - Final execution time: 7.5360s
+2025-05-17 01:12:12,421 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,422 - INFO - Forward pass peak memory: 16.461 GB
+2025-05-17 01:12:12,422 - INFO - Backward pass peak memory: 16.365 GB
+2025-05-17 01:12:12,422 - INFO - Overall peak memory: 16.461 GB
+2025-05-17 01:12:12,422 - INFO - Final execution time: 7.5862s
+2025-05-17 01:12:12,451 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,452 - INFO - Forward pass peak memory: 16.413 GB
+2025-05-17 01:12:12,452 - INFO - Backward pass peak memory: 16.317 GB
+2025-05-17 01:12:12,452 - INFO - Overall peak memory: 16.413 GB
+2025-05-17 01:12:12,452 - INFO - Final execution time: 7.6364s
+2025-05-17 01:12:12,481 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,481 - INFO - Forward pass peak memory: 16.366 GB
+2025-05-17 01:12:12,481 - INFO - Backward pass peak memory: 16.270 GB
+2025-05-17 01:12:12,481 - INFO - Overall peak memory: 16.366 GB
+2025-05-17 01:12:12,481 - INFO - Final execution time: 7.6866s
+2025-05-17 01:12:12,509 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,509 - INFO - Forward pass peak memory: 16.318 GB
+2025-05-17 01:12:12,509 - INFO - Backward pass peak memory: 16.222 GB
+2025-05-17 01:12:12,509 - INFO - Overall peak memory: 16.318 GB
+2025-05-17 01:12:12,510 - INFO - Final execution time: 7.7367s
+2025-05-17 01:12:12,538 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,538 - INFO - Forward pass peak memory: 16.270 GB
+2025-05-17 01:12:12,538 - INFO - Backward pass peak memory: 16.174 GB
+2025-05-17 01:12:12,538 - INFO - Overall peak memory: 16.270 GB
+2025-05-17 01:12:12,538 - INFO - Final execution time: 7.7869s
+2025-05-17 01:12:12,567 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,567 - INFO - Forward pass peak memory: 16.222 GB
+2025-05-17 01:12:12,567 - INFO - Backward pass peak memory: 16.126 GB
+2025-05-17 01:12:12,567 - INFO - Overall peak memory: 16.222 GB
+2025-05-17 01:12:12,567 - INFO - Final execution time: 7.8371s
+2025-05-17 01:12:12,596 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,596 - INFO - Forward pass peak memory: 16.174 GB
+2025-05-17 01:12:12,596 - INFO - Backward pass peak memory: 16.078 GB
+2025-05-17 01:12:12,596 - INFO - Overall peak memory: 16.174 GB
+2025-05-17 01:12:12,596 - INFO - Final execution time: 7.8873s
+2025-05-17 01:12:12,625 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,626 - INFO - Forward pass peak memory: 16.126 GB
+2025-05-17 01:12:12,626 - INFO - Backward pass peak memory: 16.030 GB
+2025-05-17 01:12:12,626 - INFO - Overall peak memory: 16.126 GB
+2025-05-17 01:12:12,626 - INFO - Final execution time: 7.9374s
+2025-05-17 01:12:12,654 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,654 - INFO - Forward pass peak memory: 16.078 GB
+2025-05-17 01:12:12,654 - INFO - Backward pass peak memory: 15.983 GB
+2025-05-17 01:12:12,654 - INFO - Overall peak memory: 16.078 GB
+2025-05-17 01:12:12,654 - INFO - Final execution time: 7.9876s
+2025-05-17 01:12:12,682 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,682 - INFO - Forward pass peak memory: 16.031 GB
+2025-05-17 01:12:12,683 - INFO - Backward pass peak memory: 15.935 GB
+2025-05-17 01:12:12,683 - INFO - Overall peak memory: 16.031 GB
+2025-05-17 01:12:12,683 - INFO - Final execution time: 8.0378s
+2025-05-17 01:12:12,711 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,711 - INFO - Forward pass peak memory: 15.983 GB
+2025-05-17 01:12:12,711 - INFO - Backward pass peak memory: 15.887 GB
+2025-05-17 01:12:12,711 - INFO - Overall peak memory: 15.983 GB
+2025-05-17 01:12:12,711 - INFO - Final execution time: 8.0880s
+2025-05-17 01:12:12,740 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,740 - INFO - Forward pass peak memory: 15.935 GB
+2025-05-17 01:12:12,740 - INFO - Backward pass peak memory: 15.839 GB
+2025-05-17 01:12:12,740 - INFO - Overall peak memory: 15.935 GB
+2025-05-17 01:12:12,740 - INFO - Final execution time: 8.1381s
+2025-05-17 01:12:12,769 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,769 - INFO - Forward pass peak memory: 15.887 GB
+2025-05-17 01:12:12,769 - INFO - Backward pass peak memory: 15.791 GB
+2025-05-17 01:12:12,769 - INFO - Overall peak memory: 15.887 GB
+2025-05-17 01:12:12,769 - INFO - Final execution time: 8.1883s
+2025-05-17 01:12:12,798 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,798 - INFO - Forward pass peak memory: 15.839 GB
+2025-05-17 01:12:12,798 - INFO - Backward pass peak memory: 15.743 GB
+2025-05-17 01:12:12,798 - INFO - Overall peak memory: 15.839 GB
+2025-05-17 01:12:12,798 - INFO - Final execution time: 8.2385s
+2025-05-17 01:12:12,828 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,828 - INFO - Forward pass peak memory: 15.791 GB
+2025-05-17 01:12:12,828 - INFO - Backward pass peak memory: 15.695 GB
+2025-05-17 01:12:12,828 - INFO - Overall peak memory: 15.791 GB
+2025-05-17 01:12:12,828 - INFO - Final execution time: 8.2887s
+2025-05-17 01:12:12,858 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,859 - INFO - Forward pass peak memory: 15.744 GB
+2025-05-17 01:12:12,859 - INFO - Backward pass peak memory: 15.648 GB
+2025-05-17 01:12:12,859 - INFO - Overall peak memory: 15.744 GB
+2025-05-17 01:12:12,859 - INFO - Final execution time: 8.3389s
+2025-05-17 01:12:12,887 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,888 - INFO - Forward pass peak memory: 15.696 GB
+2025-05-17 01:12:12,888 - INFO - Backward pass peak memory: 15.600 GB
+2025-05-17 01:12:12,888 - INFO - Overall peak memory: 15.696 GB
+2025-05-17 01:12:12,888 - INFO - Final execution time: 8.3890s
+2025-05-17 01:12:12,915 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,915 - INFO - Forward pass peak memory: 15.648 GB
+2025-05-17 01:12:12,915 - INFO - Backward pass peak memory: 15.552 GB
+2025-05-17 01:12:12,915 - INFO - Overall peak memory: 15.648 GB
+2025-05-17 01:12:12,915 - INFO - Final execution time: 8.4392s
+2025-05-17 01:12:12,944 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,944 - INFO - Forward pass peak memory: 15.600 GB
+2025-05-17 01:12:12,944 - INFO - Backward pass peak memory: 15.504 GB
+2025-05-17 01:12:12,944 - INFO - Overall peak memory: 15.600 GB
+2025-05-17 01:12:12,944 - INFO - Final execution time: 8.4894s
+2025-05-17 01:12:12,972 - INFO - Memory simulation complete.
+2025-05-17 01:12:12,972 - INFO - Forward pass peak memory: 15.552 GB
+2025-05-17 01:12:12,973 - INFO - Backward pass peak memory: 15.456 GB
+2025-05-17 01:12:12,973 - INFO - Overall peak memory: 15.552 GB
+2025-05-17 01:12:12,973 - INFO - Final execution time: 8.5396s
+2025-05-17 01:12:13,001 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,001 - INFO - Forward pass peak memory: 15.504 GB
+2025-05-17 01:12:13,001 - INFO - Backward pass peak memory: 15.408 GB
+2025-05-17 01:12:13,001 - INFO - Overall peak memory: 15.504 GB
+2025-05-17 01:12:13,001 - INFO - Final execution time: 8.5897s
+2025-05-17 01:12:13,028 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,028 - INFO - Forward pass peak memory: 15.456 GB
+2025-05-17 01:12:13,028 - INFO - Backward pass peak memory: 15.360 GB
+2025-05-17 01:12:13,028 - INFO - Overall peak memory: 15.456 GB
+2025-05-17 01:12:13,028 - INFO - Final execution time: 8.6399s
+2025-05-17 01:12:13,054 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,055 - INFO - Forward pass peak memory: 15.409 GB
+2025-05-17 01:12:13,055 - INFO - Backward pass peak memory: 15.313 GB
+2025-05-17 01:12:13,055 - INFO - Overall peak memory: 15.409 GB
+2025-05-17 01:12:13,055 - INFO - Final execution time: 8.6901s
+2025-05-17 01:12:13,083 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,084 - INFO - Forward pass peak memory: 15.361 GB
+2025-05-17 01:12:13,084 - INFO - Backward pass peak memory: 15.265 GB
+2025-05-17 01:12:13,084 - INFO - Overall peak memory: 15.361 GB
+2025-05-17 01:12:13,084 - INFO - Final execution time: 8.7403s
+2025-05-17 01:12:13,111 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,111 - INFO - Forward pass peak memory: 15.313 GB
+2025-05-17 01:12:13,111 - INFO - Backward pass peak memory: 15.217 GB
+2025-05-17 01:12:13,111 - INFO - Overall peak memory: 15.313 GB
+2025-05-17 01:12:13,111 - INFO - Final execution time: 8.7904s
+2025-05-17 01:12:13,139 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,139 - INFO - Forward pass peak memory: 15.265 GB
+2025-05-17 01:12:13,139 - INFO - Backward pass peak memory: 15.169 GB
+2025-05-17 01:12:13,139 - INFO - Overall peak memory: 15.265 GB
+2025-05-17 01:12:13,139 - INFO - Final execution time: 8.8406s
+2025-05-17 01:12:13,166 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,166 - INFO - Forward pass peak memory: 15.217 GB
+2025-05-17 01:12:13,166 - INFO - Backward pass peak memory: 15.121 GB
+2025-05-17 01:12:13,166 - INFO - Overall peak memory: 15.217 GB
+2025-05-17 01:12:13,166 - INFO - Final execution time: 8.8908s
+2025-05-17 01:12:13,194 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,194 - INFO - Forward pass peak memory: 15.169 GB
+2025-05-17 01:12:13,194 - INFO - Backward pass peak memory: 15.073 GB
+2025-05-17 01:12:13,194 - INFO - Overall peak memory: 15.169 GB
+2025-05-17 01:12:13,194 - INFO - Final execution time: 8.9410s
+2025-05-17 01:12:13,222 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,222 - INFO - Forward pass peak memory: 15.121 GB
+2025-05-17 01:12:13,222 - INFO - Backward pass peak memory: 15.025 GB
+2025-05-17 01:12:13,222 - INFO - Overall peak memory: 15.121 GB
+2025-05-17 01:12:13,222 - INFO - Final execution time: 8.9911s
+2025-05-17 01:12:13,250 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,250 - INFO - Forward pass peak memory: 15.074 GB
+2025-05-17 01:12:13,250 - INFO - Backward pass peak memory: 14.978 GB
+2025-05-17 01:12:13,250 - INFO - Overall peak memory: 15.074 GB
+2025-05-17 01:12:13,250 - INFO - Final execution time: 9.0413s
+2025-05-17 01:12:13,279 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,279 - INFO - Forward pass peak memory: 15.026 GB
+2025-05-17 01:12:13,279 - INFO - Backward pass peak memory: 14.930 GB
+2025-05-17 01:12:13,279 - INFO - Overall peak memory: 15.026 GB
+2025-05-17 01:12:13,279 - INFO - Final execution time: 9.0915s
+2025-05-17 01:12:13,307 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,307 - INFO - Forward pass peak memory: 14.978 GB
+2025-05-17 01:12:13,307 - INFO - Backward pass peak memory: 14.882 GB
+2025-05-17 01:12:13,307 - INFO - Overall peak memory: 14.978 GB
+2025-05-17 01:12:13,307 - INFO - Final execution time: 9.1417s
+2025-05-17 01:12:13,308 - INFO - Memory budget of 15.00 GB met.
+2025-05-17 01:12:13,308 - INFO - Actual memory usage: 14.98 GB
+2025-05-17 01:12:13,334 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,334 - INFO - Forward pass peak memory: 14.978 GB
+2025-05-17 01:12:13,334 - INFO - Backward pass peak memory: 14.882 GB
+2025-05-17 01:12:13,334 - INFO - Overall peak memory: 14.978 GB
+2025-05-17 01:12:13,334 - INFO - Final execution time: 9.1417s
+2025-05-17 01:12:13,334 - INFO - 
+Final Results:
+2025-05-17 01:12:13,334 - INFO - Initial peak memory: 22.20 GB
+2025-05-17 01:12:13,334 - INFO - Final peak memory: 14.98 GB
+2025-05-17 01:12:13,334 - INFO - Memory reduction: 7.23 GB (32.5%)
+2025-05-17 01:12:13,334 - INFO - Memory budget: 15.00 GB
+2025-05-17 01:12:13,334 - INFO - Gap to budget: -0.02 GB
+2025-05-17 01:12:13,334 - INFO - Estimated incompressible memory: 11.69 GB
+2025-05-17 01:12:13,334 - INFO - Initial execution time: 1.46s
+2025-05-17 01:12:13,334 - INFO - Final execution time: 9.14s
+2025-05-17 01:12:13,334 - INFO - Execution time overhead: 7.68s (524.1%)
+2025-05-17 01:12:13,336 - INFO - Total activations marked for recomputation: 106
+2025-05-17 01:12:13,336 - INFO - Total memory saved by recomputation: 7.32 GB
+2025-05-17 01:12:13,339 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions.csv
+2025-05-17 01:12:13,339 - INFO - 
+Timing Statistics:
+2025-05-17 01:12:13,340 - INFO - Total execution time: 3.31s
+2025-05-17 01:12:13,340 - INFO - Initialization: 0.00s (0.0%)
+2025-05-17 01:12:13,340 - INFO - Initial memory simulation: 0.05s (1.4%)
+2025-05-17 01:12:13,340 - INFO - Memory component analysis: 0.01s (0.3%)
+2025-05-17 01:12:13,340 - INFO - Candidate filtering: 0.00s (0.0%)
+2025-05-17 01:12:13,340 - INFO - Main loop: 3.23s (97.4%)
+2025-05-17 01:12:13,340 - INFO -   - Memory simulations: 3.13s (94.4%)
+2025-05-17 01:12:13,340 - INFO -   - Candidate selection: 0.10s (2.9%)
+2025-05-17 01:12:13,340 - INFO - Final memory simulation: 0.03s (0.8%)
+2025-05-17 01:12:13,340 - INFO - 
+Top 5 slowest iterations:
+2025-05-17 01:12:13,340 - INFO -   1. Iteration 6: 0.04s (Simulation: 0.04s, Selection: 0.00s)
+2025-05-17 01:12:13,340 - INFO -   2. Iteration 37: 0.04s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-17 01:12:13,340 - INFO -   3. Iteration 1: 0.04s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-17 01:12:13,340 - INFO -   4. Iteration 18: 0.03s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-17 01:12:13,340 - INFO -   5. Iteration 2: 0.03s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-17 01:12:13,369 - INFO - Memory simulation complete.
+2025-05-17 01:12:13,369 - INFO - Forward pass peak memory: 14.978 GB
+2025-05-17 01:12:13,369 - INFO - Backward pass peak memory: 14.882 GB
+2025-05-17 01:12:13,369 - INFO - Overall peak memory: 14.978 GB
+2025-05-17 01:12:13,369 - INFO - Final execution time: 9.1417s

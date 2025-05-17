@@ -51,6 +51,11 @@ class ActivationCheckpointingAlgorithm:
             # Load data from CSV files into pandas DataFrames
             node_stats_df = pd.read_csv(node_stats_path)
             activation_stats_df = pd.read_csv(activation_stats_path)
+            print("loaded csv files successfully")
+            
+            # Store the original DataFrames as instance attributes
+            self.node_stats_df = node_stats_df
+            self.activation_stats_df = activation_stats_df
             
             # Convert pandas DataFrames to dictionaries for faster access
             self.node_stats = {}
@@ -523,13 +528,13 @@ class ActivationCheckpointingAlgorithm:
         
         # Calculate total simulation time
         sim_timing['total'] = time.time() - sim_start_time
+        logger.info(f"Memory simulation complete.")
+        logger.info(f"Forward pass peak memory: {fw_peak_mem / (1024**3):.3f} GB")
+        logger.info(f"Backward pass peak memory: {bw_peak_mem / (1024**3):.3f} GB")
+        logger.info(f"Overall peak memory: {peak_mem / (1024**3):.3f} GB")
+        logger.info(f"Final execution time: {total_execution_time:.4f}s")
         
         if debug:
-            logger.info(f"Memory simulation complete.")
-            logger.info(f"Forward pass peak memory: {fw_peak_mem / (1024**3):.3f} GB")
-            logger.info(f"Backward pass peak memory: {bw_peak_mem / (1024**3):.3f} GB")
-            logger.info(f"Overall peak memory: {peak_mem / (1024**3):.3f} GB")
-            logger.info(f"Final execution time: {total_execution_time:.4f}s")
             
             # Calculate memory savings
             memory_savings = 0

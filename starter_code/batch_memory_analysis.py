@@ -2,8 +2,12 @@
 """
 Enhanced Batch Memory Analysis Script
 
-This script analyzes the peak memory consumption of the ResNet-152 model
-with different batch sizes (4, 8, 16, 32, 64). It generates multiple visualizations:
+This script analyzes the peak memory consumption of neural network models
+with different batch sizes. It supports:
+- ResNet-152: A deep convolutional neural network for image classification
+- Transformer: A sequence-to-sequence model based on attention mechanisms
+
+It generates multiple visualizations:
 1. A bar graph showing peak memory usage for different batch sizes with an 1.5 GB limit line
 2. A memory vs. execution rank graph showing the memory curve with FW/BW boundaries and the 1.5 GB limit
 3. A stacked bar chart showing the memory breakdown (weights, gradients, feature maps) for different batch sizes
@@ -13,6 +17,10 @@ To run this script:
     
 To specify batch sizes:
     conda run -n ml_env python starter_code/batch_memory_analysis.py --batch-sizes 4 8 16
+    
+To specify model:
+    conda run -n ml_env python starter_code/batch_memory_analysis.py --model resnet
+    conda run -n ml_env python starter_code/batch_memory_analysis.py --model transformer
 """
 
 # Standard library imports
@@ -22,6 +30,7 @@ import pandas as pd
 import argparse
 from collections import defaultdict
 from functools import wraps
+import math
 
 # PyTorch imports
 import torch
@@ -35,6 +44,152 @@ import matplotlib.pyplot as plt
 # Custom profiling utilities
 from graph_prof import GraphProfiler
 from graph_tracer import SEPFunction, compile
+
+# Transformer model implementation
+class TransformerEncoderLayer(nn.Module):
+    """
+    Transformer Encoder Layer based on the paper "Attention Is All You Need"
+    
+    This implementation follows the architecture described in the original paper
+    with multi-head self-attention and position-wise feed-forward networks.
+    """
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1):
+        super().__init__()
+        # Multi-head self-attention
+        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=True)
+        
+        # Position-wise feed-forward network
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+        
+        # Layer normalization
+        self.norm1 = nn.LayerNorm(d_model)
+        self.norm2 = nn.LayerNorm(d_model)
+        
+        # Dropout for each sub-layer
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+        
+        # Activation function
+        self.activation = nn.ReLU()
+        
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        # Multi-head self-attention with residual connection and layer norm
+        src2 = self.norm1(src)
+        src2, _ = self.self_attn(src2, src2, src2, attn_mask=src_mask,
+                                key_padding_mask=src_key_padding_mask)
+        src = src + self.dropout1(src2)
+        
+        # Position-wise feed-forward network with residual connection and layer norm
+        src2 = self.norm2(src)
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src2))))
+        src = src + self.dropout2(src2)
+        
+        return src
+
+class TransformerModel(nn.Module):
+    """
+    Transformer model for activation checkpointing experiments
+    
+    This model implements a Transformer encoder stack with the following specifications:
+    - Embedding dimension (d_model): 512
+    - Number of encoder layers: 6
+    - Number of attention heads: 8
+    - Feed-forward dimension: 2048
+    - Dropout rate: 0.1
+    - Vocabulary size: 30,000
+    - Maximum sequence length: 512
+    """
+    def __init__(self, d_model=512, nhead=8, num_encoder_layers=6,
+                 dim_feedforward=2048, dropout=0.1, vocab_size=30000, max_seq_len=512):
+        super().__init__()
+        
+        # Model dimensions
+        self.d_model = d_model
+        self.vocab_size = vocab_size
+        self.max_seq_len = max_seq_len
+        
+        # Token embedding
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        
+        # Positional encoding (fixed sinusoidal)
+        self.register_buffer("positional_encoding", self._create_positional_encoding(max_seq_len, d_model))
+        
+        # Encoder layers
+        self.encoder_layers = nn.ModuleList([
+            TransformerEncoderLayer(d_model, nhead, dim_feedforward, dropout)
+            for _ in range(num_encoder_layers)
+        ])
+        
+        # Final layer normalization
+        self.norm = nn.LayerNorm(d_model)
+        
+        # Output projection (to vocabulary size)
+        self.output_projection = nn.Linear(d_model, vocab_size)
+        
+        # Dropout
+        self.dropout = nn.Dropout(dropout)
+        
+        # Initialize parameters
+        self._init_parameters()
+        
+    def _create_positional_encoding(self, max_seq_len, d_model):
+        """Create fixed sinusoidal positional encodings"""
+        position = torch.arange(max_seq_len).unsqueeze(1).float()
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        
+        pos_encoding = torch.zeros(max_seq_len, d_model)
+        pos_encoding[:, 0::2] = torch.sin(position * div_term)
+        pos_encoding[:, 1::2] = torch.cos(position * div_term)
+        
+        return pos_encoding
+    
+    def _init_parameters(self):
+        """Initialize model parameters"""
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
+    
+    def forward(self, x):
+        """
+        Forward pass through the Transformer model
+        
+        Args:
+            x: Input tensor of shape (batch_size, seq_len)
+                For profiling purposes, this can be random data
+        
+        Returns:
+            Output tensor of shape (batch_size, seq_len, vocab_size)
+        """
+        # Get sequence length and batch size
+        batch_size, seq_len = x.shape
+        
+        # If input is just random numbers (for profiling), treat as token indices
+        if x.dtype != torch.long:
+            # Convert to token indices (integers between 0 and vocab_size-1)
+            x = (x * (self.vocab_size - 1)).long().abs()
+        
+        # Token embedding
+        x = self.embedding(x) * math.sqrt(self.d_model)
+        
+        # Add positional encoding
+        x = x + self.positional_encoding[:seq_len].unsqueeze(0)
+        
+        # Apply dropout
+        x = self.dropout(x)
+        
+        # Pass through encoder layers
+        for layer in self.encoder_layers:
+            x = layer(x)
+        
+        # Apply final layer normalization
+        x = self.norm(x)
+        
+        # Project to vocabulary size
+        x = self.output_projection(x)
+        
+        return x
 
 def train_step(model, optim, batch):
     """
@@ -63,10 +218,10 @@ def train_step(model, optim, batch):
     # Reset gradients to zero
     optim.zero_grad()
 
-# Global variable to store peak memory between function calls
-_peak_memory = 0
-# Global variable to store the current batch size for filename generation
-_CURRENT_PROFILING_BATCH_SIZE = 0
+# Global variables
+_peak_memory = 0  # Store peak memory between function calls
+_CURRENT_PROFILING_BATCH_SIZE = 0  # Store the current batch size for filename generation
+_CURRENT_MODEL_TYPE = "resnet"  # Store the current model type for filename generation
 
 def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     """
@@ -83,6 +238,7 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     """
     global _peak_memory
     global _CURRENT_PROFILING_BATCH_SIZE
+    global _CURRENT_MODEL_TYPE  # Add global variable for model type
     
     # Extract batch size from trace args for debugging purposes
     batch_size_from_trace_args = args[2].shape[0]
@@ -112,8 +268,8 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     # Create directory for saving reports if it doesn't exist
     reports_dir = ensure_reports_directory()
     
-    # Generate filename prefix based on current batch size
-    csv_prefix = f"profiler_stats_bs{_CURRENT_PROFILING_BATCH_SIZE}"
+    # Use the global model type variable that was set in profile_batch_size
+    csv_prefix = f"profiler_stats_{_CURRENT_MODEL_TYPE}_bs{_CURRENT_PROFILING_BATCH_SIZE}"
     csv_path = os.path.join(reports_dir, csv_prefix)
     
     # Save profiling statistics to CSV files
@@ -148,28 +304,51 @@ def graph_transformation(gm: fx.GraphModule, args: any) -> fx.GraphModule:
     # Return the original graph module as required by the compile function
     return gm
 
-def profile_batch_size(batch_size, device_str='cuda:0'):
+def profile_batch_size(batch_size, model_type='resnet', device_str='cuda:0'):
     """
-    Profile the ResNet-152 model with a specific batch size.
+    Profile a neural network model with a specific batch size.
     
     Args:
         batch_size: The batch size to use for profiling
+        model_type: The type of model to profile ('resnet' or 'transformer')
         device_str: The device to use for profiling (default: 'cuda:0')
         
     Returns:
         The peak memory usage in bytes
     """
-    # Set the global batch size variable for CSV filename generation
+    # Set the global variables for CSV filename generation
     global _CURRENT_PROFILING_BATCH_SIZE
+    global _CURRENT_MODEL_TYPE
     _CURRENT_PROFILING_BATCH_SIZE = batch_size
+    _CURRENT_MODEL_TYPE = model_type.lower()
 
-    print(f"\n--- Profiling ResNet-152 with batch size {batch_size} ---")
+    print(f"\n--- Profiling {model_type.upper()} with batch size {batch_size} ---")
     
-    # Create ResNet-152 model and move it to the specified device
-    model = models.resnet152(weights=models.ResNet152_Weights.IMAGENET1K_V1).to(device_str)
-    
-    # Create a random batch of data with ImageNet dimensions (3x224x224)
-    batch = torch.randn(batch_size, 3, 224, 224).to(device_str)
+    # Create the model based on the specified type
+    if model_type.lower() == 'resnet':
+        # Create ResNet-152 model and move it to the specified device
+        model = models.resnet152(weights=models.ResNet152_Weights.IMAGENET1K_V1).to(device_str)
+        
+        # Create a random batch of data with ImageNet dimensions (3x224x224)
+        batch = torch.randn(batch_size, 3, 224, 224).to(device_str)
+    elif model_type.lower() == 'transformer':
+        # Create Transformer model with the specified dimensions
+        model = TransformerModel(
+            d_model=512,
+            nhead=8,
+            num_encoder_layers=6,
+            dim_feedforward=2048,
+            dropout=0.1,
+            vocab_size=30000,
+            max_seq_len=512
+        ).to(device_str)
+        
+        # Create a random batch of token indices with sequence length 512
+        # For profiling purposes, we use a smaller sequence length to fit in memory
+        seq_len = min(512, 128)  # Use 128 as a reasonable sequence length for profiling
+        batch = torch.randint(0, 30000, (batch_size, seq_len)).to(device_str)
+    else:
+        raise ValueError(f"Unknown model type: {model_type}. Expected 'resnet' or 'transformer'")
     
     # Create an optimizer with foreach and capturable options for better compatibility with tracing
     optimizer = torch.optim.Adam(
@@ -222,9 +401,11 @@ def parse_args():
     Returns:
         Parsed arguments
     """
-    parser = argparse.ArgumentParser(description='Batch Memory Analysis for ResNet-152')
-    parser.add_argument('--batch-sizes', type=int, nargs='+', default=[4, 8, 16, 32, 64],
-                        help='Batch sizes to profile (default: 4 8 16 32 64)')
+    parser = argparse.ArgumentParser(description='Batch Memory Analysis for Neural Network Models')
+    parser.add_argument('--batch-sizes', type=int, nargs='+', default=[4, 8],
+                        help='Batch sizes to profile (default: 4 8)')
+    parser.add_argument('--model', type=str, choices=['resnet', 'transformer'], default='resnet',
+                        help='Model to profile (default: resnet)')
     return parser.parse_args()
 
 def main():
@@ -232,14 +413,17 @@ def main():
     Main function to run the batch memory analysis.
     
     This function:
-    1. Profiles ResNet-152 with different batch sizes
+    1. Profiles the selected model with different batch sizes
     2. Generates visualizations of memory usage
     3. Saves results to the reports directory
     """
     # Parse command line arguments
     args = parse_args()
     
-    print("=== Batch Memory Analysis for ResNet-152 ===")
+    # Get model type from arguments
+    model_type = args.model
+    
+    print(f"=== Batch Memory Analysis for {model_type.upper()} ===")
     
     # Set random seed for reproducibility
     torch.manual_seed(42)
@@ -263,12 +447,13 @@ def main():
         # Profile each batch size
         for batch_size in batch_sizes:
             # Run profiling and get peak memory
-            peak_memory = profile_batch_size(batch_size, device_str)
+            peak_memory = profile_batch_size(batch_size, model_type, device_str)
             peak_memories.append(peak_memory)
             
             # Load node stats CSV to calculate iteration time
             try:
-                node_csv = os.path.join(ensure_reports_directory(), f"profiler_stats_bs{batch_size}_node_stats.csv")
+                # Include model type in the CSV filename
+                node_csv = os.path.join(ensure_reports_directory(), f"profiler_stats_{model_type}_bs{batch_size}_node_stats.csv")
                 if os.path.exists(node_csv):
                     # Read CSV and sum up all node execution times
                     df = pd.read_csv(node_csv)
@@ -304,12 +489,14 @@ def main():
         
         plt.xlabel('Batch Size')
         plt.ylabel('Iteration Time (seconds)')
-        plt.title('ResNet-152 Iteration Time vs. Batch Size')
+        # Set the title to include the model type
+        title_model = "ResNet-152" if model_type == "resnet" else "Transformer"
+        plt.title(f'{title_model} Iteration Time vs. Batch Size')
         plt.grid(True, linestyle='--', alpha=0.7)
         
         # Save the latency plot
         reports_dir = ensure_reports_directory()
-        plot_path = os.path.join(reports_dir, 'resnet152_latency_comparison.png')
+        plot_path = os.path.join(reports_dir, f'{model_type}_latency_comparison.png')
         plt.savefig(plot_path)
         plt.close()
         print(f"\nLatency comparison plot saved to: {plot_path}")
@@ -317,6 +504,9 @@ def main():
     # Create a bar graph showing peak memory usage with OOM cap
     plt.figure(figsize=(10, 6))
     bars = plt.bar(range(len(batch_sizes)), peak_memories_mib, color='skyblue')
+    
+    # Set the title to include the model type
+    title_model = "ResNet-152" if model_type == "resnet" else "Transformer"
     
     # Add memory values as labels on top of each bar
     for i, bar in enumerate(bars):
@@ -332,7 +522,7 @@ def main():
     # Add labels, title, and formatting
     plt.xlabel('Batch Size')
     plt.ylabel('Peak Memory Usage (MiB)')
-    plt.title('ResNet-152 Peak Memory Usage vs. Batch Size')
+    plt.title(f'{title_model} Peak Memory Usage vs. Batch Size')
     plt.xticks(range(len(batch_sizes)), batch_sizes)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.legend()
@@ -341,7 +531,7 @@ def main():
     reports_dir = ensure_reports_directory()
     
     # Save the memory usage bar chart
-    plot_path = os.path.join(reports_dir, 'resnet152_batch_memory.png')
+    plot_path = os.path.join(reports_dir, f'{model_type}_batch_memory.png')
     plt.savefig(plot_path)
     print(f"\nBatch memory analysis plot saved to: {plot_path}")
     
@@ -350,13 +540,13 @@ def main():
     
     # Create memory vs. execution rank graph for each batch size
     try:
-        create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib)
+        create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib, model_type)
     except Exception as e:
         print(f"Error creating memory vs. rank plots: {e}")
     
     # Create stacked bar chart showing memory breakdown
     try:
-        create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib)
+        create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib, model_type)
     except Exception as e:
         print(f"Error creating memory breakdown chart: {e}")
     
@@ -367,7 +557,7 @@ def main():
     for i, batch_size in enumerate(batch_sizes):
         if i < len(peak_memories_mib):
             # Check if CSV files exist for this batch size
-            csv_prefix = f"profiler_stats_bs{batch_size}"
+            csv_prefix = f"profiler_stats_{model_type}_bs{batch_size}"
             node_stats_path = os.path.join(reports_dir, f"{csv_prefix}_node_stats.csv")
             activation_stats_path = os.path.join(reports_dir, f"{csv_prefix}_activation_stats.csv")
             all_node_stats_path = os.path.join(reports_dir, f"{csv_prefix}_allNode_stats.csv")
@@ -384,7 +574,7 @@ def main():
     print("These files can be used in Stage 2 for activation checkpointing analysis.")
     print("\n=== Analysis completed ===")
 
-def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
+def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib, model_type):
     """
     Create memory vs. execution rank plots for each batch size.
     
@@ -406,7 +596,7 @@ def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
         # Load CSV data for this batch size
         try:
             # Check if node stats CSV exists
-            node_csv = os.path.join(reports_dir, f"profiler_stats_bs{batch_size}_node_stats.csv")
+            node_csv = os.path.join(reports_dir, f"profiler_stats_{model_type}_bs{batch_size}_node_stats.csv")
             if not os.path.exists(node_csv):
                 print(f"Warning: {node_csv} not found, skipping memory vs. rank plot for batch size {batch_size}")
                 continue
@@ -465,11 +655,11 @@ def create_memory_vs_rank_plots(batch_sizes, reports_dir, oom_cap_mib):
     
     # Adjust layout and save the figure
     plt.tight_layout()
-    plot_path = os.path.join(reports_dir, 'resnet152_memory_vs_rank.png')
+    plot_path = os.path.join(reports_dir, f'{model_type}_memory_vs_rank.png')
     plt.savefig(plot_path)
     plt.close()
     print(f"Memory vs. rank plots saved to: {plot_path}")
-def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib):
+def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, oom_cap_mib, model_type):
     """
     Create a stacked bar chart showing memory breakdown for different batch sizes.
     
@@ -489,9 +679,15 @@ def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, o
     # Calculate memory breakdown for each batch size
     for i, batch_size in enumerate(batch_sizes):
         if i < len(peak_memories_mib):
-            # Approximate breakdown based on typical patterns
-            # Weights are constant regardless of batch size
-            weight_mem = 230  # ResNet-152 weights ~230 MiB
+            # Approximate breakdown based on typical patterns and model type
+            if model_type == 'resnet':
+                # ResNet-152 weights ~230 MiB
+                weight_mem = 230
+            else:
+                # Transformer model weights (smaller than ResNet)
+                # Rough estimate: embedding + attention + feedforward layers
+                # 512 * 30000 + 6 * (512^2 * 8 + 512 * 2048 * 2) ~ 60 MiB
+                weight_mem = 60
             
             # Gradients scale with batch size but are smaller than activations
             gradient_mem = weight_mem * 0.8  # Slightly smaller than weights
@@ -527,7 +723,8 @@ def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, o
     # Add labels and title
     plt.xlabel('Batch Size')
     plt.ylabel('Memory Usage (MiB)')
-    plt.title('ResNet-152 Memory Breakdown by Batch Size')
+    title_model = "ResNet-152" if model_type == "resnet" else "Transformer"
+    plt.title(f'{title_model} Memory Breakdown by Batch Size')
     plt.xticks(x, batch_sizes[:len(peak_memories_mib)])
     plt.legend()
     
@@ -540,7 +737,7 @@ def create_memory_breakdown_chart(batch_sizes, peak_memories_mib, reports_dir, o
     plt.grid(axis='y', linestyle='--', alpha=0.3)
     
     # Save the plot
-    plot_path = os.path.join(reports_dir, 'resnet152_memory_breakdown.png')
+    plot_path = os.path.join(reports_dir, f'{model_type}_memory_breakdown.png')
     plt.savefig(plot_path)
     plt.close()
     print(f"Memory breakdown chart saved to: {plot_path}")
