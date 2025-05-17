@@ -3,7 +3,7 @@
 This file tracks the project's progress using a task list format.
 2025-05-12 18:14:41 - Log of updates made.
 
-*
+* [2025-05-16 21:01:11] - Completed Task: Optimized pandas operations in `starter_code/activation_checkpointing.py` by replacing them with more efficient native Python data structures. Converted pandas DataFrames to dictionaries after loading, optimized lookup methods to use dictionary access instead of DataFrame indexing, and updated all related methods to work with the new data structures. This optimization should improve performance for the activation checkpointing algorithm.
 
 * [2025-05-14 13:40:00] - Completed Task: Fixed issue with `flatten` variable being referenced before assignment in graph rewriting. Enhanced `_ensure_topological_ordering` to identify critical operations (avgpool, flatten, fc) and ensure proper dependencies. Added a robust fallback mechanism in `apply_rewritten_graph` that creates a fixed model with a manually defined forward method when the critical path is incomplete. This resolves the "local variable 'fc' referenced before assignment" error.
 
@@ -244,3 +244,4 @@ This file tracks the project's progress using a task list format.
 * [2025-05-15 18:45:00] - Completed Task: Updated PLAN_stage_2.md to focus exclusively on activation checkpointing (recompute) strategy. Removed all references to swapping and tensor offloading to host memory. Added new sections on Memory Simulation, Performance Optimization, and Integration with Stage 3 to provide a more comprehensive plan for the recomputation-based approach.
 * [2025-05-15 19:43:43] - Completed Task: Further refined PLAN_stage_2.md to focus only on the core requirements for the activation checkpointing algorithm implementation. Removed the advanced performance optimizations section as it went beyond the basic requirements from the Π-TWO paper. Simplified the core scheduling logic and enhanced the integration section with Stage 3.
 * [2025-05-15 19:48:24] - Completed Task: Updated PLAN_stage_3.md to focus only on the core requirements for the graph extractor and rewriter implementation. Removed sections 6 (Robust Error Handling) and 7 (Performance Optimization) which go beyond the basic requirements from the Π-TWO paper. Also modified the testing section to focus specifically on ResNet-152 as the primary model.
+* [2025-05-16 18:35:03] - Completed Task: Removed `_find_peak_memory_rank` method and its usages from `ActivationCheckpointingAlgorithm` in [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py).

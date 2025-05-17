@@ -1,0 +1,180 @@
+2025-05-16 18:35:38,985 - INFO - ================================================================================
+2025-05-16 18:35:38,985 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-16 18:35:38,985 - INFO - Log file: logs\activation_checkpointing_20250516_183538.log
+2025-05-16 18:35:39,005 - INFO - Loaded node stats with 18493 rows
+2025-05-16 18:35:39,005 - INFO - Loaded activation stats with 775 rows
+2025-05-16 18:35:39,005 - INFO - Memory budget set to 20.0 GB (21474836480.0 bytes)
+2025-05-16 18:35:39,005 - INFO - Algorithm initialization time: 0.02s
+2025-05-16 18:35:39,014 - INFO - Starting checkpoint decision algorithm...
+2025-05-16 18:35:39,014 - INFO - Fixed overhead: 0.3 GB, Memory budget: 20.00 GB
+2025-05-16 18:35:39,014 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-16 18:35:39,023 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-16 18:35:39,622 - INFO - Built activation mappings with 775 activations
+2025-05-16 18:35:39,622 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-16 18:35:40,723 - INFO - Initial peak memory: 22.20 GB
+2025-05-16 18:35:40,723 - INFO - Initial execution time: 1.30s
+2025-05-16 18:35:41,269 - INFO - Incompressible memory: 11.69 GB
+2025-05-16 18:35:41,269 - INFO - Active memory - FW: 11.36 GB, BW: 11.39 GB
+2025-05-16 18:35:41,269 - INFO - Fixed overhead: 0.30 GB
+2025-05-16 18:35:41,269 - INFO - Setting effective target budget to 19.60 GB (2% below requested)
+2025-05-16 18:35:41,269 - INFO - Filtering valid activations...
+2025-05-16 18:35:41,269 - INFO - Found 775 valid activations for consideration
+2025-05-16 18:35:41,269 - INFO - 
+Iteration 1/1000 (Elapsed time: 0.0s)
+2025-05-16 18:35:42,367 - INFO - Simulated peak memory: 22.20 GB. Budget: 20.00 GB. Exec time: 1.30s
+2025-05-16 18:35:42,367 - INFO - Current checkpoint count: 620
+2025-05-16 18:35:42,367 - INFO - Current recompute count: 0
+2025-05-16 18:35:42,375 - INFO - Considering activation: relu__3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2510
+2025-05-16 18:35:42,375 - INFO - Choosing to RECOMPUTE relu__3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:42,375 - INFO - 
+Iteration 2/1000 (Elapsed time: 1.1s)
+2025-05-16 18:35:43,460 - INFO - Simulated peak memory: 22.01 GB. Budget: 20.00 GB. Exec time: 1.50s
+2025-05-16 18:35:43,460 - INFO - Current checkpoint count: 619
+2025-05-16 18:35:43,460 - INFO - Current recompute count: 1
+2025-05-16 18:35:43,460 - INFO - New best schedule found with peak memory: 22.01 GB
+2025-05-16 18:35:43,468 - INFO - Considering activation: convolution_7, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2473
+2025-05-16 18:35:43,468 - INFO - Choosing to RECOMPUTE convolution_7 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:43,468 - INFO - 
+Iteration 3/1000 (Elapsed time: 2.2s)
+2025-05-16 18:35:44,531 - INFO - Simulated peak memory: 21.82 GB. Budget: 20.00 GB. Exec time: 1.70s
+2025-05-16 18:35:44,531 - INFO - Current checkpoint count: 618
+2025-05-16 18:35:44,531 - INFO - Current recompute count: 2
+2025-05-16 18:35:44,531 - INFO - New best schedule found with peak memory: 21.82 GB
+2025-05-16 18:35:44,538 - INFO - Considering activation: convolution, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2590
+2025-05-16 18:35:44,538 - INFO - Choosing to RECOMPUTE convolution (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:44,538 - INFO - 
+Iteration 4/1000 (Elapsed time: 3.3s)
+2025-05-16 18:35:45,593 - INFO - Simulated peak memory: 21.63 GB. Budget: 20.00 GB. Exec time: 1.90s
+2025-05-16 18:35:45,594 - INFO - Current checkpoint count: 617
+2025-05-16 18:35:45,594 - INFO - Current recompute count: 3
+2025-05-16 18:35:45,594 - INFO - New best schedule found with peak memory: 21.63 GB
+2025-05-16 18:35:45,602 - INFO - Considering activation: convolution_4, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2523
+2025-05-16 18:35:45,602 - INFO - Choosing to RECOMPUTE convolution_4 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:45,602 - INFO - 
+Iteration 5/1000 (Elapsed time: 4.3s)
+2025-05-16 18:35:46,692 - INFO - Simulated peak memory: 21.44 GB. Budget: 20.00 GB. Exec time: 2.11s
+2025-05-16 18:35:46,693 - INFO - Current checkpoint count: 616
+2025-05-16 18:35:46,693 - INFO - Current recompute count: 4
+2025-05-16 18:35:46,693 - INFO - New best schedule found with peak memory: 21.44 GB
+2025-05-16 18:35:46,701 - INFO - Considering activation: convolution_3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2537
+2025-05-16 18:35:46,701 - INFO - Choosing to RECOMPUTE convolution_3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:46,701 - INFO - 
+Iteration 6/1000 (Elapsed time: 5.4s)
+2025-05-16 18:35:47,770 - INFO - Simulated peak memory: 21.25 GB. Budget: 20.00 GB. Exec time: 2.31s
+2025-05-16 18:35:47,770 - INFO - Current checkpoint count: 615
+2025-05-16 18:35:47,770 - INFO - Current recompute count: 5
+2025-05-16 18:35:47,770 - INFO - New best schedule found with peak memory: 21.25 GB
+2025-05-16 18:35:47,778 - INFO - Considering activation: convolution_10, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2423
+2025-05-16 18:35:47,778 - INFO - Choosing to RECOMPUTE convolution_10 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:47,778 - INFO - 
+Iteration 7/1000 (Elapsed time: 6.5s)
+2025-05-16 18:35:48,843 - INFO - Simulated peak memory: 21.06 GB. Budget: 20.00 GB. Exec time: 2.51s
+2025-05-16 18:35:48,843 - INFO - Current checkpoint count: 614
+2025-05-16 18:35:48,843 - INFO - Current recompute count: 6
+2025-05-16 18:35:48,843 - INFO - New best schedule found with peak memory: 21.06 GB
+2025-05-16 18:35:48,851 - INFO - Considering activation: relu_, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2581
+2025-05-16 18:35:48,851 - INFO - Choosing to RECOMPUTE relu_ (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:48,851 - INFO - 
+Iteration 8/1000 (Elapsed time: 7.6s)
+2025-05-16 18:35:49,907 - INFO - Simulated peak memory: 20.86 GB. Budget: 20.00 GB. Exec time: 2.71s
+2025-05-16 18:35:49,907 - INFO - Current checkpoint count: 613
+2025-05-16 18:35:49,907 - INFO - Current recompute count: 7
+2025-05-16 18:35:49,907 - INFO - New best schedule found with peak memory: 20.86 GB
+2025-05-16 18:35:49,915 - INFO - Considering activation: relu__9, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2387
+2025-05-16 18:35:49,915 - INFO - Choosing to RECOMPUTE relu__9 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:49,915 - INFO - 
+Iteration 9/1000 (Elapsed time: 8.6s)
+2025-05-16 18:35:50,996 - INFO - Simulated peak memory: 20.67 GB. Budget: 20.00 GB. Exec time: 2.91s
+2025-05-16 18:35:50,996 - INFO - Current checkpoint count: 612
+2025-05-16 18:35:50,996 - INFO - Current recompute count: 8
+2025-05-16 18:35:50,996 - INFO - New best schedule found with peak memory: 20.67 GB
+2025-05-16 18:35:51,004 - INFO - Considering activation: relu__6, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2460
+2025-05-16 18:35:51,004 - INFO - Choosing to RECOMPUTE relu__6 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 18:35:51,004 - INFO - 
+Iteration 10/1000 (Elapsed time: 9.7s)
+2025-05-16 18:35:52,078 - INFO - Simulated peak memory: 20.48 GB. Budget: 20.00 GB. Exec time: 3.11s
+2025-05-16 18:35:52,078 - INFO - Current checkpoint count: 611
+2025-05-16 18:35:52,078 - INFO - Current recompute count: 9
+2025-05-16 18:35:52,078 - INFO - New best schedule found with peak memory: 20.48 GB
+2025-05-16 18:35:52,085 - INFO - Considering activation: convolution_11, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2405
+2025-05-16 18:35:52,085 - INFO - Choosing to RECOMPUTE convolution_11 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:52,085 - INFO - 
+Iteration 11/1000 (Elapsed time: 10.8s)
+2025-05-16 18:35:53,152 - INFO - Simulated peak memory: 20.39 GB. Budget: 20.00 GB. Exec time: 3.21s
+2025-05-16 18:35:53,152 - INFO - Current checkpoint count: 610
+2025-05-16 18:35:53,152 - INFO - Current recompute count: 10
+2025-05-16 18:35:53,152 - INFO - New best schedule found with peak memory: 20.39 GB
+2025-05-16 18:35:53,160 - INFO - Considering activation: relu__33, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 1973
+2025-05-16 18:35:53,160 - INFO - Choosing to RECOMPUTE relu__33 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:53,160 - INFO - 
+Iteration 12/1000 (Elapsed time: 11.9s)
+2025-05-16 18:35:54,253 - INFO - Simulated peak memory: 20.29 GB. Budget: 20.00 GB. Exec time: 3.31s
+2025-05-16 18:35:54,253 - INFO - Current checkpoint count: 609
+2025-05-16 18:35:54,253 - INFO - Current recompute count: 11
+2025-05-16 18:35:54,253 - INFO - New best schedule found with peak memory: 20.29 GB
+2025-05-16 18:35:54,261 - INFO - Considering activation: relu__10, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2394
+2025-05-16 18:35:54,261 - INFO - Choosing to RECOMPUTE relu__10 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:54,261 - INFO - 
+Iteration 13/1000 (Elapsed time: 13.0s)
+2025-05-16 18:35:55,329 - INFO - Simulated peak memory: 20.19 GB. Budget: 20.00 GB. Exec time: 3.41s
+2025-05-16 18:35:55,329 - INFO - Current checkpoint count: 608
+2025-05-16 18:35:55,329 - INFO - Current recompute count: 12
+2025-05-16 18:35:55,329 - INFO - New best schedule found with peak memory: 20.19 GB
+2025-05-16 18:35:55,337 - INFO - Considering activation: convolution_23, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2209
+2025-05-16 18:35:55,337 - INFO - Choosing to RECOMPUTE convolution_23 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:55,337 - INFO - 
+Iteration 14/1000 (Elapsed time: 14.1s)
+2025-05-16 18:35:56,393 - INFO - Simulated peak memory: 20.10 GB. Budget: 20.00 GB. Exec time: 3.51s
+2025-05-16 18:35:56,393 - INFO - Current checkpoint count: 607
+2025-05-16 18:35:56,393 - INFO - Current recompute count: 13
+2025-05-16 18:35:56,393 - INFO - New best schedule found with peak memory: 20.10 GB
+2025-05-16 18:35:56,400 - INFO - Considering activation: convolution_20, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2259
+2025-05-16 18:35:56,400 - INFO - Choosing to RECOMPUTE convolution_20 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:56,400 - INFO - 
+Iteration 15/1000 (Elapsed time: 15.1s)
+2025-05-16 18:35:57,463 - INFO - Simulated peak memory: 20.00 GB. Budget: 20.00 GB. Exec time: 3.61s
+2025-05-16 18:35:57,463 - INFO - Current checkpoint count: 606
+2025-05-16 18:35:57,463 - INFO - Current recompute count: 14
+2025-05-16 18:35:57,463 - INFO - New best schedule found with peak memory: 20.00 GB
+2025-05-16 18:35:57,470 - INFO - Considering activation: relu__15, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2296
+2025-05-16 18:35:57,470 - INFO - Choosing to RECOMPUTE relu__15 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 18:35:57,470 - INFO - 
+Iteration 16/1000 (Elapsed time: 16.2s)
+2025-05-16 18:35:58,561 - INFO - Simulated peak memory: 19.91 GB. Budget: 20.00 GB. Exec time: 3.71s
+2025-05-16 18:35:58,561 - INFO - Current checkpoint count: 605
+2025-05-16 18:35:58,561 - INFO - Current recompute count: 15
+2025-05-16 18:35:58,561 - INFO - New best schedule found with peak memory: 19.91 GB
+2025-05-16 18:35:58,561 - INFO - Memory budget of 20.00 GB met.
+2025-05-16 18:35:58,561 - INFO - Actual memory usage: 19.91 GB
+2025-05-16 18:35:59,626 - INFO - 
+Final Results:
+2025-05-16 18:35:59,626 - INFO - Initial peak memory: 22.20 GB
+2025-05-16 18:35:59,626 - INFO - Final peak memory: 19.91 GB
+2025-05-16 18:35:59,626 - INFO - Memory reduction: 2.30 GB (10.3%)
+2025-05-16 18:35:59,626 - INFO - Memory budget: 20.00 GB
+2025-05-16 18:35:59,626 - INFO - Gap to budget: -0.09 GB
+2025-05-16 18:35:59,626 - INFO - Estimated incompressible memory: 11.69 GB
+2025-05-16 18:35:59,626 - INFO - Initial execution time: 1.30s
+2025-05-16 18:35:59,626 - INFO - Final execution time: 3.71s
+2025-05-16 18:35:59,626 - INFO - Execution time overhead: 2.41s (184.9%)
+2025-05-16 18:35:59,627 - INFO - Total activations marked for recomputation: 15
+2025-05-16 18:35:59,627 - INFO - Total memory saved by recomputation: 2.30 GB
+2025-05-16 18:35:59,668 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions.csv
+2025-05-16 18:35:59,668 - INFO - 
+Timing Statistics:
+2025-05-16 18:35:59,668 - INFO - Total execution time: 20.65s
+2025-05-16 18:35:59,668 - INFO - Initialization: 0.01s (0.0%)
+2025-05-16 18:35:59,668 - INFO - Initial memory simulation: 1.10s (5.3%)
+2025-05-16 18:35:59,668 - INFO - Memory component analysis: 0.55s (2.6%)
+2025-05-16 18:35:59,668 - INFO - Candidate filtering: 0.00s (0.0%)
+2025-05-16 18:35:59,668 - INFO - Main loop: 17.29s (83.7%)
+2025-05-16 18:35:59,668 - INFO -   - Memory simulations: 17.17s (83.2%)
+2025-05-16 18:35:59,668 - INFO -   - Candidate selection: 0.11s (0.5%)
+2025-05-16 18:35:59,668 - INFO - Final memory simulation: 1.07s (5.2%)
+2025-05-16 18:35:59,668 - INFO - 
+Top 5 slowest iterations:
+2025-05-16 18:35:59,668 - INFO -   1. Iteration 1: 1.11s (Simulation: 1.10s, Selection: 0.01s)
+2025-05-16 18:35:59,668 - INFO -   2. Iteration 12: 1.10s (Simulation: 1.09s, Selection: 0.01s)
+2025-05-16 18:35:59,668 - INFO -   3. Iteration 5: 1.10s (Simulation: 1.09s, Selection: 0.01s)
+2025-05-16 18:35:59,668 - INFO -   4. Iteration 2: 1.09s (Simulation: 1.08s, Selection: 0.01s)
+2025-05-16 18:35:59,668 - INFO -   5. Iteration 9: 1.09s (Simulation: 1.08s, Selection: 0.01s)

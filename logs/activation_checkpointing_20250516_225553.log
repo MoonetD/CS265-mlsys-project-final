@@ -1,0 +1,267 @@
+2025-05-16 22:55:53,178 - INFO - ================================================================================
+2025-05-16 22:55:53,178 - INFO - Activation Checkpointing Algorithm Starting
+2025-05-16 22:55:53,178 - INFO - Log file: logs\activation_checkpointing_20250516_225553.log
+2025-05-16 22:55:53,833 - INFO - Loaded node stats with 18493 rows
+2025-05-16 22:55:53,833 - INFO - Loaded activation stats with 775 rows
+2025-05-16 22:55:53,833 - INFO - Memory budget set to 15.0 GB (16106127360.0 bytes)
+2025-05-16 22:55:53,833 - INFO - Algorithm initialization time: 0.65s
+2025-05-16 22:55:53,834 - INFO - Starting checkpoint decision algorithm...
+2025-05-16 22:55:53,834 - INFO - Fixed overhead: 0.3 GB, Memory budget: 15.00 GB
+2025-05-16 22:55:53,834 - INFO - Initializing schedule with all activations checkpointed...
+2025-05-16 22:55:53,834 - INFO - Initial schedule has 620 activations marked for RETAINED
+2025-05-16 22:55:53,850 - INFO - Built activation mappings with 775 activations
+2025-05-16 22:55:53,850 - INFO - Initialized simulation cache with 18493 nodes, 3631 forward nodes, 14860 backward nodes
+2025-05-16 22:55:53,883 - INFO - Initial peak memory: 22.20 GB
+2025-05-16 22:55:53,883 - INFO - Initial execution time: 1.30s
+2025-05-16 22:55:53,894 - INFO - Incompressible memory: 11.69 GB
+2025-05-16 22:55:53,894 - INFO - Active memory - FW: 11.36 GB, BW: 11.39 GB
+2025-05-16 22:55:53,894 - INFO - Fixed overhead: 0.30 GB
+2025-05-16 22:55:53,894 - INFO - Setting effective target budget to 14.70 GB (2% below requested)
+2025-05-16 22:55:53,894 - INFO - Filtering valid activations...
+2025-05-16 22:55:53,895 - INFO - Found 775 valid activations for consideration
+2025-05-16 22:55:53,929 - INFO - Considering activation: convolution_3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2537
+2025-05-16 22:55:53,929 - INFO - Choosing to RECOMPUTE convolution_3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:53,963 - INFO - Considering activation: relu__3, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2510
+2025-05-16 22:55:53,963 - INFO - Choosing to RECOMPUTE relu__3 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:53,996 - INFO - Considering activation: relu__9, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2387
+2025-05-16 22:55:53,996 - INFO - Choosing to RECOMPUTE relu__9 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,029 - INFO - Considering activation: convolution_7, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2473
+2025-05-16 22:55:54,029 - INFO - Choosing to RECOMPUTE convolution_7 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,063 - INFO - Considering activation: convolution_10, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2423
+2025-05-16 22:55:54,064 - INFO - Choosing to RECOMPUTE convolution_10 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,096 - INFO - Considering activation: convolution, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2590
+2025-05-16 22:55:54,096 - INFO - Choosing to RECOMPUTE convolution (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,129 - INFO - Considering activation: convolution_4, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2523
+2025-05-16 22:55:54,129 - INFO - Choosing to RECOMPUTE convolution_4 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,162 - INFO - Considering activation: relu_, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2581
+2025-05-16 22:55:54,162 - INFO - Choosing to RECOMPUTE relu_ (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,194 - INFO - Considering activation: relu__6, recompute_benefit_ratio: 1023999999.49, mem_size: 196.00 MB, recomp_time: 0.200704s, lifetime: 2460
+2025-05-16 22:55:54,195 - INFO - Choosing to RECOMPUTE relu__6 (memory saved: 196.00 MB, recompute overhead: 0.200704s)
+2025-05-16 22:55:54,228 - INFO - Considering activation: convolution_23, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2209
+2025-05-16 22:55:54,228 - INFO - Choosing to RECOMPUTE convolution_23 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,261 - INFO - Considering activation: relu__33, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 1973
+2025-05-16 22:55:54,261 - INFO - Choosing to RECOMPUTE relu__33 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,294 - INFO - Considering activation: relu__24, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2146
+2025-05-16 22:55:54,295 - INFO - Choosing to RECOMPUTE relu__24 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,328 - INFO - Considering activation: convolution_13, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2373
+2025-05-16 22:55:54,328 - INFO - Choosing to RECOMPUTE convolution_13 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,361 - INFO - Considering activation: convolution_11, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2405
+2025-05-16 22:55:54,361 - INFO - Choosing to RECOMPUTE convolution_11 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,395 - INFO - Considering activation: convolution_17, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2309
+2025-05-16 22:55:54,395 - INFO - Choosing to RECOMPUTE convolution_17 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,427 - INFO - Considering activation: relu__12, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2346
+2025-05-16 22:55:54,427 - INFO - Choosing to RECOMPUTE relu__12 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,462 - INFO - Considering activation: convolution_26, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2159
+2025-05-16 22:55:54,462 - INFO - Choosing to RECOMPUTE convolution_26 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,497 - INFO - Considering activation: convolution_35, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2009
+2025-05-16 22:55:54,497 - INFO - Choosing to RECOMPUTE convolution_35 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,531 - INFO - Considering activation: relu__10, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2394
+2025-05-16 22:55:54,532 - INFO - Choosing to RECOMPUTE relu__10 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,565 - INFO - Considering activation: relu__18, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2246
+2025-05-16 22:55:54,565 - INFO - Choosing to RECOMPUTE relu__18 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,596 - INFO - Considering activation: relu__30, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2046
+2025-05-16 22:55:54,596 - INFO - Choosing to RECOMPUTE relu__30 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,628 - INFO - Considering activation: relu__15, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2296
+2025-05-16 22:55:54,629 - INFO - Choosing to RECOMPUTE relu__15 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,661 - INFO - Considering activation: relu__27, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2096
+2025-05-16 22:55:54,662 - INFO - Choosing to RECOMPUTE relu__27 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,695 - INFO - Considering activation: convolution_29, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2109
+2025-05-16 22:55:54,695 - INFO - Choosing to RECOMPUTE convolution_29 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,728 - INFO - Considering activation: convolution_32, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2059
+2025-05-16 22:55:54,728 - INFO - Choosing to RECOMPUTE convolution_32 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,761 - INFO - Considering activation: getitem_5, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2578
+2025-05-16 22:55:54,761 - INFO - Choosing to RECOMPUTE getitem_5 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,794 - INFO - Considering activation: relu__21, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2196
+2025-05-16 22:55:54,794 - INFO - Choosing to RECOMPUTE relu__21 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,827 - INFO - Considering activation: convolution_20, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2259
+2025-05-16 22:55:54,827 - INFO - Choosing to RECOMPUTE convolution_20 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,862 - INFO - Considering activation: convolution_14, recompute_benefit_ratio: 1023999998.98, mem_size: 98.00 MB, recomp_time: 0.100352s, lifetime: 2359
+2025-05-16 22:55:54,862 - INFO - Choosing to RECOMPUTE convolution_14 (memory saved: 98.00 MB, recompute overhead: 0.100352s)
+2025-05-16 22:55:54,893 - INFO - Considering activation: relu__135, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 282
+2025-05-16 22:55:54,893 - INFO - Choosing to RECOMPUTE relu__135 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:54,926 - INFO - Considering activation: relu__129, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 382
+2025-05-16 22:55:54,926 - INFO - Choosing to RECOMPUTE relu__129 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:54,960 - INFO - Considering activation: convolution_90, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1095
+2025-05-16 22:55:54,960 - INFO - Choosing to RECOMPUTE convolution_90 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:54,992 - INFO - Considering activation: relu__51, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1682
+2025-05-16 22:55:54,992 - INFO - Choosing to RECOMPUTE relu__51 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,025 - INFO - Considering activation: convolution_117, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 645
+2025-05-16 22:55:55,025 - INFO - Choosing to RECOMPUTE convolution_117 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,058 - INFO - Considering activation: convolution_8, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2455
+2025-05-16 22:55:55,058 - INFO - Choosing to RECOMPUTE convolution_8 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,091 - INFO - Considering activation: relu__96, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 932
+2025-05-16 22:55:55,091 - INFO - Choosing to RECOMPUTE relu__96 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,123 - INFO - Considering activation: relu__2, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2542
+2025-05-16 22:55:55,123 - INFO - Choosing to RECOMPUTE relu__2 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,158 - INFO - Considering activation: convolution_114, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 695
+2025-05-16 22:55:55,158 - INFO - Choosing to RECOMPUTE convolution_114 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,189 - INFO - Considering activation: convolution_6, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2489
+2025-05-16 22:55:55,189 - INFO - Choosing to RECOMPUTE convolution_6 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,221 - INFO - Considering activation: convolution_135, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 345
+2025-05-16 22:55:55,221 - INFO - Choosing to RECOMPUTE convolution_135 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,252 - INFO - Considering activation: convolution_105, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 845
+2025-05-16 22:55:55,253 - INFO - Choosing to RECOMPUTE convolution_105 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,284 - INFO - Considering activation: convolution_66, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1495
+2025-05-16 22:55:55,284 - INFO - Choosing to RECOMPUTE convolution_66 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,316 - INFO - Considering activation: convolution_84, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1195
+2025-05-16 22:55:55,316 - INFO - Choosing to RECOMPUTE convolution_84 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,348 - INFO - Considering activation: relu__8, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2428
+2025-05-16 22:55:55,348 - INFO - Choosing to RECOMPUTE relu__8 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,377 - INFO - Considering activation: convolution_72, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1395
+2025-05-16 22:55:55,377 - INFO - Choosing to RECOMPUTE convolution_72 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,409 - INFO - Considering activation: relu__108, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 732
+2025-05-16 22:55:55,409 - INFO - Choosing to RECOMPUTE relu__108 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,442 - INFO - Considering activation: relu__48, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1732
+2025-05-16 22:55:55,442 - INFO - Choosing to RECOMPUTE relu__48 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,472 - INFO - Considering activation: convolution_5, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2505
+2025-05-16 22:55:55,474 - INFO - Choosing to RECOMPUTE convolution_5 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,506 - INFO - Considering activation: relu__34, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1980
+2025-05-16 22:55:55,506 - INFO - Choosing to RECOMPUTE relu__34 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,538 - INFO - Considering activation: relu__105, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 782
+2025-05-16 22:55:55,538 - INFO - Choosing to RECOMPUTE relu__105 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,569 - INFO - Considering activation: getitem_4, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2552
+2025-05-16 22:55:55,569 - INFO - Choosing to RECOMPUTE getitem_4 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,601 - INFO - Considering activation: relu__63, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1482
+2025-05-16 22:55:55,601 - INFO - Choosing to RECOMPUTE relu__63 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,633 - INFO - Considering activation: relu__72, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1332
+2025-05-16 22:55:55,633 - INFO - Choosing to RECOMPUTE relu__72 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,666 - INFO - Considering activation: relu__4, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2494
+2025-05-16 22:55:55,666 - INFO - Choosing to RECOMPUTE relu__4 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,697 - INFO - Considering activation: convolution_51, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1745
+2025-05-16 22:55:55,697 - INFO - Choosing to RECOMPUTE convolution_51 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,729 - INFO - Considering activation: relu__120, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 532
+2025-05-16 22:55:55,729 - INFO - Choosing to RECOMPUTE relu__120 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,762 - INFO - Considering activation: relu__132, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 332
+2025-05-16 22:55:55,762 - INFO - Choosing to RECOMPUTE relu__132 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,793 - INFO - Considering activation: convolution_38, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1959
+2025-05-16 22:55:55,793 - INFO - Choosing to RECOMPUTE convolution_38 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,824 - INFO - Considering activation: relu__5, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2478
+2025-05-16 22:55:55,824 - INFO - Choosing to RECOMPUTE relu__5 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,856 - INFO - Considering activation: convolution_57, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1645
+2025-05-16 22:55:55,856 - INFO - Choosing to RECOMPUTE convolution_57 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,887 - INFO - Considering activation: convolution_123, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 545
+2025-05-16 22:55:55,887 - INFO - Choosing to RECOMPUTE convolution_123 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,918 - INFO - Considering activation: convolution_126, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 495
+2025-05-16 22:55:55,918 - INFO - Choosing to RECOMPUTE convolution_126 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,949 - INFO - Considering activation: relu__93, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 982
+2025-05-16 22:55:55,949 - INFO - Choosing to RECOMPUTE relu__93 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:55,981 - INFO - Considering activation: relu__81, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1182
+2025-05-16 22:55:55,981 - INFO - Choosing to RECOMPUTE relu__81 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,013 - INFO - Considering activation: relu__123, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 482
+2025-05-16 22:55:56,013 - INFO - Choosing to RECOMPUTE relu__123 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,044 - INFO - Considering activation: relu__90, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1032
+2025-05-16 22:55:56,044 - INFO - Choosing to RECOMPUTE relu__90 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,075 - INFO - Considering activation: relu__87, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1082
+2025-05-16 22:55:56,075 - INFO - Choosing to RECOMPUTE relu__87 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,105 - INFO - Considering activation: relu__117, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 582
+2025-05-16 22:55:56,107 - INFO - Choosing to RECOMPUTE relu__117 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,137 - INFO - Considering activation: convolution_75, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1345
+2025-05-16 22:55:56,137 - INFO - Choosing to RECOMPUTE convolution_75 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,168 - INFO - Considering activation: convolution_108, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 795
+2025-05-16 22:55:56,168 - INFO - Choosing to RECOMPUTE convolution_108 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,199 - INFO - Considering activation: relu__66, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1432
+2025-05-16 22:55:56,199 - INFO - Choosing to RECOMPUTE relu__66 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,232 - INFO - Considering activation: relu__36, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1932
+2025-05-16 22:55:56,232 - INFO - Choosing to RECOMPUTE relu__36 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,263 - INFO - Considering activation: relu__69, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1382
+2025-05-16 22:55:56,263 - INFO - Choosing to RECOMPUTE relu__69 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,295 - INFO - Considering activation: relu__7, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2444
+2025-05-16 22:55:56,295 - INFO - Choosing to RECOMPUTE relu__7 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,327 - INFO - Considering activation: convolution_39, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1945
+2025-05-16 22:55:56,327 - INFO - Choosing to RECOMPUTE convolution_39 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,359 - INFO - Considering activation: convolution_81, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1245
+2025-05-16 22:55:56,359 - INFO - Choosing to RECOMPUTE convolution_81 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,390 - INFO - Considering activation: convolution_141, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 245
+2025-05-16 22:55:56,391 - INFO - Choosing to RECOMPUTE convolution_141 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,422 - INFO - Considering activation: relu__57, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1582
+2025-05-16 22:55:56,422 - INFO - Choosing to RECOMPUTE relu__57 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,451 - INFO - Considering activation: convolution_144, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 195
+2025-05-16 22:55:56,452 - INFO - Choosing to RECOMPUTE convolution_144 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,483 - INFO - Considering activation: convolution_42, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1895
+2025-05-16 22:55:56,483 - INFO - Choosing to RECOMPUTE convolution_42 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,512 - INFO - Considering activation: convolution_138, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 295
+2025-05-16 22:55:56,513 - INFO - Choosing to RECOMPUTE convolution_138 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,541 - INFO - Considering activation: relu__54, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1632
+2025-05-16 22:55:56,541 - INFO - Choosing to RECOMPUTE relu__54 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,572 - INFO - Considering activation: relu__99, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 882
+2025-05-16 22:55:56,572 - INFO - Choosing to RECOMPUTE relu__99 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,602 - INFO - Considering activation: relu__126, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 432
+2025-05-16 22:55:56,602 - INFO - Choosing to RECOMPUTE relu__126 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,632 - INFO - Considering activation: relu__60, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1532
+2025-05-16 22:55:56,632 - INFO - Choosing to RECOMPUTE relu__60 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,660 - INFO - Considering activation: convolution_111, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 745
+2025-05-16 22:55:56,660 - INFO - Choosing to RECOMPUTE convolution_111 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,690 - INFO - Considering activation: relu__141, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 159
+2025-05-16 22:55:56,690 - INFO - Choosing to RECOMPUTE relu__141 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,719 - INFO - Considering activation: convolution_54, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1695
+2025-05-16 22:55:56,719 - INFO - Choosing to RECOMPUTE convolution_54 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,751 - INFO - Considering activation: relu__1, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2558
+2025-05-16 22:55:56,751 - INFO - Choosing to RECOMPUTE relu__1 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,783 - INFO - Considering activation: convolution_93, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1045
+2025-05-16 22:55:56,783 - INFO - Choosing to RECOMPUTE convolution_93 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,814 - INFO - Considering activation: relu__39, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1882
+2025-05-16 22:55:56,814 - INFO - Choosing to RECOMPUTE relu__39 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,844 - INFO - Considering activation: convolution_2, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2553
+2025-05-16 22:55:56,844 - INFO - Choosing to RECOMPUTE convolution_2 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,875 - INFO - Considering activation: convolution_69, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1445
+2025-05-16 22:55:56,875 - INFO - Choosing to RECOMPUTE convolution_69 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,905 - INFO - Considering activation: convolution_78, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1295
+2025-05-16 22:55:56,905 - INFO - Choosing to RECOMPUTE convolution_78 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,936 - INFO - Considering activation: convolution_48, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1795
+2025-05-16 22:55:56,936 - INFO - Choosing to RECOMPUTE convolution_48 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,966 - INFO - Considering activation: convolution_132, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 395
+2025-05-16 22:55:56,966 - INFO - Choosing to RECOMPUTE convolution_132 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:56,998 - INFO - Considering activation: relu__84, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1132
+2025-05-16 22:55:56,998 - INFO - Choosing to RECOMPUTE relu__84 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,029 - INFO - Considering activation: relu__138, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 232
+2025-05-16 22:55:57,029 - INFO - Choosing to RECOMPUTE relu__138 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,059 - INFO - Considering activation: relu__42, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1832
+2025-05-16 22:55:57,061 - INFO - Choosing to RECOMPUTE relu__42 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,091 - INFO - Considering activation: convolution_102, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 895
+2025-05-16 22:55:57,091 - INFO - Choosing to RECOMPUTE convolution_102 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,121 - INFO - Considering activation: relu__75, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1282
+2025-05-16 22:55:57,121 - INFO - Choosing to RECOMPUTE relu__75 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,152 - INFO - Considering activation: convolution_1, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 2569
+2025-05-16 22:55:57,152 - INFO - Choosing to RECOMPUTE convolution_1 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,182 - INFO - Considering activation: convolution_36, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1991
+2025-05-16 22:55:57,182 - INFO - Choosing to RECOMPUTE convolution_36 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,212 - INFO - Considering activation: relu__102, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 832
+2025-05-16 22:55:57,212 - INFO - Choosing to RECOMPUTE relu__102 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,242 - INFO - Considering activation: relu__45, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 1782
+2025-05-16 22:55:57,242 - INFO - Choosing to RECOMPUTE relu__45 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,272 - INFO - Considering activation: convolution_120, recompute_benefit_ratio: 1023999997.96, mem_size: 49.00 MB, recomp_time: 0.050176s, lifetime: 595
+2025-05-16 22:55:57,272 - INFO - Choosing to RECOMPUTE convolution_120 (memory saved: 49.00 MB, recompute overhead: 0.050176s)
+2025-05-16 22:55:57,301 - INFO - Memory budget of 15.00 GB met.
+2025-05-16 22:55:57,301 - INFO - Actual memory usage: 14.98 GB
+2025-05-16 22:55:57,331 - INFO - 
+Final Results:
+2025-05-16 22:55:57,331 - INFO - Initial peak memory: 22.20 GB
+2025-05-16 22:55:57,331 - INFO - Final peak memory: 14.98 GB
+2025-05-16 22:55:57,331 - INFO - Memory reduction: 7.23 GB (32.5%)
+2025-05-16 22:55:57,332 - INFO - Memory budget: 15.00 GB
+2025-05-16 22:55:57,332 - INFO - Gap to budget: -0.02 GB
+2025-05-16 22:55:57,332 - INFO - Estimated incompressible memory: 11.69 GB
+2025-05-16 22:55:57,332 - INFO - Initial execution time: 1.30s
+2025-05-16 22:55:57,332 - INFO - Final execution time: 8.98s
+2025-05-16 22:55:57,332 - INFO - Execution time overhead: 7.68s (589.3%)
+2025-05-16 22:55:57,332 - INFO - Total activations marked for recomputation: 106
+2025-05-16 22:55:57,332 - INFO - Total memory saved by recomputation: 7.32 GB
+2025-05-16 22:55:57,336 - INFO - Saved activation checkpointing decisions to C:\Users\ydeng\Documents\GitHub\CS265-mlsys-project-final\reports\ac_decisions.csv
+2025-05-16 22:55:57,336 - INFO - 
+Timing Statistics:
+2025-05-16 22:55:57,336 - INFO - Total execution time: 3.50s
+2025-05-16 22:55:57,336 - INFO - Initialization: 0.00s (0.0%)
+2025-05-16 22:55:57,336 - INFO - Initial memory simulation: 0.05s (1.4%)
+2025-05-16 22:55:57,336 - INFO - Memory component analysis: 0.01s (0.3%)
+2025-05-16 22:55:57,336 - INFO - Candidate filtering: 0.00s (0.0%)
+2025-05-16 22:55:57,336 - INFO - Main loop: 3.41s (97.3%)
+2025-05-16 22:55:57,336 - INFO -   - Memory simulations: 3.29s (93.8%)
+2025-05-16 22:55:57,336 - INFO -   - Candidate selection: 0.12s (3.4%)
+2025-05-16 22:55:57,336 - INFO - Final memory simulation: 0.03s (0.8%)
+2025-05-16 22:55:57,336 - INFO - 
+Top 5 slowest iterations:
+2025-05-16 22:55:57,336 - INFO -   1. Iteration 17: 0.04s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-16 22:55:57,336 - INFO -   2. Iteration 19: 0.04s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-16 22:55:57,336 - INFO -   3. Iteration 29: 0.04s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-16 22:55:57,336 - INFO -   4. Iteration 18: 0.03s (Simulation: 0.03s, Selection: 0.00s)
+2025-05-16 22:55:57,336 - INFO -   5. Iteration 1: 0.03s (Simulation: 0.03s, Selection: 0.00s)

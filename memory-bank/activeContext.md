@@ -3,7 +3,7 @@
   This file tracks the project's current status, including recent changes, current goals, and open questions.
   2025-05-12 18:14:34 - Log of updates made.
 
-*
+* [2025-05-16 21:00:32] - Optimized pandas operations in `starter_code/activation_checkpointing.py` by replacing them with more efficient native Python data structures. Converted pandas DataFrames to dictionaries after loading, optimized lookup methods to use dictionary access instead of DataFrame indexing, and updated all related methods to work with the new data structures.
 
 ## Current Focus
 
@@ -217,3 +217,4 @@
     3. Added explicit recompilation of the graph
 * [2025-05-15 18:44:44] - Updated PLAN_stage_2.md to focus exclusively on activation checkpointing (recompute) strategy. Removed all references to swapping and tensor offloading to host memory while maintaining the overall structure of the plan. Added new sections on Memory Simulation, Performance Optimization, and Integration with Stage 3.
 * [2025-05-15 19:47:54] - Updated PLAN_stage_3.md to focus only on the core requirements for the graph extractor and rewriter implementation. Removed sections 6 (Robust Error Handling) and 7 (Performance Optimization) which go beyond the basic requirements from the Π-TWO paper. Also ensured the plan focuses only on implementing with ResNet-152 as the primary model.
+* [2025-05-16 18:34:55] - Removed `_find_peak_memory_rank` method and its usages from `ActivationCheckpointingAlgorithm` in [`starter_code/activation_checkpointing.py`](starter_code/activation_checkpointing.py).

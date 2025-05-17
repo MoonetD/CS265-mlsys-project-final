@@ -3,7 +3,7 @@
 This file records architectural and implementation decisions using a list format.
 2025-05-12 18:14:49 - Log of updates made.
 
-*
+* [2025-05-16 21:00:53] - Optimized pandas operations in `activation_checkpointing.py` by replacing them with native Python data structures.
 
 ## Decision
 
@@ -17,6 +17,27 @@ This file records architectural and implementation decisions using a list format
 
 *
 ---
+### Decision (Code)
+[2025-05-16 21:00:53] - Optimized pandas operations in `starter_code/activation_checkpointing.py` by replacing them with more efficient native Python data structures.
+
+**Rationale:**
+Pandas operations can be computationally expensive, especially for repeated lookups and iterations. By converting pandas DataFrames to native Python dictionaries after loading, we can significantly improve performance for operations that don't require pandas' advanced functionality. This is particularly important for the activation checkpointing algorithm which performs many lookups and iterations over the data.
+
+**Details:**
+1. Modified `__init__` method to convert pandas DataFrames to dictionaries after loading
+2. Updated `_get_activation_details` and `_get_node_details` methods to use dictionary lookups instead of DataFrame indexing
+3. Optimized `_build_activation_mappings` method to work with dictionary data structures
+4. Updated helper methods for activation lookups to work with the new data structures
+5. Modified `_simulate_memory_usage` method to use dictionary access patterns
+6. Updated `_save_schedule_to_csv` to build CSV data from dictionaries
+7. Optimized `_analyze_memory_components` and `_get_max_recompute_ratio_candidate` methods
+8. Updated `decide_checkpoints` method to initialize and filter candidates using dictionaries
+
+These changes maintain the same functionality while improving performance by:
+- Reducing overhead of pandas DataFrame operations
+- Minimizing data copying and transformation
+- Using more efficient dictionary lookups instead of DataFrame indexing
+- Simplifying data access patterns throughout the code
 ### Decision (Documentation)
 [2025-05-15 19:44:29] - Further refined PLAN_stage_2.md to focus only on core requirements for activation checkpointing.
 

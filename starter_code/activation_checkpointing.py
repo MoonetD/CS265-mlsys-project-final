@@ -48,10 +48,26 @@ class ActivationCheckpointingAlgorithm:
             memory_budget_gb (float): GPU memory budget in Gigabytes.
         """
         try:
-            self.node_stats_df = pd.read_csv(node_stats_path)
-            self.activation_stats_df = pd.read_csv(activation_stats_path)
-            logger.info(f"Loaded node stats with {len(self.node_stats_df)} rows")
-            logger.info(f"Loaded activation stats with {len(self.activation_stats_df)} rows")
+            # Load data from CSV files into pandas DataFrames
+            node_stats_df = pd.read_csv(node_stats_path)
+            activation_stats_df = pd.read_csv(activation_stats_path)
+            
+            # Convert pandas DataFrames to dictionaries for faster access
+            self.node_stats = {}
+            self.activation_stats = {}
+            
+            # Process node stats
+            for _, row in node_stats_df.iterrows():
+                node_name = row['node_name']
+                self.node_stats[node_name] = dict(row)
+            
+            # Process activation stats and create index by activation_name
+            for _, row in activation_stats_df.iterrows():
+                act_name = row['activation_name']
+                self.activation_stats[act_name] = dict(row)
+            
+            logger.info(f"Loaded node stats with {len(self.node_stats)} rows")
+            logger.info(f"Loaded activation stats with {len(self.activation_stats)} rows")
         except FileNotFoundError as e:
             logger.error(f"Error: One or both profiler statistics files not found: {e}")
             raise
@@ -66,30 +82,26 @@ class ActivationCheckpointingAlgorithm:
         # Initialize schedule dictionary to store decisions (act_name -> 'RETAINED' or 'RECOMPUTE')
         self.schedule = {}
         
-        # Ensure activation_name is the index for activation_stats_df
-        if 'activation_name' in self.activation_stats_df.columns:
-            self.activation_stats_df.set_index('activation_name', inplace=True, drop=False)
-        else:
-            raise ValueError("activation_stats_df must contain an 'activation_name' column.")
-        
-        # Ensure node_name is the index for node_stats_df
-        if 'node_name' in self.node_stats_df.columns:
-            self.node_stats_df.set_index('node_name', inplace=True, drop=False)
-        else:
-            raise ValueError("node_stats_df must contain a 'node_name' column.")
-        
-        # Validate required columns in activation_stats_df
+        # Validate required columns in activation_stats
         required_act_cols = ['creation_rank', 'last_fw_use_rank', 'first_bw_use_rank',
                             'last_bw_use_rank', 'median_mem_size_bytes', 'recomp_time_s']
-        missing_cols = [col for col in required_act_cols if col not in self.activation_stats_df.columns]
-        if missing_cols:
-            raise ValueError(f"Missing required columns in activation_stats_df: {missing_cols}")
         
-        # Validate required columns in node_stats_df
+        # Check first activation to validate columns (assuming all have same structure)
+        if self.activation_stats:
+            first_act = next(iter(self.activation_stats.values()))
+            missing_cols = [col for col in required_act_cols if col not in first_act]
+            if missing_cols:
+                raise ValueError(f"Missing required columns in activation_stats: {missing_cols}")
+        
+        # Validate required columns in node_stats
         required_node_cols = ['rank', 'gtype', 'median_run_time_s', 'median_active_mem_bytes']
-        missing_cols = [col for col in required_node_cols if col not in self.node_stats_df.columns]
-        if missing_cols:
-            raise ValueError(f"Missing required columns in node_stats_df: {missing_cols}")
+        
+        # Check first node to validate columns (assuming all have same structure)
+        if self.node_stats:
+            first_node = next(iter(self.node_stats.values()))
+            missing_cols = [col for col in required_node_cols if col not in first_node]
+            if missing_cols:
+                raise ValueError(f"Missing required columns in node_stats: {missing_cols}")
             
         # variables for caching simulation data
         self._execution_order = None
@@ -109,15 +121,16 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             tuple: (recompute_time, activation_memory_size)
         """
-        if activation_name not in self.activation_stats_df.index:
+        act_details = self.activation_stats.get(activation_name)
+        if act_details is None:
             logger.warning(f"Activation {activation_name} not found in stats for recompute overhead.")
             return 0, 0  # Time, Memory
         
         # Get recomputation time from activation stats
-        recomp_time = self.activation_stats_df.loc[activation_name, 'recomp_time_s']
+        recomp_time = act_details.get('recomp_time_s', 0)
         
         # Get memory size of the activation
-        act_memory = self.activation_stats_df.loc[activation_name, 'median_mem_size_bytes']
+        act_memory = act_details.get('median_mem_size_bytes', 0)
         
         return recomp_time if pd.notna(recomp_time) else 0, act_memory if pd.notna(act_memory) else 0
 
@@ -129,9 +142,15 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             list: Node names in execution order.
         """
-        # Sort nodes by their rank
-        sorted_nodes = self.node_stats_df.dropna(subset=['rank']).sort_values(by='rank')
-        return sorted_nodes['node_name'].tolist()
+        # Create a list of (node_name, rank) tuples for nodes with valid ranks
+        nodes_with_ranks = []
+        for node_name, node_data in self.node_stats.items():
+            rank = node_data.get('rank')
+            if pd.notna(rank):
+                nodes_with_ranks.append((node_name, rank))
+        
+        # Sort by rank and extract node names
+        return [node[0] for node in sorted(nodes_with_ranks, key=lambda x: x[1])]
 
     def _get_activation_details(self, activation_name):
         """
@@ -141,11 +160,9 @@ class ActivationCheckpointingAlgorithm:
             activation_name (str): Name of the activation.
             
         Returns:
-            pd.Series: Activation details or None if not found.
+            dict: Activation details or None if not found.
         """
-        if activation_name not in self.activation_stats_df.index:
-            return None
-        return self.activation_stats_df.loc[activation_name]
+        return self.activation_stats.get(activation_name)
 
     def _get_node_details(self, node_name):
         """
@@ -155,11 +172,9 @@ class ActivationCheckpointingAlgorithm:
             node_name (str): Name of the node.
             
         Returns:
-            pd.Series: Node details or None if not found.
+            dict: Node details or None if not found.
         """
-        if node_name not in self.node_stats_df.index:
-            return None
-        return self.node_stats_df.loc[node_name]
+        return self.node_stats.get(node_name)
         
     def _initialize_simulation_cache(self):
         """
@@ -207,43 +222,52 @@ class ActivationCheckpointingAlgorithm:
         }
         
         # Pre-cache all activation details
-        for act_idx, act_details_series in self.activation_stats_df.iterrows():
-            act_name = act_details_series['activation_name']
-            self._activation_details_cache[act_name] = act_details_series
+        for act_name, act_details in self.activation_stats.items():
+            self._activation_details_cache[act_name] = act_details
             
             # Map by creation rank
-            if pd.notna(act_details_series['creation_rank']):
-                rank = int(act_details_series['creation_rank'])
+            creation_rank = act_details.get('creation_rank')
+            if pd.notna(creation_rank):
+                rank = int(creation_rank)
                 if rank not in self._activation_mappings['creation_rank']:
                     self._activation_mappings['creation_rank'][rank] = []
-                self._activation_mappings['creation_rank'][rank].append(act_details_series)
+                self._activation_mappings['creation_rank'][rank].append(act_details)
             
             # Map by first backward use rank
-            if pd.notna(act_details_series['first_bw_use_rank']):
-                rank = int(act_details_series['first_bw_use_rank'])
+            first_bw_use_rank = act_details.get('first_bw_use_rank')
+            if pd.notna(first_bw_use_rank):
+                rank = int(first_bw_use_rank)
                 if rank not in self._activation_mappings['first_bw_use_rank']:
                     self._activation_mappings['first_bw_use_rank'][rank] = []
-                self._activation_mappings['first_bw_use_rank'][rank].append(act_details_series)
+                self._activation_mappings['first_bw_use_rank'][rank].append(act_details)
             
             # Map by last backward use rank
-            if pd.notna(act_details_series['last_bw_use_rank']):
-                rank = int(act_details_series['last_bw_use_rank'])
+            last_bw_use_rank = act_details.get('last_bw_use_rank')
+            if pd.notna(last_bw_use_rank):
+                rank = int(last_bw_use_rank)
                 if rank not in self._activation_mappings['last_bw_use_rank']:
                     self._activation_mappings['last_bw_use_rank'][rank] = []
-                self._activation_mappings['last_bw_use_rank'][rank].append(act_details_series)
+                self._activation_mappings['last_bw_use_rank'][rank].append(act_details)
             
             # Map by last forward use rank
-            if pd.notna(act_details_series['last_fw_use_rank']) and act_details_series['last_fw_use_rank'] != -1:
-                rank = int(act_details_series['last_fw_use_rank'])
+            last_fw_use_rank = act_details.get('last_fw_use_rank')
+            if pd.notna(last_fw_use_rank) and last_fw_use_rank != -1:
+                rank = int(last_fw_use_rank)
                 if rank not in self._activation_mappings['last_fw_use_rank']:
                     self._activation_mappings['last_fw_use_rank'][rank] = []
-                self._activation_mappings['last_fw_use_rank'][rank].append(act_details_series)
+                self._activation_mappings['last_fw_use_rank'][rank].append(act_details)
         
         logger.info(f"Built activation mappings with {len(self._activation_details_cache)} activations")
 
     def _get_activation_details_cached(self, activation_name):
         """
         Get activation details from cache.
+        
+        Args:
+            activation_name (str): Name of the activation.
+            
+        Returns:
+            dict: Activation details or None if not found.
         """
         if activation_name in self._activation_details_cache:
             return self._activation_details_cache[activation_name]
@@ -254,7 +278,7 @@ class ActivationCheckpointingAlgorithm:
             self._activation_details_cache[activation_name] = details
         return details
 
-    def _simulate_memory_usage(self, current_schedule, fixed_overhead_bytes=0, debug=False): # consumer and the producer of the 
+    def _simulate_memory_usage(self, current_schedule, fixed_overhead_bytes=0, debug=False):
         """
         Simulates peak memory usage and total execution time based on a given schedule.
         
@@ -267,6 +291,10 @@ class ActivationCheckpointingAlgorithm:
             float: Estimated peak GPU memory in bytes.
             float: Total execution time in seconds.
         """
+        # Ensure cache is initialized
+        if self._execution_order is None:
+            self._initialize_simulation_cache()
+            
         # Start timing the simulation
         sim_start_time = time.time()
         
@@ -289,7 +317,12 @@ class ActivationCheckpointingAlgorithm:
         if debug:
             logger.info("Calculating total execution time...")
             
-        total_execution_time = self.node_stats_df['median_run_time_s'].sum()
+        # Calculate total execution time from node stats
+        total_execution_time = 0.0
+        for node_data in self.node_stats.values():
+            run_time = node_data.get('median_run_time_s', 0)
+            if pd.notna(run_time):
+                total_execution_time += run_time
         
         # Add recomputation times for activations scheduled for RECOMPUTE
         recompute_count = 0
@@ -298,13 +331,12 @@ class ActivationCheckpointingAlgorithm:
         for act_name, decision in current_schedule.items():
             if decision == 'RECOMPUTE':
                 act_details = self._get_activation_details_cached(act_name)
-                # Ensure act_details is a Series and 'recomp_time_s' exists
-                if act_details is not None and isinstance(act_details, pd.Series) and \
-                   'recomp_time_s' in act_details.index and pd.notna(act_details['recomp_time_s']):
+                if act_details is not None and 'recomp_time_s' in act_details:
                     recomp_time = act_details['recomp_time_s']
-                    total_execution_time += recomp_time
-                    recompute_time_total += recomp_time
-                    recompute_count += 1
+                    if pd.notna(recomp_time):
+                        total_execution_time += recomp_time
+                        recompute_time_total += recomp_time
+                        recompute_count += 1
         
         sim_timing['execution_time_calc'] = time.time() - exec_time_start
 
@@ -336,9 +368,8 @@ class ActivationCheckpointingAlgorithm:
             logger.info(f"Fixed overhead: {fixed_overhead_bytes / (1024**3):.3f} GB")
             logger.info(f"Starting peak memory: {peak_mem / (1024**3):.3f} GB")
         
-        # Get execution order
-        execution_order = self._get_node_execution_order()
-        if not execution_order:
+        # Use cached execution order instead of recalculating
+        if not self._execution_order:
             if debug:
                 logger.warning("Could not determine execution order.")
             return float('inf'), total_execution_time
@@ -346,18 +377,9 @@ class ActivationCheckpointingAlgorithm:
         # Process nodes in execution order
         node_processing_start = time.time()
         
-        # Find the boundary between forward and backward passes
-        forward_nodes = []
-        backward_nodes = []
-        for node_name in execution_order:
-            node_details = self._get_node_details(node_name)
-            if node_details is None:
-                continue
-            
-            if node_details['gtype'] == 'forward':
-                forward_nodes.append(node_name)
-            elif node_details['gtype'] == 'backward':
-                backward_nodes.append(node_name)
+        # Use cached forward and backward nodes instead of recalculating
+        forward_nodes = self._forward_nodes
+        backward_nodes = self._backward_nodes
         
         if debug:
             logger.info(f"Processing {len(forward_nodes)} forward nodes and {len(backward_nodes)} backward nodes...")
@@ -367,23 +389,26 @@ class ActivationCheckpointingAlgorithm:
             if debug and i % max(1, len(forward_nodes) // 10) == 0:
                 logger.info(f"  Processing forward node {i+1}/{len(forward_nodes)} ({(i+1)/len(forward_nodes)*100:.1f}%)...")
             
-            node_details = self._get_node_details(node_name)
+            # Use cached node details if available
+            node_details = self._node_details_cache.get(node_name)
             if node_details is None:
-                continue
+                node_details = self._get_node_details(node_name)
+                if node_details is None:
+                    continue
             
             node_rank = node_details['rank']
             
             # Update active memory for forward pass
-            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                fw_active_mem = node_details['median_active_mem_bytes']
+            active_mem = node_details.get('median_active_mem_bytes', 0)
+            if pd.notna(active_mem):
+                fw_active_mem = active_mem
             
             # Process activations created at this rank
             for act_name, act_details in self._get_activations_created_at_rank(node_rank).items():
                 if act_name in current_schedule:
                     decision = current_schedule[act_name]
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        mem_size = act_details['median_mem_size_bytes']
-                        
+                    mem_size = act_details.get('median_mem_size_bytes', 0)
+                    if pd.notna(mem_size):
                         # Add to forward intermediate memory
                         fw_inter_mem += mem_size
                         
@@ -398,9 +423,8 @@ class ActivationCheckpointingAlgorithm:
             for act_name, act_details in self._get_activations_last_used_in_forward_at_rank(node_rank).items():
                 if act_name in current_schedule:
                     decision = current_schedule[act_name]
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        mem_size = act_details['median_mem_size_bytes']
-                        
+                    mem_size = act_details.get('median_mem_size_bytes', 0)
+                    if pd.notna(mem_size):
                         # If this activation is not needed for backward pass or will be recomputed,
                         # we can free its memory after last forward use
                         if decision == 'RECOMPUTE' or not self._is_activation_used_in_backward(act_name):
@@ -435,23 +459,26 @@ class ActivationCheckpointingAlgorithm:
             if debug and i % max(1, len(backward_nodes) // 10) == 0:
                 logger.info(f"  Processing backward node {i+1}/{len(backward_nodes)} ({(i+1)/len(backward_nodes)*100:.1f}%)...")
             
-            node_details = self._get_node_details(node_name)
+            # Use cached node details if available
+            node_details = self._node_details_cache.get(node_name)
             if node_details is None:
-                continue
+                node_details = self._get_node_details(node_name)
+                if node_details is None:
+                    continue
             
             node_rank = node_details['rank']
             
             # Update active memory for backward pass
-            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                bw_active_mem = node_details['median_active_mem_bytes']
+            active_mem = node_details.get('median_active_mem_bytes', 0)
+            if pd.notna(active_mem):
+                bw_active_mem = active_mem
             
             # Process activations first used in backward at this rank
             for act_name, act_details in self._get_activations_first_used_in_backward_at_rank(node_rank).items():
                 if act_name in current_schedule:
                     decision = current_schedule[act_name]
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        mem_size = act_details['median_mem_size_bytes']
-                        
+                    mem_size = act_details.get('median_mem_size_bytes', 0)
+                    if pd.notna(mem_size):
                         if decision == 'RECOMPUTE':
                             # Add memory for recomputed activation
                             bw_inter_mem += mem_size
@@ -464,9 +491,8 @@ class ActivationCheckpointingAlgorithm:
             for act_name, act_details in self._get_activations_last_used_in_backward_at_rank(node_rank).items():
                 if act_name in current_schedule:
                     decision = current_schedule[act_name]
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        mem_size = act_details['median_mem_size_bytes']
-                        
+                    mem_size = act_details.get('median_mem_size_bytes', 0)
+                    if pd.notna(mem_size):
                         if decision == 'RECOMPUTE' and act_name in recomputed_activations:
                             # Free memory for recomputed activation
                             bw_inter_mem -= mem_size
@@ -510,8 +536,10 @@ class ActivationCheckpointingAlgorithm:
             for act_name, decision in current_schedule.items():
                 if decision == 'RECOMPUTE':
                     act_details = self._get_activation_details_cached(act_name)
-                    if act_details is not None and 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        memory_savings += act_details['median_mem_size_bytes']
+                    if act_details is not None:
+                        mem_size = act_details.get('median_mem_size_bytes', 0)
+                        if pd.notna(mem_size):
+                            memory_savings += mem_size
             
             logger.info(f"Memory savings from activation checkpointing: {memory_savings / (1024**3):.3f} GB")
             logger.info(f"Computation overhead from recomputation: {recompute_time_total:.4f}s")
@@ -526,7 +554,15 @@ class ActivationCheckpointingAlgorithm:
         return peak_mem, total_execution_time
     
     def _get_activations_created_at_rank(self, rank):
-        """Helper method to get activations created at a specific rank."""
+        """
+        Helper method to get activations created at a specific rank.
+        
+        Args:
+            rank (int): The execution rank to check.
+            
+        Returns:
+            dict: Dictionary mapping activation names to their details.
+        """
         result = {}
         if rank in self._activation_mappings['creation_rank']:
             for act_details in self._activation_mappings['creation_rank'][rank]:
@@ -534,7 +570,15 @@ class ActivationCheckpointingAlgorithm:
         return result
     
     def _get_activations_first_used_in_backward_at_rank(self, rank):
-        """Helper method to get activations first used in backward at a specific rank."""
+        """
+        Helper method to get activations first used in backward at a specific rank.
+        
+        Args:
+            rank (int): The execution rank to check.
+            
+        Returns:
+            dict: Dictionary mapping activation names to their details.
+        """
         result = {}
         if rank in self._activation_mappings['first_bw_use_rank']:
             for act_details in self._activation_mappings['first_bw_use_rank'][rank]:
@@ -542,7 +586,15 @@ class ActivationCheckpointingAlgorithm:
         return result
     
     def _get_activations_last_used_in_backward_at_rank(self, rank):
-        """Helper method to get activations last used in backward at a specific rank."""
+        """
+        Helper method to get activations last used in backward at a specific rank.
+        
+        Args:
+            rank (int): The execution rank to check.
+            
+        Returns:
+            dict: Dictionary mapping activation names to their details.
+        """
         result = {}
         if rank in self._activation_mappings['last_bw_use_rank']:
             for act_details in self._activation_mappings['last_bw_use_rank'][rank]:
@@ -550,7 +602,15 @@ class ActivationCheckpointingAlgorithm:
         return result
     
     def _get_activations_last_used_in_forward_at_rank(self, rank):
-        """Helper method to get activations last used in forward at a specific rank."""
+        """
+        Helper method to get activations last used in forward at a specific rank.
+        
+        Args:
+            rank (int): The execution rank to check.
+            
+        Returns:
+            dict: Dictionary mapping activation names to their details.
+        """
         result = {}
         if rank in self._activation_mappings['last_fw_use_rank']:
             for act_details in self._activation_mappings['last_fw_use_rank'][rank]:
@@ -558,141 +618,18 @@ class ActivationCheckpointingAlgorithm:
         return result
     
     def _is_activation_used_in_backward(self, act_name):
-        """Check if an activation is used in backward pass."""
-        act_details = self._get_activation_details_cached(act_name)
-        return act_details is not None and pd.notna(act_details['first_bw_use_rank'])
-        
-    def _find_peak_memory_rank(self, current_schedule, fixed_overhead_bytes=0, debug=False):
         """
-        Find the rank at which peak memory occurs.
-        
-        This method runs a memory simulation to identify at which point in the execution
-        the peak memory usage occurs. This information can be used to better target
-        activations that contribute to peak memory.
+        Check if an activation is used in backward pass.
         
         Args:
-            current_schedule (dict): Activation name to decision ('RETAINED', 'RECOMPUTE').
-            fixed_overhead_bytes (float): Estimated memory for parameters, gradients, optimizer.
-            debug (bool): Whether to print detailed debug information.
+            act_name (str): Name of the activation to check.
             
         Returns:
-            float: Estimated peak GPU memory in bytes.
-            int: Rank at which peak memory occurs.
-            bool: Whether peak memory occurs in forward pass (True) or backward pass (False).
+            bool: True if the activation is used in backward pass, False otherwise.
         """
-        # Initialize memory tracking variables
-        fw_inter_mem = 0  # Memory for intermediate tensors in forward pass
-        bw_inter_mem = 0  # Memory for intermediate tensors in backward pass
-        fw_active_mem = 0  # Active memory during forward pass
-        bw_active_mem = 0  # Active memory during backward pass
+        act_details = self._get_activation_details_cached(act_name)
+        return act_details is not None and pd.notna(act_details.get('first_bw_use_rank'))
         
-        # We'll track forward and backward passes separately
-        fw_peak_mem = fixed_overhead_bytes
-        bw_peak_mem = fixed_overhead_bytes
-        
-        # Track peak memory information
-        peak_mem = fixed_overhead_bytes
-        peak_rank = -1
-        is_forward = True
-        
-        # Ensure we have cached execution order and node classifications
-        if self._execution_order is None:
-            self._initialize_simulation_cache()
-        
-        # Process forward pass nodes
-        for i, node_name in enumerate(self._forward_nodes):
-            node_details = self._node_details_cache[node_name]
-            if node_details is None:
-                continue
-            
-            node_rank = node_details['rank']
-            
-            # Update active memory for forward pass without applying heuristic reductions
-            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                fw_active_mem = node_details['median_active_mem_bytes']
-            
-            # Add memory for newly created tensors
-            if node_rank in self._activation_mappings['creation_rank']:
-                for act_details in self._activation_mappings['creation_rank'][node_rank]:
-                    act_name = act_details['activation_name']
-                    if current_schedule.get(act_name) == 'RETAINED':
-                        # Only add memory for activations we're keeping (not recomputing)
-                        if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                            mem_size = act_details['median_mem_size_bytes']
-                            fw_inter_mem += mem_size
-            
-            # Remove memory for tensors that are no longer needed in forward pass
-            if node_rank in self._activation_mappings['last_fw_use_rank']:
-                for act_details in self._activation_mappings['last_fw_use_rank'][node_rank]:
-                    act_name = act_details['activation_name']
-                    if current_schedule.get(act_name) == 'RETAINED':
-                        if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                            fw_inter_mem -= act_details['median_mem_size_bytes']
-            
-            # Calculate current forward pass memory
-            current_fw_mem = fw_active_mem + fw_inter_mem + fixed_overhead_bytes
-            
-            # Update peak forward memory
-            if current_fw_mem > fw_peak_mem:
-                fw_peak_mem = current_fw_mem
-                if fw_peak_mem > peak_mem:
-                    peak_mem = fw_peak_mem
-                    peak_rank = node_rank
-                    is_forward = True
-        
-        # Reset intermediate memory for backward pass
-        fw_inter_mem = 0
-        bw_inter_mem = 0
-        
-        # Process backward pass nodes
-        for i, node_name in enumerate(self._backward_nodes):
-            node_details = self._node_details_cache[node_name]
-            if node_details is None:
-                continue
-            
-            node_rank = node_details['rank']
-            
-            # Update active memory for backward pass without applying heuristic reductions
-            if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                bw_active_mem = node_details['median_active_mem_bytes']
-            
-            # Add memory for activations needed at this rank (both retained and recomputed)
-            if node_rank in self._activation_mappings['first_bw_use_rank']:
-                for act_details in self._activation_mappings['first_bw_use_rank'][node_rank]:
-                    act_name = act_details['activation_name']
-                    decision = current_schedule.get(act_name)
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        mem_size = act_details['median_mem_size_bytes']
-                        
-                        if decision == 'RECOMPUTE':
-                            # Add memory for recomputed activation
-                            bw_inter_mem += mem_size
-                        elif decision == 'RETAINED':
-                            # Add memory for retained activation only when it's first used in backward pass
-                            bw_inter_mem += mem_size
-            
-            # Remove memory for tensors that are no longer needed in backward pass
-            if node_rank in self._activation_mappings['last_bw_use_rank']:
-                for act_details in self._activation_mappings['last_bw_use_rank'][node_rank]:
-                    act_name = act_details['activation_name']
-                    if 'median_mem_size_bytes' in act_details and pd.notna(act_details['median_mem_size_bytes']):
-                        # Remove the memory for this activation after its last use
-                        mem_size = act_details['median_mem_size_bytes']
-                        bw_inter_mem -= mem_size
-            
-            # Calculate current backward pass memory
-            current_bw_mem = bw_active_mem + bw_inter_mem + fixed_overhead_bytes
-            
-            # Update peak backward memory
-            if current_bw_mem > bw_peak_mem:
-                bw_peak_mem = current_bw_mem
-                if bw_peak_mem > peak_mem:
-                    peak_mem = bw_peak_mem
-                    peak_rank = node_rank
-                    is_forward = False
-        
-        return peak_mem, peak_rank, is_forward
-
     def _save_schedule_to_csv(self, schedule):
         """
         Save the activation checkpointing schedule to a CSV file.
@@ -701,19 +638,27 @@ class ActivationCheckpointingAlgorithm:
             schedule (dict): The schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
         """
         try:
-            # Create a DataFrame from the schedule
-            schedule_df = pd.DataFrame({
-                'activation_name': list(schedule.keys()),
-                'decision': list(schedule.values())
-            })
+            # Create a list of dictionaries for the CSV data
+            csv_data = []
             
-            # Add additional information from activation_stats_df if available
-            for col in ['median_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'first_bw_use_rank']:
-                if col in self.activation_stats_df.columns:
-                    schedule_df[col] = [
-                        self.activation_stats_df.loc[act, col] if act in self.activation_stats_df.index else None
-                        for act in schedule_df['activation_name']
-                    ]
+            for act_name, decision in schedule.items():
+                # Start with basic info
+                row_data = {
+                    'activation_name': act_name,
+                    'decision': decision
+                }
+                
+                # Add additional information from activation_stats if available
+                act_details = self._get_activation_details_cached(act_name)
+                if act_details:
+                    for col in ['median_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'first_bw_use_rank']:
+                        if col in act_details:
+                            row_data[col] = act_details[col]
+                
+                csv_data.append(row_data)
+            
+            # Create DataFrame from the list of dictionaries
+            schedule_df = pd.DataFrame(csv_data)
             
             # Ensure reports directory exists
             reports_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports')
@@ -741,9 +686,6 @@ class ActivationCheckpointingAlgorithm:
         Returns:
             dict: A schedule mapping activation names to 'RETAINED' or 'RECOMPUTE'.
         """
-        # Reset cached peak information
-        self._cached_peak_info = None
-        
         # Start overall timing
         overall_start_time = time.time()
         
@@ -769,18 +711,16 @@ class ActivationCheckpointingAlgorithm:
         # Initial state: checkpoint all activations (mark all as RETAINED)
         init_start = time.time()
         logger.info("Initializing schedule with all activations checkpointed...")
-        current_schedule = {
-            act_name: 'RETAINED'
-            for act_name in self.activation_stats_df['activation_name']
-            if pd.notna(self.activation_stats_df.loc[act_name, 'median_mem_size_bytes']) and
-               self.activation_stats_df.loc[act_name, 'median_mem_size_bytes'] > 0
-        }
+        current_schedule = {}
+        for act_name, act_details in self.activation_stats.items():
+            mem_size = act_details.get('median_mem_size_bytes', 0)
+            if pd.notna(mem_size) and mem_size > 0:
+                current_schedule[act_name] = 'RETAINED'
         timing_stats['initialization'] = time.time() - init_start
         
         logger.info(f"Initial schedule has {len(current_schedule)} activations marked for RETAINED")
         
-        # Initialize the simulation cache once before the main loop
-        self._initialize_simulation_cache()
+        # The simulation cache will be initialized automatically when needed
         
         # Run initial memory simulation to get baseline
         sim_start = time.time()
@@ -826,13 +766,18 @@ class ActivationCheckpointingAlgorithm:
         # Filter out activations with no valid size or recompute stats
         filter_start = time.time()
         logger.info("Filtering valid activations...")
-        valid_activations_df = self.activation_stats_df.dropna(subset=['median_mem_size_bytes', 'recomp_time_s', 'creation_rank', 'last_fw_use_rank'])
-        # No minimum memory size threshold - consider all activations regardless of size
+        
+        # Create a set of candidate activations with valid data
+        candidate_set = set()
+        for act_name, act_details in self.activation_stats.items():
+            if (pd.notna(act_details.get('median_mem_size_bytes')) and
+                pd.notna(act_details.get('recomp_time_s')) and
+                pd.notna(act_details.get('creation_rank')) and
+                pd.notna(act_details.get('last_fw_use_rank'))):
+                candidate_set.add(act_name)
+                
         timing_stats['candidate_filtering'] = time.time() - filter_start
-        logger.info(f"Found {len(valid_activations_df)} valid activations for consideration")
-
-        # Create a set of candidate activations
-        candidate_set = set(valid_activations_df.index)
+        logger.info(f"Found {len(candidate_set)} valid activations for consideration")
         
         # Initialize tracking set for recomputation
         recomps = set()
@@ -858,7 +803,7 @@ class ActivationCheckpointingAlgorithm:
                 break
                 
             iteration += 1
-            logger.info(f"\nIteration {iteration}/{max_iterations} (Elapsed time: {elapsed_time:.1f}s)")
+            # logger.info(f"\nIteration {iteration}/{max_iterations} (Elapsed time: {elapsed_time:.1f}s)")
             
             # Run memory simulation to check current state
             sim_start = time.time()
@@ -870,16 +815,16 @@ class ActivationCheckpointingAlgorithm:
             sim_time = time.time() - sim_start
             timing_stats['memory_simulations'] += sim_time
             
-            logger.info(f"Simulated peak memory: {current_peak_memory / (1024**3):.2f} GB. Budget: {self.memory_budget_bytes / (1024**3):.2f} GB. Exec time: {current_exec_time:.2f}s")
-            logger.info(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'RETAINED')}")
-            logger.info(f"Current recompute count: {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')}")
+            # logger.info(f"Simulated peak memory: {current_peak_memory / (1024**3):.2f} GB. Budget: {self.memory_budget_bytes / (1024**3):.2f} GB. Exec time: {current_exec_time:.2f}s")
+            # logger.info(f"Current checkpoint count: {sum(1 for d in current_schedule.values() if d == 'RETAINED')}")
+            # logger.info(f"Current recompute count: {sum(1 for d in current_schedule.values() if d == 'RECOMPUTE')}")
 
             # Update best schedule if this one is better
             if current_peak_memory < best_peak_memory:
                 best_schedule = current_schedule.copy()
                 best_peak_memory = current_peak_memory
                 best_exec_time = current_exec_time
-                logger.info(f"New best schedule found with peak memory: {best_peak_memory / (1024**3):.2f} GB")
+                # logger.info(f"New best schedule found with peak memory: {best_peak_memory / (1024**3):.2f} GB")
 
             # Check if we've met the budget
             # Use effective_budget for comparison to ensure we meet the actual budget
@@ -922,10 +867,10 @@ class ActivationCheckpointingAlgorithm:
             if pd.notna(creation_rank) and pd.notna(first_bw_use_rank):
                 lifetime = first_bw_use_rank - creation_rank
             
-            logger.info(f"Considering activation: {r_cand}, recompute_benefit_ratio: {recompute_benefit_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s, lifetime: {lifetime}")
+            # logger.info(f"Considering activation: {r_cand}, recompute_benefit_ratio: {recompute_benefit_ratio:.2f}, mem_size: {mem_size:.2f} MB, recomp_time: {recomp_time:.6f}s, lifetime: {lifetime}")
             
             # Always choose to recompute to save memory
-            logger.info(f"Choosing to RECOMPUTE {r_cand} (memory saved: {mem_size:.2f} MB, recompute overhead: {recomp_time:.6f}s)")
+            # logger.info(f"Choosing to RECOMPUTE {r_cand} (memory saved: {mem_size:.2f} MB, recompute overhead: {recomp_time:.6f}s)")
             current_schedule[r_cand] = 'RECOMPUTE'
             recomps.add(r_cand)
             
@@ -1114,32 +1059,45 @@ class ActivationCheckpointingAlgorithm:
         
         This method analyzes the memory usage during training to identify components that
         cannot be reduced through activation checkpointing (incompressible).
+        
+        Args:
+            current_schedule (dict): The current activation checkpointing schedule.
+            fixed_overhead_bytes (float): Fixed memory overhead in bytes.
+            debug (bool): Whether to print debug information.
+            
+        Returns:
+            tuple: (fw_active_mem, bw_active_mem) - Maximum active memory for forward and backward passes.
         """
+        # Ensure cache is initialized
+        if self._execution_order is None:
+            self._initialize_simulation_cache()
+            
         # Initialize memory tracking variables
         fw_active_mem = 0
         bw_active_mem = 0
         
-        # Get execution order
-        execution_order = self._get_node_execution_order()
-        
-        if not execution_order:
+        # Use cached execution order
+        if not self._execution_order:
             logger.warning("Could not determine execution order.")
             return fw_active_mem, bw_active_mem
         
         # Find maximum active memory for forward and backward passes
-        for node_name in execution_order:
-            node_details = self._get_node_details(node_name)
+        for node_name in self._execution_order:
+            # Use cached node details if available
+            node_details = self._node_details_cache.get(node_name)
             if node_details is None:
-                continue
+                node_details = self._get_node_details(node_name)
+                if node_details is None:
+                    continue
             
-            node_gtype = node_details['gtype']
+            node_gtype = node_details.get('gtype')
+            active_mem = node_details.get('median_active_mem_bytes', 0)
             
-            if node_gtype == 'forward':
-                if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                    fw_active_mem = max(fw_active_mem, node_details['median_active_mem_bytes'])
-            elif node_gtype == 'backward':
-                if 'median_active_mem_bytes' in node_details and pd.notna(node_details['median_active_mem_bytes']):
-                    bw_active_mem = max(bw_active_mem, node_details['median_active_mem_bytes'])
+            if pd.notna(active_mem):
+                if node_gtype == 'forward':
+                    fw_active_mem = max(fw_active_mem, active_mem)
+                elif node_gtype == 'backward':
+                    bw_active_mem = max(bw_active_mem, active_mem)
         
         return fw_active_mem, bw_active_mem
 
@@ -1157,20 +1115,6 @@ class ActivationCheckpointingAlgorithm:
         max_ratio = -1
         max_candidate = None
         
-        # Use cached peak memory information if available
-        # This avoids running an expensive simulation for each candidate selection
-        if not hasattr(self, '_cached_peak_info') or self._cached_peak_info is None:
-            # Only run the simulation once and cache the results
-            current_schedule = {act_name: 'RETAINED' for act_name in self.activation_stats_df['activation_name']}
-            peak_mem, peak_rank, is_forward = self._find_peak_memory_rank(
-                current_schedule,
-                fixed_overhead_bytes=0.3 * (1024**3)
-            )
-            self._cached_peak_info = (peak_rank, is_forward)
-        else:
-            # Use cached information
-            peak_rank, is_forward = self._cached_peak_info
-        
         # Find activations that are likely to be alive at peak memory
         # This is a heuristic - we'll prioritize activations with large memory footprint
         # that are created early in the forward pass and used late in the backward pass
@@ -1180,13 +1124,10 @@ class ActivationCheckpointingAlgorithm:
             if act_details is None:
                 continue
                 
-            if 'median_mem_size_bytes' not in act_details or 'recomp_time_s' not in act_details:
-                continue
-                
-            mem_size = act_details['median_mem_size_bytes']
-            recomp_time = act_details['recomp_time_s']
+            mem_size = act_details.get('median_mem_size_bytes')
+            recomp_time = act_details.get('recomp_time_s')
             
-            if pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
+            if not mem_size or not recomp_time or pd.isna(mem_size) or pd.isna(recomp_time) or recomp_time <= 0:
                 continue
             
             # Calculate basic recompute benefit ratio
@@ -1214,18 +1155,6 @@ class ActivationCheckpointingAlgorithm:
                 ratio *= 2.0
             elif mem_size > 1 * (1024 * 1024):  # Medium activations (>1MB)
                 ratio *= 1.5
-                
-            # Check if this activation is alive at the peak memory point
-            # If peak is in forward pass, check if activation is created before peak and used after peak
-            # If peak is in backward pass, check if activation is used in backward pass at or after peak
-            if is_forward and pd.notna(creation_rank) and pd.notna(last_fw_use_rank):
-                if creation_rank <= peak_rank and last_fw_use_rank >= peak_rank:
-                    # This activation is alive at peak memory in forward pass
-                    ratio *= 4.0  # Very high boost for activations alive at peak memory
-            elif not is_forward and pd.notna(first_bw_use_rank):
-                if first_bw_use_rank <= peak_rank:
-                    # This activation is used in backward pass at or before peak memory
-                    ratio *= 4.0  # Very high boost for activations alive at peak memory
                 
             if ratio > max_ratio:
                 max_ratio = ratio
