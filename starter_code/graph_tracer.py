@@ -3,7 +3,8 @@ from copy import copy
 from dataclasses import dataclass
 from functools import partial, wraps
 from typing import Any, Callable, Dict, List, Optional, Union
-from utils import SPMD_DECOMP_TABLE
+# Remove utils import which might not be available
+# from utils import SPMD_DECOMP_TABLE
 
 import torch
 
@@ -15,9 +16,10 @@ import torch.utils._pytree as pytree
 from torch import fx
 from torch._subclasses.fake_tensor import FakeTensorMode
 from torch.distributed._functional_collectives import all_reduce
-from torch.distributed.tensor import DTensor
-from torch.distributed.tensor._op_schema import OpSchema, OutputSharding
-from torch.distributed._tensor.placement_types import DTensorSpec
+# Remove DTensor import which is not available
+# from torch.distributed.tensor import DTensor
+# from torch.distributed.tensor._op_schema import OpSchema, OutputSharding
+# from torch.distributed._tensor.placement_types import DTensorSpec
 from torch.fx.experimental.proxy_tensor import make_fx
 from torch.fx.graph import CodeGen, _PyTreeCodeGen, _PyTreeInfo
 from torch.nn.utils import stateless
@@ -38,21 +40,9 @@ separator_lib.impl("sep", sep, "CompositeExplicitAutograd")
 separator_lib.define("sep_backward(Tensor x) -> Tensor")
 separator_lib.impl("sep_backward", sep_backward, "CompositeExplicitAutograd")
 
+# Remove DTensor-related functions that are causing issues
+# These functions are not needed for the basic functionality
 
-def _identity_prop_rule(op_schema: OpSchema) -> OutputSharding:
-    (x,) = op_schema.args_schema
-    assert isinstance(x, DTensorSpec), f"expecting DTensorSpec but got {x}"
-
-    return OutputSharding(output_spec=DTensorSpec(x.mesh, x.placements))
-
-def _prop_sepm(op_schema: OpSchema) -> OutputSharding:
-    return _identity_prop_rule(op_schema)
-
-def _prop_sepm_backward(op_schema: OpSchema) -> OutputSharding:
-    return _identity_prop_rule(op_schema)
-
-DTensor._op_dispatcher.sharding_propagator.register_sharding_prop_rule(torch.ops.separator.sep.default, _prop_sepm)
-DTensor._op_dispatcher.sharding_propagator.register_sharding_prop_rule(torch.ops.separator.sep_backward.default, _prop_sepm_backward)
 
 
 

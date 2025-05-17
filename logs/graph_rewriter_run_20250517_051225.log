@@ -1,0 +1,10 @@
+2025-05-17 05:12:25,075 - INFO - ================================================================================
+2025-05-17 05:12:25,076 - INFO - GRAPH REWRITER (STAGE 3)
+2025-05-17 05:12:25,076 - INFO - ================================================================================
+2025-05-17 05:12:25,076 - INFO - Log file: logs\graph_rewriter_run_20250517_051225.log
+2025-05-17 05:12:25,077 - INFO - Model: resnet
+2025-05-17 05:12:25,077 - INFO - Batch size for AC decisions: 4
+2025-05-17 05:12:25,077 - INFO - Batch sizes for performance measurement: [1, 2, 4, 8, 16]
+2025-05-17 05:12:25,127 - INFO - CUDA available: NVIDIA GeForce RTX 4090 Laptop GPU
+2025-05-17 05:12:25,127 - INFO - CUDA memory: 15.99 GB
+2025-05-17 05:12:25,128 - INFO - Loading resnet model...

@@ -1,0 +1,15 @@
+2025-05-17 05:11:31,216 - INFO - ================================================================================
+2025-05-17 05:11:31,217 - INFO - GRAPH REWRITER (STAGE 3)
+2025-05-17 05:11:31,218 - INFO - ================================================================================
+2025-05-17 05:11:31,218 - INFO - Log file: logs\graph_rewriter_run_20250517_051131.log
+2025-05-17 05:11:31,219 - INFO - Model: resnet152
+2025-05-17 05:11:31,220 - INFO - Batch size for AC decisions: 4
+2025-05-17 05:11:31,220 - INFO - Batch sizes for performance measurement: [1, 2, 4, 8, 16]
+2025-05-17 05:11:31,295 - INFO - CUDA available: NVIDIA GeForce RTX 4090 Laptop GPU
+2025-05-17 05:11:31,296 - INFO - CUDA memory: 15.99 GB
+2025-05-17 05:11:31,296 - INFO - Loading resnet152 model...
+2025-05-17 05:11:32,091 - INFO - Model loaded: ResNet-152
+2025-05-17 05:11:32,091 - INFO - Example input shape: torch.Size([1, 3, 224, 224])
+2025-05-17 05:11:32,092 - INFO - Loading activation checkpointing decisions from Stage 2...
+2025-05-17 05:11:32,093 - ERROR - Error: [Errno 2] No such file or directory: 'reports/ac_decisions_resnet152_bs4.csv'
+2025-05-17 05:11:32,093 - ERROR - Please run the profiler (Stage 1) and activation checkpointing algorithm (Stage 2) first.
