@@ -59,7 +59,10 @@ def load_data(ac_decisions_path, activation_stats_path, node_stats_path):
             'creation_rank': row['creation_rank'],
             'last_fw_use_rank': row['last_fw_use_rank'],
             'first_bw_use_rank': row['first_bw_use_rank'],
-            'last_bw_use_rank': row['last_bw_use_rank']
+            'last_bw_use_rank': row['last_bw_use_rank'],
+            'median_mem_size_bytes': row['median_mem_size_bytes'],
+            'recomp_time_s': row['recomp_time_s'],
+            'recomp_memory_bytes': row['recomp_memory_bytes']
         }
     
     # Load node statistics

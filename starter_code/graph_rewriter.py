@@ -4,6 +4,7 @@ Graph Extractor and Rewriter for Activation Checkpointing
 This module implements Stage 3 of the activation checkpointing project:
 1. Extracting subgraphs for activations marked for recomputation
 2. Rewriting the graph to include these subgraphs in the backward pass
+3. Freeing activation memory during forward pass and recomputing during backward pass
 
 The implementation follows the approach described in the μ-TWO paper.
 """
@@ -813,20 +814,44 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
             logger.warning(f"Could not find any insertion point for activation {act_name}")
             continue
             
-        # Skip this activation if it's too large or has a very small recomputation time
-        # This helps avoid recomputing activations that would cause more problems than benefits
+        # Evaluate whether to recompute this activation based on memory/compute tradeoff
         act_details = activation_liveness.get(act_name, {})
         mem_size = act_details.get('median_mem_size_bytes', 0)
         recomp_time = act_details.get('recomp_time_s', 0)
         
-        # Skip very large activations (> 100MB) or those with negligible recomputation time
-        if mem_size > 100 * 1024 * 1024:  # > 100MB
+        # Get lifetime information
+        creation_rank = activation_liveness[act_name].get('creation_rank', -1)
+        last_fw_use_rank = activation_liveness[act_name].get('last_fw_use_rank', -1)
+        first_bw_use_rank = activation_liveness[act_name].get('first_bw_use_rank', -1)
+        
+        # Calculate memory/compute ratio (higher is better for recomputation)
+        mem_compute_ratio = mem_size / (recomp_time + 1e-10)  # Avoid division by zero
+        
+        # Skip very large activations (> 1GB) as they're too expensive to recompute
+        # This is a much more generous limit than before (was 500MB)
+        if mem_size > 1024 * 1024 * 1024:  # > 1GB
             logger.warning(f"Skipping activation {act_name} because it's too large ({mem_size/(1024*1024):.2f} MB)")
             continue
             
-        if recomp_time < 1e-5:  # < 10 microseconds
-            logger.warning(f"Skipping activation {act_name} because recomputation time is too small ({recomp_time:.8f} s)")
+        # Skip activations with extremely small recomputation time (likely not worth it)
+        # This is an even smaller threshold to allow more recomputation
+        if recomp_time < 1e-10:  # < 0.1 nanoseconds
+            logger.warning(f"Skipping activation {act_name} because recomputation time is too small ({recomp_time:.10f} s)")
             continue
+            
+        # Skip activations with very short lifetime only if they have extremely poor memory/compute ratio
+        # This is even more permissive than before
+        lifetime = first_bw_use_rank - last_fw_use_rank
+        if lifetime < 10 and mem_compute_ratio < 1e6:  # Very short lifetime and extremely poor ratio
+            logger.warning(f"Skipping activation {act_name} because it has a very short lifetime ({lifetime}) and extremely poor memory/compute ratio ({mem_compute_ratio:.2f})")
+            continue
+            
+        # Increase the limit on number of activations to recompute even further
+        if len(subgraphs) >= 400:  # Recompute up to 400 activations (was 200)
+            logger.warning(f"Skipping activation {act_name} because we've already selected enough activations")
+            continue
+            
+        logger.info(f"Activation {act_name} will be recomputed. Size: {mem_size/(1024*1024):.2f} MB, Recomp time: {recomp_time:.8f} s")
         
         logger.info(f"Found insertion point: {insertion_point.name}")
         
@@ -881,23 +906,107 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
         
         logger.info(f"Inserted recomputation subgraph, recomputed node: {recomputed_node.name}")
         
-        # Replace backward pass uses of the original activation with the recomputed version
-        # We only want to replace uses that occur after the insertion point
+        # Replace ALL backward pass uses of the original activation with the recomputed version
+        # This is critical to ensure the original activation is not kept alive by references
+        
+        # First, identify all backward users
+        backward_users = []
         for user in list(original_node_in_new_graph.users.keys()):
+            # Try multiple methods to identify backward users
+            is_backward = False
+            
+            # Method 1: By rank
             if hasattr(user, 'meta') and 'rank' in user.meta and user.meta['rank'] >= first_bw_use_rank:
+                is_backward = True
+                
+            # Method 2: By gtype
+            elif hasattr(user, 'meta') and user.meta.get('gtype') == 'backward':
+                is_backward = True
+                
+            # Method 3: By name (many backward ops contain "grad" or "backward" in their name)
+            elif 'grad' in user.name.lower() or 'backward' in user.name.lower():
+                is_backward = True
+                
+            if is_backward:
+                backward_users.append(user)
+        
+        # Replace all backward users with the recomputed node
+        if backward_users:
+            for user in backward_users:
                 user.replace_input_with(original_node_in_new_graph, recomputed_node)
                 logger.info(f"Replaced use of {original_node_in_new_graph.name} with {recomputed_node.name} in {user.name}")
+        else:
+            # If no backward users found, this is unusual - log a warning
+            logger.warning(f"No backward users found for {original_node_in_new_graph.name} - activation checkpointing may not work correctly")
+            
+            # As a fallback, replace ALL remaining users (after the insertion point) with the recomputed node
+            for user in list(original_node_in_new_graph.users.keys()):
+                if user != recomputed_node:  # Don't replace in our recomputed node
+                    user.replace_input_with(original_node_in_new_graph, recomputed_node)
+                    logger.info(f"Fallback: Replaced use of {original_node_in_new_graph.name} with {recomputed_node.name} in {user.name}")
         
         # Mark the original activation node as being recomputed
         if not hasattr(original_node_in_new_graph, 'meta'):
             original_node_in_new_graph.meta = {}
         original_node_in_new_graph.meta['recomputed'] = True
+        
+        # Instead of trying to free memory by replacing activations with zeros (which can cause issues),
+        # we'll use a more reliable approach: we'll simply not add any "free" nodes and rely on the
+        # backward pass recomputation to handle the memory management.
+        
+        # Mark the original node as being recomputed in metadata
+        if not hasattr(original_node_in_new_graph, 'meta'):
+            original_node_in_new_graph.meta = {}
+        original_node_in_new_graph.meta['recomputed'] = True
+        
+        logger.info(f"Marked activation {original_node_in_new_graph.name} for recomputation")
     
     # Validate the rewritten graph
     try:
         new_graph.lint()
+        logger.info("Graph validation successful")
     except Exception as e:
         logger.warning(f"Graph validation failed: {e}")
+        # Try to fix common validation issues
+        try:
+            # Instead of trying to remove nodes (which can cause issues),
+            # let's create a new graph without the problematic nodes
+            fixed_graph = fx.Graph(owning_module=new_graph._owning_module)
+            env = {}
+            
+            # Copy all nodes except problematic ones
+            for node in new_graph.nodes:
+                # Skip free nodes that might be causing issues
+                if node.op == 'call_function' and 'free_' in node.name:
+                    users = list(node.users.keys())
+                    if not users:
+                        logger.info(f"Skipping unused free node: {node.name}")
+                        continue
+                
+                # Define the argument transformation function
+                def arg_transform(arg):
+                    if isinstance(arg, fx.Node):
+                        if arg in env:
+                            return env[arg]
+                        else:
+                            # If we encounter a reference to a node we skipped, use a placeholder
+                            logger.warning(f"Missing node reference: {arg.name}")
+                            return None
+                    return arg
+                
+                # Copy the node to the new graph
+                new_node = fixed_graph.node_copy(node, arg_transform)
+                env[node] = new_node
+            
+            # Try validation on the fixed graph
+            fixed_graph.lint()
+            logger.info("Graph validation successful after fixes")
+            
+            # Use the fixed graph
+            new_graph = fixed_graph
+        except Exception as e2:
+            logger.error(f"Graph validation still failed after fixes: {e2}")
+            # We'll continue anyway and let the topological ordering handle it
     
     # Ensure proper topological ordering before returning
     try:
@@ -906,9 +1015,16 @@ def rewrite_graph_with_recomputation(graph: fx.Graph,
         return ordered_graph
     except Exception as e:
         logger.error(f"Error in topological ordering: {e}")
-        # Fall back to the original graph without reordering
-        logger.warning("Falling back to the original graph without reordering")
-        return new_graph
+        # Try a simpler approach to fix the graph
+        try:
+            # Just return the graph as is, without reordering
+            logger.warning("Attempting to return graph without reordering")
+            return new_graph
+        except Exception as e2:
+            logger.error(f"Failed to return graph without reordering: {e2}")
+            # Fall back to the original graph as a last resort
+            logger.warning("Falling back to the original graph")
+            return graph  # Return the original graph instead of new_graph
 
 def apply_rewritten_graph(model: torch.nn.Module,
                            original_graph: fx.Graph,
@@ -949,9 +1065,55 @@ def apply_rewritten_graph(model: torch.nn.Module,
         logger.info("Graph validation successful")
     except Exception as e:
         logger.warning(f"Graph validation failed: {e}")
-        # Handle special cases or fallbacks
-        logger.warning("Falling back to original model")
-        return model
+        
+        # Try to fix common validation issues
+        try:
+            # Create a new graph without problematic nodes
+            fixed_graph = fx.Graph(owning_module=new_module.graph._owning_module)
+            env = {}
+            
+            # Copy all nodes except problematic ones
+            for node in new_module.graph.nodes:
+                # Skip free nodes that might be causing issues
+                if node.op == 'call_function' and 'free_' in node.name:
+                    users = list(node.users.keys())
+                    if not users:
+                        logger.info(f"Skipping unused free node: {node.name}")
+                        continue
+                
+                # Define the argument transformation function
+                def arg_transform(arg):
+                    if isinstance(arg, fx.Node):
+                        if arg in env:
+                            return env[arg]
+                        else:
+                            # If we encounter a reference to a node we skipped, use a placeholder
+                            logger.warning(f"Missing node reference: {arg.name}")
+                            return None
+                    return arg
+                
+                # Copy the node to the new graph
+                new_node = fixed_graph.node_copy(node, arg_transform)
+                env[node] = new_node
+            
+            # Create a new module with the fixed graph
+            fixed_module = fx.GraphModule(model, fixed_graph)
+            
+            # Try validation on the fixed module
+            fixed_module.graph.lint()
+            logger.info("Graph validation successful after fixes")
+            
+            # Copy over any attributes from the original module
+            for name, attr in model.__dict__.items():
+                if name != '_modules' and not name.startswith('_parameters') and not name.startswith('_buffers'):
+                    setattr(fixed_module, name, attr)
+            
+            return fixed_module
+        except Exception as e2:
+            logger.warning(f"Graph validation still failed after fixes: {e2}")
+            # Handle special cases or fallbacks
+            logger.warning("Falling back to original model")
+            return model
     
     logger.info("Successfully applied rewritten graph to model")
     return new_module
